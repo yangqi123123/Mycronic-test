@@ -67,7 +67,8 @@
           <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div class="flex gap-2">
-                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="mine" aria-current="page">我负责的</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="all" aria-current="page">全部</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="mine">我负责的</button>
                 <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="subs">我下属的</button>
               </div>
             </div>
@@ -437,8 +438,9 @@
       });
 
       // ===== tabs & query =====
-      let activeTab = "mine"; // mine/subs
+      let activeTab = "all"; // all/mine/subs
       function passesTab(row) {
+        if (activeTab === "all") return true;
         const cust = getCustomer(row.customerId);
         const ownerId = cust?.ownerId || "";
         if (activeTab === "mine") return ownerId === currentUser.id;
@@ -693,7 +695,11 @@
           });
           pageNo = 1;
           chkAll.checked = false;
-          toast("success", "已切换标签页", activeTab === "mine" ? "我负责的" : "我下属的");
+          toast(
+            "success",
+            "已切换标签页",
+            activeTab === "all" ? "全部" : activeTab === "mine" ? "我负责的" : "我下属的"
+          );
           render();
         });
       });

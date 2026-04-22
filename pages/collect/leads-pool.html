@@ -213,21 +213,11 @@
             <div class="text-[12px] text-muted mb-1">统一社会信用代码</div>
             <input id="fUscc" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
           </div>
-          <div class="col-span-4">
-            <div class="text-[12px] text-muted mb-1">优先级</div>
-            <select id="fPriority" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-              <option>低</option>
-              <option>一般</option>
-              <option>中</option>
-              <option>紧急</option>
-              <option>非常紧急</option>
-            </select>
-          </div>
-          <div class="col-span-4">
+          <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">项目名称</div>
             <input id="fProjectName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
           </div>
-          <div class="col-span-4">
+          <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">项目编号</div>
             <input id="fProjectNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
           </div>
@@ -756,7 +746,6 @@
         document.getElementById("fUscc").value = row.uscc || "";
         const ns = document.getElementById("fNeedSummary");
         if (ns) ns.value = String(row.needSummary || "").slice(0, 240);
-        document.getElementById("fPriority").value = row.priority;
         document.getElementById("fProjectName").value = row.projectName || "";
         document.getElementById("fProjectNo").value = row.projectNo || "";
         document.getElementById("fSource").value = row.source;
@@ -776,7 +765,6 @@
         row.uscc = document.getElementById("fUscc").value.trim();
         const ns = document.getElementById("fNeedSummary");
         row.needSummary = (ns ? String(ns.value || "") : "").trim().slice(0, 240);
-        row.priority = document.getElementById("fPriority").value;
         row.projectName = document.getElementById("fProjectName").value.trim();
         row.projectNo = document.getElementById("fProjectNo").value.trim();
         row.source = document.getElementById("fSource").value;
