@@ -1,0 +1,194 @@
+/* Minimal design-tokens + utilities (aligned to design-system-cn) */
+:root{
+  --primary:#FF8A00;
+  --bg:#F5F7FA;
+  --surface:#FFFFFF;
+  --text:#1D2129;
+  --muted:#86909C;
+  --border:#C9CDD4;
+  --success:#00B42A;
+  --warning:#FF7D00;
+  --danger:#F53F3F;
+}
+
+html,body{height:100%;}
+body{background:var(--bg); color:var(--text);}
+
+/* Better desktop feel at 1366x768+ */
+.app-shell{min-width:1280px;}
+
+/* Sidebar selected state: orange bar + subtle background */
+.nav-item[aria-current="page"]{
+  background: rgba(255,138,0,.10);
+  color: var(--text);
+  position: relative;
+}
+.nav-item[aria-current="page"]::before{
+  content:"";
+  position:absolute;
+  left:0; top:8px; bottom:8px;
+  width:3px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* Sidebar second-level items (系统管理) */
+.nav-subitem{
+  position: relative;
+}
+.nav-subitem[aria-current="page"]{
+  background: rgba(255,138,0,.10);
+  color: var(--text);
+}
+.nav-subitem[aria-current="page"]::before{
+  content:"";
+  position:absolute;
+  left:0; top:6px; bottom:6px;
+  width:3px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* Chips */
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:.375rem;
+  padding:.125rem .5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(201,205,212,.7);
+  background: rgba(245,247,250,.9);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.chip--primary{border-color: rgba(255,138,0,.35); background: rgba(255,138,0,.10); color: #7a3f00;}
+.chip--success{border-color: rgba(0,180,42,.25); background: rgba(0,180,42,.10); color: #067a2a;}
+.chip--warning{border-color: rgba(255,125,0,.25); background: rgba(255,125,0,.10); color: #8a3b00;}
+.chip--danger{border-color: rgba(245,63,63,.20); background: rgba(245,63,63,.10); color: #8a1010;}
+
+/* Modal/drawer base */
+.overlay{
+  position:fixed; inset:0;
+  background: rgba(29,33,41,.45);
+  display:none;
+}
+.overlay[data-open="true"]{display:block;}
+
+.drawer{
+  position:fixed;
+  top:0; right:0; height:100%;
+  width: 520px;
+  max-width: 92vw;
+  background: var(--surface);
+  border-left: 1px solid rgba(201,205,212,.7);
+  transform: translateX(100%);
+  transition: transform .18s ease;
+}
+.drawer[data-open="true"]{transform: translateX(0);}
+
+.modal{
+  position:fixed;
+  left:50%; top:10%;
+  transform: translateX(-50%);
+  width: 720px;
+  max-width: calc(100vw - 48px);
+  background: var(--surface);
+  border: 1px solid rgba(201,205,212,.7);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(29,33,41,.18);
+  display:none;
+}
+.modal[data-open="true"]{display:block;}
+
+/* Table nicer */
+table{border-collapse:separate; border-spacing:0;}
+.table th{color:var(--muted); font-weight:600; font-size:12px; text-transform:none;}
+.table td{font-size:14px;}
+
+/* ===== 侧边栏宽度与折叠（图标模式） ===== */
+[data-sidebar]{
+  width: 200px;
+  transition: width 0.15s ease;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+[data-sidebar][data-collapsed="true"]{
+  width: 56px !important;
+}
+[data-sidebar][data-collapsed="true"] .sidebar-brand{
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+  gap: 0;
+}
+[data-sidebar][data-collapsed="true"] nav.sidebar-nav{
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Sidebar: only menu area scrolls */
+nav.sidebar-nav{
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+[data-sidebar][data-collapsed="true"] [data-nav-label]{
+  display: none !important;
+}
+[data-sidebar][data-collapsed="true"] .nav-item,
+[data-sidebar][data-collapsed="true"] .nav-subitem{
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+  gap: 0;
+}
+[data-sidebar][data-collapsed="true"] .nav-item i,
+[data-sidebar][data-collapsed="true"] .nav-subitem i{
+  margin: 0;
+}
+/* 分组标题行：折叠时仅保留中间图标，隐藏文字与收起按钮占宽 */
+[data-sidebar][data-collapsed="true"] [data-nav-group] > div.mt-2{
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+}
+/* 面包屑 */
+.app-breadcrumb{
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+}
+.app-breadcrumb a{
+  color: var(--muted);
+  text-decoration: none;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-breadcrumb a:hover{
+  color: var(--primary);
+}
+.app-breadcrumb span.app-breadcrumb-current{
+  color: var(--text);
+  font-weight: 600;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-breadcrumb .app-breadcrumb-sep{
+  color: var(--muted);
+  user-select: none;
+}
+

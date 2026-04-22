@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能触达 · 发送记录</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">发送记录</div>
+              <div class="text-[12px] text-muted">发送状态/打开/点击/回复回流 · 用于意向评分与升级转人工</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./overview.html">
+              <i class="fa-solid fa-arrow-left text-muted mr-2"></i>返回触达总览
+            </a>
+            <a class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex items-center" href="../sales/workbench.html">
+              <i class="fa-solid fa-list-check mr-2"></i>查看转人工待办
+            </a>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">查询与筛选</div>
+                <div class="text-[12px] text-muted mt-1">按客户/渠道/状态/时间筛选；异常（空号/退订/限频）自动标记并回流合规</div>
+              </div>
+              <a class="text-primary font-semibold" href="../compliance/overview.html">查看合规拦截</a>
+            </div>
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-5">
+                <div class="text-[12px] text-muted mb-1">客户</div>
+                <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="搜索客户名称/ID" />
+              </div>
+              <div class="col-span-2">
+                <div class="text-[12px] text-muted mb-1">渠道</div>
+                <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+                  <option>全部</option><option>邮件</option><option>短信</option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <div class="text-[12px] text-muted mb-1">状态</div>
+                <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+                  <option>全部</option><option>成功</option><option>失败</option><option>拦截</option>
+                </select>
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">操作</div>
+                <div class="flex gap-2">
+                  <button class="flex-1 h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                  <button class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">记录列表（示例）</div>
+                <div class="text-[12px] text-muted mt-1">打开/点击/回复将影响“触达有效性”和“意向评分”</div>
+              </div>
+              <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold">
+                <i class="fa-solid fa-download text-muted mr-2"></i>导出（脱敏）
+              </button>
+            </div>
+            <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">客户</th>
+                    <th class="text-left px-3 py-2">渠道/模板</th>
+                    <th class="text-left px-3 py-2">状态</th>
+                    <th class="text-left px-3 py-2">行为</th>
+                    <th class="text-left px-3 py-2">意向分</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-surface">
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">苏州XX半导体设备有限公司</div>
+                      <div class="text-[12px] text-muted mt-1">发送：2026-04-13 10:05</div>
+                    </td>
+                    <td class="px-3 py-3">
+                      <span class="chip"><i class="fa-regular fa-envelope"></i>邮件</span>
+                      <span class="chip ml-2"><i class="fa-solid fa-pen"></i>A-定制化方案</span>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>成功</span></td>
+                    <td class="px-3 py-3">
+                      <span class="chip"><i class="fa-regular fa-eye"></i>打开</span>
+                      <span class="chip ml-2"><i class="fa-solid fa-link"></i>点击 2</span>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip chip--warning"><i class="fa-solid fa-bolt"></i>86</span></td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="../sales/workbench.html">转人工待办</a>
+                      <a class="text-primary font-semibold ml-3" href="../crm/customer-360.html">360°</a>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">某某客户（已退订）</div>
+                      <div class="text-[12px] text-muted mt-1">发送：2026-04-10 09:30</div>
+                    </td>
+                    <td class="px-3 py-3">
+                      <span class="chip"><i class="fa-regular fa-message"></i>短信</span>
+                      <span class="chip ml-2"><i class="fa-solid fa-pen"></i>C-产品手册</span>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip chip--danger"><i class="fa-solid fa-ban"></i>拦截</span></td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-shield-halved"></i>退订</span></td>
+                    <td class="px-3 py-3">—</td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="../compliance/overview.html">查看合规</a>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">某某客户（空号）</div>
+                      <div class="text-[12px] text-muted mt-1">发送：2026-04-12 15:20</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-regular fa-message"></i>短信</span></td>
+                    <td class="px-3 py-3"><span class="chip chip--danger"><i class="fa-solid fa-circle-xmark"></i>失败</span></td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-triangle-exclamation"></i>空号</span></td>
+                    <td class="px-3 py-3">—</td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="../crm/customer-360.html">去补全</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>
+

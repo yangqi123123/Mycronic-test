@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 销售工作台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+      .row-overdue{background:rgba(255,247,237,.95);}
+      .row-severe{background:rgba(254,242,242,.98);}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 1 顶部四卡 -->
+          <section class="grid grid-cols-12 gap-3">
+            <div class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[14px] font-semibold">客户等级统计</div>
+              <div class="text-[12px] text-muted mt-1">A级 / B级 / C级 客户数量</div>
+              <div class="mt-3 space-y-2 text-[14px]">
+                <div class="flex justify-between"><span class="text-muted">A级</span><span id="statA" class="font-semibold">0</span></div>
+                <div class="flex justify-between"><span class="text-muted">B级</span><span id="statB" class="font-semibold">0</span></div>
+                <div class="flex justify-between"><span class="text-muted">C级</span><span id="statC" class="font-semibold">0</span></div>
+              </div>
+            </div>
+            <div class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[14px] font-semibold">优先级统计</div>
+              <div class="text-[12px] text-muted mt-1">非常紧急 / 紧急 / 中</div>
+              <div class="mt-3 space-y-2 text-[14px]">
+                <div class="flex justify-between"><span class="text-muted">非常紧急</span><span id="statP1" class="font-semibold">0</span></div>
+                <div class="flex justify-between"><span class="text-muted">紧急</span><span id="statP2" class="font-semibold">0</span></div>
+                <div class="flex justify-between"><span class="text-muted">中</span><span id="statP3" class="font-semibold">0</span></div>
+              </div>
+            </div>
+            <div class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[14px] font-semibold">逾期未跟进</div>
+              <div class="text-[12px] text-muted mt-1">当前待办范围内已/严重逾期</div>
+              <div id="statOverdue" class="text-[28px] font-bold text-[#F53F3F] mt-2">0</div>
+              <div class="text-[12px] text-muted mt-2">每12小时提醒，逾期2天升级</div>
+            </div>
+            <div class="col-span-12 sm:col-span-6 lg:col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[14px] font-semibold">成单量（均值）</div>
+              <div class="text-[12px] text-muted mt-1">线索 → 合同</div>
+              <div id="statDeals" class="text-[28px] font-bold text-primary mt-2">41</div>
+            </div>
+          </section>
+
+          <!-- 2 搜索筛选 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnSearch" type="button" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" type="button" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">客户名称</div>
+                <input id="qName" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="模糊匹配" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">负责人</div>
+                <input id="qOwner" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="负责人姓名" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">客户等级</div>
+                <select id="qGrade" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                </select>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">状态</div>
+                <select id="qStatus" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>待跟进</option>
+                  <option>跟进中</option>
+                  <option>商机</option>
+                  <option>报价</option>
+                  <option>合同</option>
+                  <option>交付</option>
+                  <option>放弃</option>
+                </select>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">优先级</div>
+                <select id="qPriority" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>非常紧急</option>
+                  <option>紧急</option>
+                  <option>中</option>
+                </select>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">日期范围（按下次跟进时间）</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="qStart" type="datetime-local" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                  <input id="qEnd" type="datetime-local" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3 今日待办 + 4 分页 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div class="text-[16px] font-semibold">今日待办</div>
+                <div class="text-[12px] text-muted mt-1">含「今日及以前需跟进」项；逾期标红/严重逾期深红底</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold bg-primary text-white border-[rgba(255,138,0,.35)]" data-todo-tab="mine" aria-selected="true">我负责的</button>
+                <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold bg-surface" data-todo-tab="subs" aria-selected="false">我下属负责的</button>
+                <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold bg-surface" data-todo-tab="toAssign" aria-selected="false">待我分配</button>
+              </div>
+            </div>
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1720px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">联系方式</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">负责人</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户等级</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">优先级</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">省市区</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户来源</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">行业类型</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户标签</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">当前状态</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">下次跟进时间</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">是否逾期</th>
+                    <th class="text-right px-3 py-2 whitespace-nowrap min-w-[320px]">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>共 <span id="totalCount" class="text-text font-semibold">0</span> 条（每页 10 条）</div>
+              <div class="flex items-center gap-1">
+                <button id="prevPage" type="button" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface">上一页</button>
+                <span id="pageInfo" class="px-2">1 / 1</span>
+                <button id="nextPage" type="button" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface">下一页</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 放弃 -->
+    <div class="overlay" data-overlay="m-abandon" data-open="false"></div>
+    <div class="modal" data-modal="m-abandon" data-open="false" style="max-width: 480px; width: min(480px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">放弃</div>
+        <button type="button" class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="m-abandon"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="text-[13px] text-muted bg-[rgba(245,247,250,.95)] border border-[rgba(201,205,212,.6)] rounded-lg px-3 py-2">
+          放弃后该客户会重新进入“客户档案中心”
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">放弃原因 <span class="text-[#F53F3F]">*</span></div>
+          <textarea id="fAbandon" rows="3" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px]"></textarea>
+          <div id="eAbandon" class="hidden text-[12px] text-[#F53F3F] mt-1">必填</div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="m-abandon">取消</button>
+          <button id="btnSaveAbandon" type="button" class="h-9 px-4 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">确认放弃</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        function qp(name) {
+          try {
+            return new URLSearchParams(location.search).get(name);
+          } catch {
+            return null;
+          }
+        }
+        function toast(msg) {
+          const t = document.createElement("div");
+          t.className =
+            "toast bg-surface border border-[rgba(201,205,212,.7)] rounded-xl shadow-card px-4 py-3 text-[14px]";
+          t.textContent = msg;
+          document.getElementById("toasts").appendChild(t);
+          setTimeout(() => t.remove(), 3200);
+        }
+        const cid = qp("customerId");
+        if (cid) {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => toast("工作台已接收客户参数 customerId=" + cid + "（原型占位）"));
+          } else toast("工作台已接收客户参数 customerId=" + cid + "（原型占位）");
+        }
+      })();
+    </script>
+    <script>
+      (function () {
+        const STATUSES = ["待跟进", "跟进中", "商机", "报价", "合同", "交付", "放弃"];
+        const currentUser = { name: "李雷", subordinateNames: ["张敏", "王芳"] };
+        let activeTodoTab = "mine"; // mine / subs / toAssign
+
+        function ensureReady(cb) {
+          if (window.CustomerStore && window.AssignPersonModal) return cb();
+          const on = () => {
+            if (window.CustomerStore && window.AssignPersonModal) {
+              window.removeEventListener("assign-person:ready", on);
+              window.removeEventListener("customer-store:ready", on);
+              cb();
+            }
+          };
+          window.addEventListener("assign-person:ready", on);
+          window.addEventListener("customer-store:ready", on);
+          setTimeout(on, 0);
+        }
+
+        function store() {
+          return window.CustomerStore;
+        }
+
+        /** @type {any[]} */
+        let rows = [];
+
+        let page = 1;
+        const pageSize = 10;
+        let modalTargetId = null;
+
+        function parseDt(s) {
+          return new Date(String(s).replace(" ", "T"));
+        }
+        function endOfToday() {
+          const t = new Date();
+          t.setHours(23, 59, 59, 999);
+          return t;
+        }
+        function inTodayTodo(r) {
+          if (r.statusFlow === "放弃") return false;
+          const n = parseDt(r.nextFollowAt || "");
+          return n <= endOfToday();
+        }
+        function overdueLevel(r) {
+          const now = new Date();
+          const n = parseDt(r.nextFollowAt);
+          if (now <= n) return "none";
+          const days = (now - n) / (86400000);
+          if (days > 2) return "severe";
+          return "overdue";
+        }
+
+        function toast(title, desc) {
+          const wrap = document.getElementById("toasts");
+          const el = document.createElement("div");
+          el.className = "toast bg-surface rounded-xl border border-[rgba(0,180,42,.25)] shadow-card p-3 text-[14px]";
+          el.innerHTML = `<div class="font-semibold">${title}</div>${desc ? `<div class="text-[12px] text-muted mt-1">${desc}</div>` : ""}`;
+          wrap.appendChild(el);
+          setTimeout(() => el.remove(), 2400);
+        }
+
+        function openModal(id) {
+          const ov = document.querySelector(`[data-overlay="${id}"]`);
+          const m = document.querySelector(`[data-modal="${id}"]`);
+          if (ov) ov.dataset.open = "true";
+          if (m) m.dataset.open = "true";
+        }
+        function closeModal(id) {
+          const ov = document.querySelector(`[data-overlay="${id}"]`);
+          const m = document.querySelector(`[data-modal="${id}"]`);
+          if (ov) ov.dataset.open = "false";
+          if (m) m.dataset.open = "false";
+        }
+
+        function passesTodoTab(r) {
+          const Store = store();
+          const ownerName = r.finalOwnerId ? Store.getEmployeeName(r.finalOwnerId) : "";
+          // 我负责的：当前用户为区域负责人，展示本区域已指派（有最终跟进人）的客户
+          if (activeTodoTab === "mine") return r.regionOwner === currentUser.name && !!r.finalOwnerId;
+          if (activeTodoTab === "subs") return !!ownerName && currentUser.subordinateNames.includes(ownerName);
+          return r.regionOwner === currentUser.name && !r.finalOwnerId;
+        }
+        function baseFiltered() {
+          return rows.filter(inTodayTodo).filter(passesTodoTab);
+        }
+        function searchFiltered(list) {
+          const n = (document.getElementById("qName").value || "").trim();
+          const o = (document.getElementById("qOwner").value || "").trim();
+          const g = document.getElementById("qGrade").value;
+          const st = document.getElementById("qStatus").value;
+          const pr = document.getElementById("qPriority").value;
+          const qs = document.getElementById("qStart").value;
+          const qe = document.getElementById("qEnd").value;
+          return list.filter((r) => {
+            if (n && !r.name.includes(n)) return false;
+            const Store = store();
+            const ownerName = r.finalOwnerId ? Store.getEmployeeName(r.finalOwnerId) : "";
+            if (o && !ownerName.includes(o)) return false;
+            if (g && r.grade !== g) return false;
+            if (st && r.statusFlow !== st) return false;
+            if (pr && r.priority !== pr) return false;
+            const t = parseDt(r.nextFollowAt);
+            if (qs && t < new Date(qs)) return false;
+            if (qe && t > new Date(qe)) return false;
+            return true;
+          });
+        }
+
+        function updateStats(list) {
+          const a = list.filter((r) => r.grade === "A").length;
+          const b = list.filter((r) => r.grade === "B").length;
+          const c = list.filter((r) => r.grade === "C").length;
+          document.getElementById("statA").textContent = String(a);
+          document.getElementById("statB").textContent = String(b);
+          document.getElementById("statC").textContent = String(c);
+          document.getElementById("statP1").textContent = String(list.filter((r) => r.priority === "非常紧急").length);
+          document.getElementById("statP2").textContent = String(list.filter((r) => r.priority === "紧急").length);
+          document.getElementById("statP3").textContent = String(list.filter((r) => r.priority === "中").length);
+          document.getElementById("statOverdue").textContent = String(list.filter((r) => overdueLevel(r) !== "none").length);
+        }
+
+        function escapeHtml(s) {
+          return String(s ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function formatCustTagsCell(r) {
+          const tags = Array.isArray(r.tags) ? r.tags : [];
+          if (!tags.length) return '<span class="text-muted text-[12px]">—</span>';
+          return `<div class="flex flex-wrap gap-1 max-w-[280px]">${tags
+            .map((t) => {
+              const safe = escapeHtml(t);
+              return `<span class="chip text-[11px] max-w-[120px] truncate" title="${safe}">${safe}</span>`;
+            })
+            .join("")}</div>`;
+        }
+
+        function setStatus(id, st) {
+          const Store = store();
+          if (!Store) return;
+          Store.updateCustomer(id, { statusFlow: st });
+        }
+
+        function btn(html, onClick) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "h-8 px-2 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold mr-1 mb-1";
+          b.innerHTML = html;
+          b.addEventListener("click", onClick);
+          return b;
+        }
+        function link360(id, name) {
+          const a = document.createElement("a");
+          a.href = `../crm/customer-360.html?id=${encodeURIComponent(id)}`;
+          a.className = "text-primary font-semibold text-[12px] mr-2";
+          a.textContent = "360档案";
+          a.addEventListener("click", () => {
+            try {
+              localStorage.setItem("customerArchiveData", JSON.stringify({ id, name }));
+            } catch (_) {}
+          });
+          return a;
+        }
+
+        function renderActions(wrap, r) {
+          wrap.appendChild(link360(r.id, r.name));
+
+          // 我下属负责的：仅显示 360 档案
+          if (activeTodoTab === "subs") return;
+
+          // 待我分配：仅 360 + 分配
+          if (activeTodoTab === "toAssign") {
+            wrap.appendChild(
+              btn("分配", () => {
+                if (!window.AssignPersonModal) return;
+                window.AssignPersonModal.open(r.id, {
+                  onDone: () => {
+                    render();
+                    toast("分配成功", "客户已从「待我分配」移除并同步到目标员工待办");
+                  },
+                });
+              }),
+            );
+            return;
+          }
+
+          const st = r.statusFlow;
+          if (st === "放弃") return;
+
+          const openFollowModal = () => {
+            if (!window.WorkbenchModals) return;
+            modalTargetId = r.id;
+            window.WorkbenchModals.openFollow({
+              customerId: r.id,
+              customerName: r.name,
+              onDone: () => {
+                const Store = store();
+                if (!Store) return;
+                // 跟进确认：待跟进 -> 跟进中；其他状态保持
+                Store.updateCustomer(r.id, { statusFlow: r.statusFlow === "待跟进" ? "跟进中" : r.statusFlow });
+                render();
+              },
+            });
+          };
+          const openOppModal = () => {
+            if (!window.WorkbenchModals) return;
+            modalTargetId = r.id;
+            window.WorkbenchModals.openOpp({
+              customerId: r.id,
+              customerName: r.name,
+              onDone: () => {
+                setStatus(r.id, "商机");
+                render();
+              },
+            });
+          };
+          const openQuoteModal = () => {
+            if (!window.WorkbenchModals) return;
+            modalTargetId = r.id;
+            window.WorkbenchModals.openQuote({
+              customerId: r.id,
+              customerName: r.name,
+              onDone: () => {
+                setStatus(r.id, "报价");
+                render();
+              },
+            });
+          };
+          const openContractModal = () => {
+            if (!window.WorkbenchModals) return;
+            modalTargetId = r.id;
+            window.WorkbenchModals.openContract({
+              customerId: r.id,
+              customerName: r.name,
+              onDone: () => {
+                setStatus(r.id, "合同");
+                render();
+              },
+            });
+          };
+          const openDeliveryModal = () => {
+            if (!window.WorkbenchModals) return;
+            modalTargetId = r.id;
+            window.WorkbenchModals.openDelivery({
+              customerId: r.id,
+              customerName: r.name,
+              onDone: () => {
+                setStatus(r.id, "交付");
+                render();
+              },
+            });
+          };
+          const openAbandonModal = () => {
+            modalTargetId = r.id;
+            document.getElementById("fAbandon").value = "";
+            document.getElementById("eAbandon").classList.add("hidden");
+            openModal("m-abandon");
+          };
+
+          // ===== 固定按钮规则（严格对照需求） =====
+          if (st === "待跟进") {
+            wrap.appendChild(btn("立即跟进", openFollowModal));
+            wrap.appendChild(btn("放弃", openAbandonModal));
+          } else if (st === "跟进中") {
+            wrap.appendChild(btn("继续跟进", openFollowModal));
+            wrap.appendChild(btn("转商机", openOppModal));
+            wrap.appendChild(btn("报价", openQuoteModal));
+            wrap.appendChild(btn("合同", openContractModal));
+            wrap.appendChild(btn("放弃", openAbandonModal));
+          } else if (st === "商机") {
+            wrap.appendChild(btn("继续跟进", openFollowModal));
+            wrap.appendChild(btn("报价", openQuoteModal));
+            wrap.appendChild(btn("合同", openContractModal));
+            wrap.appendChild(btn("放弃", openAbandonModal));
+          } else if (st === "报价") {
+            wrap.appendChild(btn("继续跟进", openFollowModal));
+            wrap.appendChild(btn("合同", openContractModal));
+            wrap.appendChild(btn("放弃", openAbandonModal));
+          } else if (st === "合同") {
+            wrap.appendChild(btn("继续跟进", openFollowModal));
+            wrap.appendChild(btn("交付", openDeliveryModal));
+            wrap.appendChild(btn("放弃", openAbandonModal));
+          } else if (st === "交付") {
+            // 交付：仅 360 档案
+            return;
+          }
+        }
+
+        function render() {
+          const base = baseFiltered();
+          updateStats(base);
+          const filtered = searchFiltered(base);
+          const total = filtered.length;
+          const pages = Math.max(1, Math.ceil(total / pageSize));
+          page = Math.min(page, pages);
+          const slice = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+          document.getElementById("totalCount").textContent = String(total);
+          document.getElementById("pageInfo").textContent = `${page} / ${pages}`;
+          document.getElementById("prevPage").disabled = page <= 1;
+          document.getElementById("nextPage").disabled = page >= pages;
+
+          const tb = document.getElementById("tbody");
+          tb.innerHTML = "";
+          slice.forEach((r) => {
+            const od = overdueLevel(r);
+            const tr = document.createElement("tr");
+            tr.className = "border-t border-[rgba(201,205,212,.6)] " + (od === "severe" ? "row-severe" : od === "overdue" ? "row-overdue" : "");
+            const odCell =
+              od === "none"
+                ? `<span class="text-muted text-[12px]">—</span>`
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold text-white ${
+                    od === "severe" ? "bg-[#b91c1c]" : "bg-[#ea580c]"
+                  }">${od === "severe" ? "严重逾期" : "已逾期"}</span>`;
+            tr.innerHTML = `
+              <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(r.name)}</td>
+              <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.contactPhone || "—")}</td>
+              <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.finalOwnerId ? store().getEmployeeName(r.finalOwnerId) : "—")}</td>
+              <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.grade)}</td>
+              <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.priority)}</td>
+              <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(`${r.prov || "—"}/${r.city || "—"}/${r.dist || "—"}`)}</td>
+              <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.source || "—")}</td>
+              <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.industry || "—")}</td>
+              <td class="px-3 py-3 align-top">${formatCustTagsCell(r)}</td>
+              <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.statusFlow)}</td>
+              <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.nextFollowAt)}</td>
+              <td class="px-3 py-3 whitespace-nowrap">${odCell}</td>
+              <td class="px-3 py-3 text-right align-top"><div class="flex flex-wrap justify-end" data-act="${r.id}"></div></td>
+            `;
+            tb.appendChild(tr);
+            const w = tr.querySelector("[data-act]");
+            renderActions(w, r);
+          });
+        }
+
+        document.getElementById("btnSearch").addEventListener("click", () => {
+          page = 1;
+          render();
+          toast("已查询", "列表已按条件筛选");
+        });
+        document.getElementById("btnReset").addEventListener("click", () => {
+          document.getElementById("qName").value = "";
+          document.getElementById("qOwner").value = "";
+          document.getElementById("qGrade").value = "";
+          document.getElementById("qStatus").value = "";
+          document.getElementById("qPriority").value = "";
+          document.getElementById("qStart").value = "";
+          document.getElementById("qEnd").value = "";
+          page = 1;
+          render();
+          toast("已重置", "筛选条件已清空");
+        });
+        document.getElementById("prevPage").addEventListener("click", () => {
+          page = Math.max(1, page - 1);
+          render();
+        });
+        document.getElementById("nextPage").addEventListener("click", () => {
+          page = page + 1;
+          render();
+        });
+
+        // 今日待办标签页：全部 / 我负责的 / 我下属负责的
+        document.querySelectorAll("[data-todo-tab]").forEach((b) => {
+          b.addEventListener("click", () => {
+            activeTodoTab = b.getAttribute("data-todo-tab") || "mine";
+            document.querySelectorAll("[data-todo-tab]").forEach((x) => {
+              const on = x.getAttribute("data-todo-tab") === activeTodoTab;
+              x.setAttribute("aria-selected", on ? "true" : "false");
+              x.classList.toggle("bg-primary", on);
+              x.classList.toggle("text-white", on);
+              x.classList.toggle("border-[rgba(255,138,0,.35)]", on);
+              x.classList.toggle("bg-surface", !on);
+            });
+            page = 1;
+            render();
+          });
+        });
+
+        document.getElementById("btnSaveAbandon").addEventListener("click", () => {
+          const t = document.getElementById("fAbandon").value.trim();
+          document.getElementById("eAbandon").classList.toggle("hidden", !!t);
+          if (!t || !modalTargetId) return;
+          setStatus(modalTargetId, "放弃");
+          closeModal("m-abandon");
+          modalTargetId = null;
+          toast("已放弃", "客户已标记为放弃");
+        });
+
+        function refreshFromStore() {
+          const Store = store();
+          if (!Store) return;
+          rows = Store.listCustomers();
+          render();
+        }
+
+        ensureReady(() => {
+          refreshFromStore();
+          // 同源多页面/多标签页同步
+          const Store = store();
+          Store.onChange(() => refreshFromStore());
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 交付</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .tab-btn[aria-current="page"]{background:rgba(255,138,0,.10); border-color: rgba(255,138,0,.55); color: var(--text);}
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 搜索区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+                <button class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="delivery-edit">
+                  <i class="fa-solid fa-plus text-muted mr-2"></i>新增交付
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">客户名称（模糊）</div>
+                <input id="qCustomer" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入客户名称" />
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">合同编号</div>
+                <input id="qContractNo" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入合同编号" />
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">交付时间（日期范围）</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="qDateStart" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                  <input id="qDateEnd" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 标签页 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex gap-2">
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="mine" aria-current="page">我负责的</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="subs">我下属的</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 列表 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">交付列表</div>
+              <div class="flex items-center gap-2">
+                <button id="btnSelectAllPage" class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">全选</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-selected">导出选中</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-all">导出全部</button>
+              </div>
+            </div>
+
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1650px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2 w-10"><input id="chkAll" type="checkbox" class="accent-primary" /></th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">合同编号</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">合同名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">交付时间</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">成交金额</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">交付状态</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">附件</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建人</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建时间</th>
+                    <th class="text-right px-3 py-2 whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>共 <span id="totalCount" class="text-text font-semibold">0</span> 条</div>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="pageSize" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button id="prevPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>
+                  <button id="pageNoBtn" type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button id="nextPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 新增/编辑交付 -->
+    <div class="overlay" data-overlay="delivery-edit" data-open="false"></div>
+    <div class="modal" data-modal="delivery-edit" data-open="false" style="max-width: 980px; width: min(980px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold" id="deliveryModalTitle">新增交付</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="delivery-edit"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-4">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fCustomerId" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div id="errCustomer" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择客户</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">合同 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fContractId" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div id="errContract" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择合同</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">合同名称（只读）</div>
+            <input id="fContractName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-[rgba(245,247,250,.9)]" readonly />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">交付时间 <span class="text-[#F53F3F]">*</span></div>
+            <input id="fDeliveredAt" type="datetime-local" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+            <div id="errDeliveredAt" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择交付时间</div>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">成交金额 <span class="text-[#F53F3F]">*</span></div>
+            <input id="fAmount" inputmode="decimal" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="例如：120000.00" />
+            <div id="errAmount" class="hidden text-[12px] text-[#F53F3F] mt-1">请输入合法金额（支持两位小数）</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">交付状态</div>
+            <select id="fAcceptance" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="待交付">待交付</option>
+              <option value="交付中">交付中</option>
+              <option value="已交付">已交付</option>
+            </select>
+          </div>
+
+          <div class="col-span-12">
+            <div class="text-[12px] text-muted mb-1">附件</div>
+            <input id="fFiles" type="file" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px] pt-2" />
+            <div class="text-[12px] text-muted mt-1">最大 10MB，支持 .pdf/.xls/.xlsx/.doc/.docx/.png/.jpg</div>
+            <div id="errFiles" class="hidden text-[12px] text-[#F53F3F] mt-1">附件格式或大小不符合要求</div>
+          </div>
+          <div class="col-span-12">
+            <div class="text-[12px] text-muted mb-1">备注</div>
+            <textarea id="fRemark" rows="3" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="可选"></textarea>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="delivery-edit">取消</button>
+          <button id="btnSave" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除二次确认（单条） -->
+    <div class="overlay" data-overlay="del" data-open="false"></div>
+    <div class="modal" data-modal="del" data-open="false" style="max-width: 520px; width: min(520px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">确认删除</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="del"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">确定要删除该条交付记录吗？删除后数据无法恢复。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="del">取消</button>
+          <button id="btnDoDelete" class="h-9 px-4 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出 -->
+    <div class="overlay" data-overlay="export-selected" data-open="false"></div>
+    <div class="modal" data-modal="export-selected" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出选中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-selected"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出勾选的交付数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-selected">取消</button>
+          <button id="btnExportSelected" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="export-all" data-open="false"></div>
+    <div class="modal" data-modal="export-all" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出全部</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-all"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出当前筛选条件下的所有交付数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-all">取消</button>
+          <button id="btnExportAll" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出进度 -->
+    <div class="overlay" data-overlay="exporting" data-open="false"></div>
+    <div class="modal" data-modal="exporting" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="exporting"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px] text-muted">
+          <i class="fa-solid fa-spinner fa-spin mr-2"></i>正在生成导出文件，请稍候…
+        </div>
+        <div class="mt-3 hidden" id="exportDoneBox">
+          <a id="exportDownloadLink" class="text-primary font-semibold" href="#" download>点击下载导出文件</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      // ===== 权限控制（原型示例）=====
+      const currentUser = {
+        id: "E-002",
+        name: "李雷",
+        subordinateIds: ["E-003"],
+        permissions: ["customer:manage"],
+      };
+      const hasPerm = (p) => currentUser.permissions.includes(p);
+      document.querySelectorAll("[data-perm]").forEach((el) => {
+        const p = el.getAttribute("data-perm");
+        if (!hasPerm(p)) el.classList.add("hidden");
+      });
+
+      // ===== 工具 =====
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      function openModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "true";
+        if (m) m.dataset.open = "true";
+      }
+      function closeModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "false";
+        if (m) m.dataset.open = "false";
+      }
+      function toast(type, title, desc) {
+        const color = type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+        const border = type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+        const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-triangle-exclamation";
+        const wrap = document.getElementById("toasts");
+        const el = document.createElement("div");
+        el.className = "toast bg-surface rounded-xl border shadow-card";
+        el.style.borderColor = border;
+        el.innerHTML = `
+          <div class="p-3 flex gap-3" style="background:${color}">
+            <i class="fa-solid ${icon} text-muted mt-0.5"></i>
+            <div class="min-w-0">
+              <div class="text-[14px] font-semibold">${escapeHtml(title)}</div>
+              ${desc ? `<div class="text-[12px] text-muted mt-0.5">${escapeHtml(desc)}</div>` : ""}
+            </div>
+            <button class="ml-auto w-8 h-8 rounded-lg hover:bg-[rgba(245,247,250,.9)]" title="关闭"><i class="fa-solid fa-xmark text-muted"></i></button>
+          </div>
+        `;
+        el.querySelector("button").addEventListener("click", () => el.remove());
+        wrap.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
+      }
+      function setFieldError(inputEl, errEl, on) {
+        if (on) {
+          inputEl.classList.add("border-[#F53F3F]");
+          errEl.classList.remove("hidden");
+        } else {
+          inputEl.classList.remove("border-[#F53F3F]");
+          errEl.classList.add("hidden");
+        }
+      }
+
+      function money(n) {
+        const v = Number(n || 0);
+        return v.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function nowLocalValue() {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+
+      // ===== mock data =====
+      const creators = [
+        { id: "E-001", name: "张敏" },
+        { id: "E-002", name: "李雷" },
+        { id: "E-003", name: "王芳" },
+      ];
+      /** @type {{id:string,name:string,ownerId:string}[]} */
+      const customers = [
+        { id: "C-0001", name: "苏州XX半导体设备有限公司", ownerId: "E-002" },
+        { id: "C-0004", name: "上海某某PCB有限公司", ownerId: "E-001" },
+        { id: "C-0005", name: "北京某某研究院", ownerId: "E-003" },
+      ];
+      /** @type {{id:string,customerId:string,no:string,name:string,amount:number}[]} */
+      const contracts = [
+        { id: "CT-1", customerId: "C-0001", no: "HT-2026-0001", name: "产线升级设备采购合同", amount: 120000 },
+        { id: "CT-2", customerId: "C-0004", no: "HT-2026-0002", name: "设备维保服务合同", amount: 68000.5 },
+        { id: "CT-3", customerId: "C-0005", no: "HT-2026-0003", name: "科研设备采购与安装合同", amount: 300000 },
+      ];
+      const DELIVERY_STATUS = ["待交付", "交付中", "已交付"];
+
+      const getCustomer = (id) => customers.find((c) => c.id === id) || null;
+      const getContract = (id) => contracts.find((c) => c.id === id) || null;
+      const getCreatorName = (id) => creators.find((e) => e.id === id)?.name || "—";
+
+      /** @type {{id:string,customerId:string,contractId:string,deliveredAt:string,amount:number,status:string,files:{name:string,size:number}[],remark:string,createdById:string,createdAt:string}[]} */
+      let deliveries = [
+        {
+          id: "D-1",
+          customerId: "C-0001",
+          contractId: "CT-1",
+          deliveredAt: "2026-04-13 10:30",
+          amount: 120000,
+          status: "交付中",
+          files: [{ name: "交付清单.pdf", size: 420 * 1024 }, { name: "验收计划.xlsx", size: 260 * 1024 }],
+          remark: "现场安装完成，等待客户验收。",
+          createdById: "E-002",
+          createdAt: "2026-04-13 11:00",
+        },
+        {
+          id: "D-2",
+          customerId: "C-0004",
+          contractId: "CT-2",
+          deliveredAt: "2026-04-11 15:20",
+          amount: 68000.5,
+          status: "已交付",
+          files: [{ name: "服务报告.docx", size: 180 * 1024 }],
+          remark: "",
+          createdById: "E-001",
+          createdAt: "2026-04-11 16:05",
+        },
+        {
+          id: "D-3",
+          customerId: "C-0005",
+          contractId: "CT-3",
+          deliveredAt: "2026-04-12 09:10",
+          amount: 300000,
+          status: "待交付",
+          files: [],
+          remark: "待补充附件。",
+          createdById: "E-003",
+          createdAt: "2026-04-12 10:00",
+        },
+      ];
+
+      // ===== form selects =====
+      const fCustomerId = document.getElementById("fCustomerId");
+      const fContractId = document.getElementById("fContractId");
+      const fContractName = document.getElementById("fContractName");
+
+      function fillCustomerOptions() {
+        fCustomerId.innerHTML = "";
+        const ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = "请选择客户";
+        fCustomerId.appendChild(ph);
+        customers.forEach((c) => {
+          const o = document.createElement("option");
+          o.value = c.id;
+          o.textContent = c.name;
+          fCustomerId.appendChild(o);
+        });
+      }
+      function fillContractOptions(customerId) {
+        fContractId.innerHTML = "";
+        const ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = "请选择合同";
+        fContractId.appendChild(ph);
+        contracts.filter((c) => c.customerId === customerId).forEach((c) => {
+          const o = document.createElement("option");
+          o.value = c.id;
+          o.textContent = `${c.no}｜${c.name}`;
+          fContractId.appendChild(o);
+        });
+        fContractName.value = "";
+      }
+      fillCustomerOptions();
+      fillContractOptions("");
+      fCustomerId.addEventListener("change", () => fillContractOptions(fCustomerId.value));
+      fContractId.addEventListener("change", () => {
+        const c = getContract(fContractId.value);
+        fContractName.value = c?.name || "";
+      });
+
+      // ===== tabs & query =====
+      let activeTab = "mine"; // mine/subs
+      function passesTab(row) {
+        const cust = getCustomer(row.customerId);
+        const ownerId = cust?.ownerId || "";
+        if (activeTab === "mine") return ownerId === currentUser.id;
+        return currentUser.subordinateIds.includes(ownerId);
+      }
+      function passesQuery(row) {
+        const qCust = (document.getElementById("qCustomer").value || "").trim();
+        const qNo = (document.getElementById("qContractNo").value || "").trim();
+        const ds = document.getElementById("qDateStart").value || "";
+        const de = document.getElementById("qDateEnd").value || "";
+        const cust = getCustomer(row.customerId);
+        const ct = getContract(row.contractId);
+        if (qCust && !(cust?.name || "").includes(qCust)) return false;
+        if (qNo && !(ct?.no || "").includes(qNo)) return false;
+        if (ds && row.deliveredAt.slice(0, 10) < ds) return false;
+        if (de && row.deliveredAt.slice(0, 10) > de) return false;
+        return true;
+      }
+
+      // ===== pagination & selection =====
+      let pageNo = 1;
+      const tbody = document.getElementById("tbody");
+      const totalCount = document.getElementById("totalCount");
+      const pageSize = document.getElementById("pageSize");
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      const pageNoBtn = document.getElementById("pageNoBtn");
+      const chkAll = document.getElementById("chkAll");
+
+      function paged(rows) {
+        const size = parseInt(pageSize.value, 10);
+        const total = rows.length;
+        const pages = Math.max(1, Math.ceil(total / size));
+        pageNo = Math.min(pageNo, pages);
+        const start = (pageNo - 1) * size;
+        return { total, pages, slice: rows.slice(start, start + size) };
+      }
+      function getSelectedIds() {
+        return Array.from(document.querySelectorAll("[data-row-chk]:checked")).map((c) => c.getAttribute("data-row-chk"));
+      }
+      function guardSelection(tip) {
+        const ids = getSelectedIds();
+        if (!ids.length) {
+          toast("error", "未选择记录", tip || "请先勾选至少一条交付记录");
+          return null;
+        }
+        return ids;
+      }
+
+      // ===== render =====
+      function render() {
+        const filtered = deliveries.filter(passesTab).filter(passesQuery);
+        const { total, pages, slice } = paged(filtered);
+        totalCount.textContent = String(total);
+        pageNoBtn.textContent = String(pageNo);
+        prevPage.disabled = pageNo <= 1;
+        nextPage.disabled = pageNo >= pages;
+        chkAll.checked = false;
+
+        tbody.innerHTML = slice
+          .map((r) => {
+            const cust = getCustomer(r.customerId);
+            const ct = getContract(r.contractId);
+            const firstFile = r.files && r.files.length ? r.files[0] : null;
+            const fileLabel = firstFile
+              ? (() => {
+                  const name = firstFile.name || "附件";
+                  const ext = (name.includes(".") ? name.split(".").pop() : "").toUpperCase();
+                  const fmt = ext ? `（${ext}）` : "";
+                  return `<a href="javascript:void(0)" class="inline-flex items-center gap-2 text-primary font-semibold hover:underline" data-dl-name="${escapeHtml(
+                    name
+                  )}"><i class="fa-solid fa-paperclip text-muted"></i>${escapeHtml(name)}${escapeHtml(fmt)}</a>`;
+                })()
+              : `<span class="text-muted">—</span>`;
+            const viewBtn = `<a class="text-primary font-semibold" href="./delivery-detail.html?id=${encodeURIComponent(r.id)}">查看</a>`;
+            const canEditDel = activeTab === "mine";
+            const editBtn = canEditDel ? `<button class="text-primary font-semibold" data-edit="${r.id}">编辑</button>` : "";
+            const delBtn = canEditDel ? `<button class="text-[#F53F3F] font-semibold" data-del="${r.id}">删除</button>` : "";
+            const ops = `${viewBtn}${editBtn ? `\n                  ${editBtn}` : ""}${delBtn ? `\n                  ${delBtn}` : ""}`;
+            return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${r.id}" /></td>
+                <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(cust?.name || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(ct?.no || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(ct?.name || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.deliveredAt)}</td>
+                <td class="px-3 py-3 whitespace-nowrap font-semibold">¥ ${escapeHtml(money(r.amount))}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.status || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${fileLabel}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(getCreatorName(r.createdById))}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.createdAt)}</td>
+                <td class="px-3 py-3 text-right whitespace-nowrap space-x-3">${ops}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        // download links
+        document.querySelectorAll("[data-dl-name]").forEach((a) => {
+          a.addEventListener("click", () => {
+            const name = a.getAttribute("data-dl-name") || "附件.txt";
+            const blob = new Blob([`Prototype download: ${name}`], { type: "application/octet-stream" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = name;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+          });
+        });
+
+        bindRowActions();
+      }
+
+      // ===== modal: create/edit =====
+      const deliveryModalTitle = document.getElementById("deliveryModalTitle");
+      const fDeliveredAt = document.getElementById("fDeliveredAt");
+      const fAmount = document.getElementById("fAmount");
+      const fAcceptance = document.getElementById("fAcceptance");
+      const fFiles = document.getElementById("fFiles");
+      const fRemark = document.getElementById("fRemark");
+      const errCustomer = document.getElementById("errCustomer");
+      const errContract = document.getElementById("errContract");
+      const errDeliveredAt = document.getElementById("errDeliveredAt");
+      const errAmount = document.getElementById("errAmount");
+      const errFiles = document.getElementById("errFiles");
+      let editingId = null;
+
+      function resetForm() {
+        editingId = null;
+        deliveryModalTitle.textContent = "新增交付";
+        fCustomerId.value = "";
+        fillContractOptions("");
+        fContractId.value = "";
+        fContractName.value = "";
+        fDeliveredAt.value = nowLocalValue();
+        fAmount.value = "";
+        fAcceptance.value = "待交付";
+        fFiles.value = "";
+        fRemark.value = "";
+        setFieldError(fCustomerId, errCustomer, false);
+        setFieldError(fContractId, errContract, false);
+        setFieldError(fDeliveredAt, errDeliveredAt, false);
+        setFieldError(fAmount, errAmount, false);
+        errFiles.classList.add("hidden");
+      }
+
+      function openCreate() {
+        if (activeTab !== "mine") {
+          toast("error", "不可新增", "请切换到“我负责的”标签页新增交付");
+          return;
+        }
+        resetForm();
+        openModal("delivery-edit");
+      }
+
+      function openEdit(id) {
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可编辑交付");
+          return;
+        }
+        const row = deliveries.find((x) => x.id === id);
+        if (!row) return;
+        editingId = id;
+        deliveryModalTitle.textContent = "编辑交付";
+        fCustomerId.value = row.customerId;
+        fillContractOptions(row.customerId);
+        fContractId.value = row.contractId;
+        fContractName.value = getContract(row.contractId)?.name || "";
+        fDeliveredAt.value = (row.deliveredAt || "").replace(" ", "T").slice(0, 16);
+        fAmount.value = String(row.amount ?? "");
+        fAcceptance.value = row.status || "待交付";
+        fFiles.value = "";
+        fRemark.value = row.remark || "";
+        setFieldError(fCustomerId, errCustomer, false);
+        setFieldError(fContractId, errContract, false);
+        setFieldError(fDeliveredAt, errDeliveredAt, false);
+        setFieldError(fAmount, errAmount, false);
+        errFiles.classList.add("hidden");
+        openModal("delivery-edit");
+      }
+
+      // ===== delete =====
+      let deletingId = null;
+      function openDelete(id) {
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可删除交付");
+          return;
+        }
+        deletingId = id;
+        openModal("del");
+      }
+      function bindRowActions() {
+        document.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openEdit(b.getAttribute("data-edit"))));
+        document.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => openDelete(b.getAttribute("data-del"))));
+      }
+
+      // ===== files validation =====
+      const allowedExt = [".pdf", ".xls", ".xlsx", ".doc", ".docx", ".png", ".jpg", ".jpeg"];
+      const maxSize = 10 * 1024 * 1024;
+      function validateFiles(files) {
+        const f = files && files.length ? files[0] : null;
+        if (!f) return { ok: true };
+        const name = (f.name || "").toLowerCase();
+        const ext = allowedExt.find((e) => name.endsWith(e));
+        if (!ext) return { ok: false, msg: `不支持的文件格式：${f.name}` };
+        if (f.size > maxSize) return { ok: false, msg: `文件过大（最大 10MB）：${f.name}` };
+        return { ok: true };
+      }
+      fFiles.addEventListener("change", () => {
+        const v = validateFiles(fFiles.files);
+        if (!v.ok) {
+          errFiles.textContent = v.msg || "附件格式或大小不符合要求";
+          errFiles.classList.remove("hidden");
+        } else {
+          errFiles.classList.add("hidden");
+        }
+      });
+
+      // ===== events =====
+      document.getElementById("btnSearch").addEventListener("click", () => {
+        pageNo = 1;
+        toast("success", "已应用筛选", "列表已更新");
+        render();
+      });
+      document.getElementById("btnReset").addEventListener("click", () => {
+        document.getElementById("qCustomer").value = "";
+        document.getElementById("qContractNo").value = "";
+        document.getElementById("qDateStart").value = "";
+        document.getElementById("qDateEnd").value = "";
+        pageNo = 1;
+        toast("success", "已重置", "已恢复默认筛选条件");
+        render();
+      });
+
+      document.querySelectorAll("[data-open-modal]").forEach((b) => {
+        const id = b.getAttribute("data-open-modal");
+        b.addEventListener("click", () => {
+          if (id === "delivery-edit") openCreate();
+          else openModal(id);
+        });
+      });
+
+      // tabs
+      document.querySelectorAll(".tab-btn[data-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeTab = btn.getAttribute("data-tab");
+          document.querySelectorAll(".tab-btn[data-tab]").forEach((b) => {
+            b.setAttribute("aria-current", b.getAttribute("data-tab") === activeTab ? "page" : "false");
+          });
+          pageNo = 1;
+          chkAll.checked = false;
+          toast("success", "已切换标签页", activeTab === "mine" ? "我负责的" : "我下属的");
+          render();
+        });
+      });
+
+      // selection
+      document.getElementById("btnSelectAllPage").addEventListener("click", () => {
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = true));
+        chkAll.checked = true;
+        toast("success", "已全选", "已勾选当前页交付记录");
+      });
+      chkAll.addEventListener("change", () => {
+        const v = chkAll.checked;
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = v));
+      });
+
+      // pagination
+      pageSize.addEventListener("change", () => {
+        pageNo = 1;
+        render();
+      });
+      prevPage.addEventListener("click", () => {
+        pageNo = Math.max(1, pageNo - 1);
+        render();
+      });
+      nextPage.addEventListener("click", () => {
+        pageNo = pageNo + 1;
+        render();
+      });
+
+      // save
+      document.getElementById("btnSave").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法操作");
+          return;
+        }
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可新增/编辑交付");
+          return;
+        }
+
+        const customerId = fCustomerId.value;
+        const contractId = fContractId.value;
+        const deliveredAt = (fDeliveredAt.value || "").trim();
+        const amountStr = (fAmount.value || "").trim();
+        const status = fAcceptance.value || "待交付";
+        const file = fFiles.files?.[0] || null;
+        const remark = (fRemark.value || "").trim();
+
+        const badCustomer = !customerId;
+        const badContract = !contractId;
+        const badDeliveredAt = !deliveredAt;
+        const badAmount = !/^\d+(\.\d{1,2})?$/.test(amountStr) || Number(amountStr) <= 0;
+        setFieldError(fCustomerId, errCustomer, badCustomer);
+        setFieldError(fContractId, errContract, badContract);
+        setFieldError(fDeliveredAt, errDeliveredAt, badDeliveredAt);
+        setFieldError(fAmount, errAmount, badAmount);
+
+        const vf = validateFiles(fFiles.files);
+        if (!vf.ok) {
+          errFiles.textContent = vf.msg || "附件格式或大小不符合要求";
+          errFiles.classList.remove("hidden");
+        } else {
+          errFiles.classList.add("hidden");
+        }
+
+        if (badCustomer || badContract || badDeliveredAt || badAmount || !vf.ok) {
+          toast("error", "保存失败", "请先修正必填项/附件校验错误");
+          return;
+        }
+
+        const btn = document.getElementById("btnSave");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>保存中...';
+        setTimeout(() => {
+          const atText = deliveredAt.replace("T", " ") + (deliveredAt.length === 16 ? ":00" : "");
+          const amount = Number(amountStr);
+          const fileMeta = file ? [{ name: file.name, size: file.size }] : [];
+          const createdAt = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+          if (editingId) {
+            const row = deliveries.find((x) => x.id === editingId);
+            if (row) {
+              row.customerId = customerId;
+              row.contractId = contractId;
+              row.deliveredAt = atText;
+              row.amount = amount;
+              row.status = status;
+              if (fileMeta.length) row.files = fileMeta;
+              row.remark = remark;
+            }
+            toast("success", "编辑成功", "交付编辑成功");
+          } else {
+            const id = `D-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+            deliveries.unshift({
+              id,
+              customerId,
+              contractId,
+              deliveredAt: atText,
+              amount,
+              status,
+              files: fileMeta,
+              remark,
+              createdById: currentUser.id,
+              createdAt,
+            });
+            toast("success", "创建成功", "交付创建成功");
+          }
+
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("delivery-edit");
+          pageNo = 1;
+          render();
+        }, 850);
+      });
+
+      // delete confirm (single)
+      document.getElementById("btnDoDelete").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法删除");
+          return;
+        }
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可删除");
+          closeModal("del");
+          return;
+        }
+        if (!deletingId) return;
+        const btn = document.getElementById("btnDoDelete");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>删除中...';
+        setTimeout(() => {
+          deliveries = deliveries.filter((x) => x.id !== deletingId);
+          deletingId = null;
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("del");
+          toast("success", "删除成功", "交付记录已删除");
+          render();
+        }, 750);
+      });
+
+      // export
+      let exportUrl = null;
+      function exportCsv(rows, filename) {
+        const header = ["客户名称", "合同编号", "合同名称", "交付时间", "成交金额", "交付状态", "附件", "创建人", "创建时间"];
+        const lines = [header.join(",")];
+        rows.forEach((r) => {
+          const cust = getCustomer(r.customerId);
+          const ct = getContract(r.contractId);
+          const firstFileName = r.files && r.files.length ? r.files[0].name : "";
+          lines.push(
+            [
+              cust?.name || "",
+              ct?.no || "",
+              ct?.name || "",
+              r.deliveredAt,
+              money(r.amount),
+              r.status || "",
+              firstFileName,
+              getCreatorName(r.createdById),
+              r.createdAt,
+            ]
+              .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
+              .join(","),
+          );
+        });
+        const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        return { url, filename };
+      }
+      function startExport(rows, filename) {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法导出");
+          return;
+        }
+        document.getElementById("exportDoneBox").classList.add("hidden");
+        openModal("exporting");
+        toast("warn", "导出中", "正在生成导出文件，请稍候");
+        setTimeout(() => {
+          if (exportUrl) URL.revokeObjectURL(exportUrl);
+          const out = exportCsv(rows, filename);
+          exportUrl = out.url;
+          const a = document.getElementById("exportDownloadLink");
+          a.href = out.url;
+          a.download = out.filename;
+          document.getElementById("exportDoneBox").classList.remove("hidden");
+          toast("success", "导出完成", "文件已生成，可点击下载");
+        }, 900);
+      }
+      document.getElementById("btnExportSelected").addEventListener("click", () => {
+        const ids = guardSelection("请先勾选要导出的交付记录");
+        if (!ids) return;
+        closeModal("export-selected");
+        const rows = deliveries.filter(passesTab).filter(passesQuery).filter((n) => ids.includes(n.id));
+        startExport(rows, "交付-选中.csv");
+      });
+      document.getElementById("btnExportAll").addEventListener("click", () => {
+        closeModal("export-all");
+        const rows = deliveries.filter(passesTab).filter(passesQuery);
+        startExport(rows, "交付-全部.csv");
+      });
+
+      // overlay click close
+      document.querySelectorAll("[data-overlay]").forEach((ov) => {
+        ov.addEventListener("click", () => closeModal(ov.getAttribute("data-overlay")));
+      });
+
+      // init
+      render();
+    </script>
+  </body>
+</html>
+

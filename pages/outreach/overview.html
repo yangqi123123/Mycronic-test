@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能触达 · 总览</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">智能触达与意向筛选</div>
+              <div class="text-[12px] text-muted">按等级差异化触达 · 行为追踪回流 · 高意向（≥80）自动转人工并升级 A</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./templates.html">
+              <i class="fa-solid fa-pen-to-square text-muted mr-2"></i>模板管理
+            </a>
+            <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./records.html">
+              <i class="fa-solid fa-list text-muted mr-2"></i>发送记录
+            </a>
+            <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-drawer="campaign">
+              <i class="fa-solid fa-bullhorn mr-2"></i>新建触达任务
+            </button>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="grid grid-cols-12 gap-3">
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">今日发送</div>
+              <div class="text-[22px] font-semibold mt-1">1,000</div>
+              <div class="text-[12px] text-muted mt-1">短信 + 邮件</div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">打开率</div>
+              <div class="text-[22px] font-semibold mt-1">26%</div>
+              <div class="text-[12px] mt-1"><span class="chip"><i class="fa-regular fa-envelope"></i>邮件</span></div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">点击率</div>
+              <div class="text-[22px] font-semibold mt-1">8%</div>
+              <div class="text-[12px] text-muted mt-1">资料下载/链接点击</div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">高意向转人工</div>
+              <div class="text-[22px] font-semibold mt-1">19</div>
+              <div class="text-[12px] mt-1"><a class="text-primary font-semibold" href="../sales/workbench.html">查看待办</a></div>
+            </div>
+          </section>
+
+          <section class="grid grid-cols-12 gap-4">
+            <div class="col-span-7 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[16px] font-semibold">触达策略（按客户等级）</div>
+                  <div class="text-[12px] text-muted mt-1">频率：短信≤1条/天，邮件≤1封/周；退订名单永久拦截</div>
+                </div>
+                <a class="text-primary font-semibold" href="../compliance/rules.html">配置合规阈值</a>
+              </div>
+              <div class="mt-3 space-y-2">
+                <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] flex items-center justify-between">
+                  <div>
+                    <div class="font-semibold">A级：定制化方案（邮件）</div>
+                    <div class="text-[12px] text-muted mt-1">强制：1天内人工跟进（工作台待办）</div>
+                  </div>
+                  <span class="chip chip--primary"><i class="fa-solid fa-star"></i>A</span>
+                </div>
+                <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] flex items-center justify-between">
+                  <div>
+                    <div class="font-semibold">B级：行业解决方案（短信+邮件）</div>
+                    <div class="text-[12px] text-muted mt-1">3天内智能触达，行为回流计入触达有效性</div>
+                  </div>
+                  <span class="chip"><i class="fa-solid fa-tag"></i>B</span>
+                </div>
+                <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] flex items-center justify-between">
+                  <div>
+                    <div class="font-semibold">C级：产品手册（短信）</div>
+                    <div class="text-[12px] text-muted mt-1">7天内短信触达，低频避免骚扰</div>
+                  </div>
+                  <span class="chip"><i class="fa-solid fa-tag"></i>C</span>
+                </div>
+                <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] flex items-center justify-between">
+                  <div>
+                    <div class="font-semibold">D级：淘汰池（暂停触达）</div>
+                    <div class="text-[12px] text-muted mt-1">每季度复评一次，避免误杀</div>
+                  </div>
+                  <span class="chip"><i class="fa-solid fa-tag"></i>D</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-5 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[16px] font-semibold">高意向识别与升级</div>
+                  <div class="text-[12px] text-muted mt-1">意向评分≥80：升级为 A（如原等级低于A）并推送工作台</div>
+                </div>
+              </div>
+              <div class="mt-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">评分依据（示例）</div>
+                <div class="mt-2 text-[12px] text-muted leading-relaxed">
+                  打开率、点击量、回复率、资料下载、二次访问等行为加权形成意向分；规则可配置。
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-3">
+                  <div class="p-3 rounded-xl bg-surface border border-[rgba(201,205,212,.6)]">
+                    <div class="text-[12px] text-muted">阈值</div>
+                    <div class="text-[18px] font-semibold mt-1">≥80</div>
+                  </div>
+                  <div class="p-3 rounded-xl bg-surface border border-[rgba(201,205,212,.6)]">
+                    <div class="text-[12px] text-muted">SLA</div>
+                    <div class="text-[18px] font-semibold mt-1">24h</div>
+                  </div>
+                </div>
+                <div class="mt-3 flex gap-2">
+                  <a class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1 text-center leading-9" href="../sales/workbench.html">
+                    查看待办
+                  </a>
+                  <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex-1 text-center leading-9" href="../analytics/dashboard.html">
+                    查看复盘
+                  </a>
+                </div>
+              </div>
+
+              <div class="mt-4 p-3 rounded-xl border border-[rgba(201,205,212,.6)]">
+                <div class="flex items-center justify-between">
+                  <div class="font-semibold">退订管理</div>
+                  <a class="text-primary font-semibold" href="../compliance/overview.html">进入合规中心</a>
+                </div>
+                <div class="text-[12px] text-muted mt-2">客户退订需 10 分钟内处理完成；退订名单默认拦截所有触达动作。</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">待触达队列（示例）</div>
+                <div class="text-[12px] text-muted mt-1">从 CRM（评级后）进入队列；触达后行为数据回流 CRM</div>
+              </div>
+              <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>
+                <i class="fa-solid fa-paper-plane mr-2"></i>批量发送（原型）
+              </button>
+            </div>
+            <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2"><input type="checkbox" /></th>
+                    <th class="text-left px-3 py-2">客户</th>
+                    <th class="text-left px-3 py-2">等级</th>
+                    <th class="text-left px-3 py-2">渠道</th>
+                    <th class="text-left px-3 py-2">模板</th>
+                    <th class="text-left px-3 py-2">频率校验</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-surface">
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3"><input type="checkbox" /></td>
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">苏州XX半导体设备有限公司</div>
+                      <div class="text-[12px] text-muted mt-1">联系人：王工（138****1234）</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip chip--primary"><i class="fa-solid fa-star"></i>A</span></td>
+                    <td class="px-3 py-3">邮件</td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-regular fa-envelope"></i>A-定制化方案</span></td>
+                    <td class="px-3 py-3"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>通过</span></td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="../crm/customer-360.html">360°视图</a>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3"><input type="checkbox" /></td>
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">上海XX研究院（公开科研）</div>
+                      <div class="text-[12px] text-muted mt-1">联系人：—（待补全）</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-tag"></i>B</span></td>
+                    <td class="px-3 py-3">短信+邮件</td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-layer-group"></i>B-行业解决方案</span></td>
+                    <td class="px-3 py-3"><span class="chip chip--warning"><i class="fa-solid fa-triangle-exclamation"></i>缺字段</span></td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="../crm/customer-360.html">去补全</a>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3"><input type="checkbox" /></td>
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">某某客户（已退订）</div>
+                      <div class="text-[12px] text-muted mt-1">退订：2026-04-10 09:22</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-tag"></i>C</span></td>
+                    <td class="px-3 py-3">短信</td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-regular fa-message"></i>C-产品手册</span></td>
+                    <td class="px-3 py-3"><span class="chip chip--danger"><i class="fa-solid fa-ban"></i>拦截</span></td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="../compliance/overview.html">查看退订</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Drawer: campaign -->
+    <div class="overlay" data-overlay="campaign" data-open="false"></div>
+    <aside class="drawer" data-drawer="campaign" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="font-semibold text-[16px]">新建触达任务</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="campaign" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[12px] text-muted leading-relaxed">
+          系统将执行合规校验：频率阈值、退订拦截、模板审核状态。发送后自动追踪打开/点击/回复并回流 CRM。
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">触达对象</div>
+          <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+            <option>A级客户</option>
+            <option>B级客户</option>
+            <option>C级客户</option>
+            <option>自定义筛选结果（来自CRM）</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="text-[12px] text-muted mb-1">渠道</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+              <option>邮件</option>
+              <option>短信</option>
+              <option>短信+邮件</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">模板</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+              <option>A-定制化方案</option>
+              <option>B-行业解决方案</option>
+              <option>C-产品手册</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1" data-close="campaign" data-simulate-loading>创建并发送（原型）</button>
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="campaign">取消</button>
+        </div>
+      </div>
+    </aside>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>
+

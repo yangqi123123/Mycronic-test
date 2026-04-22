@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>合规总览</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">合规与安全管理</div>
+              <div class="text-[12px] text-muted">采集前校验 · 存储加密 · 触达监控 · 操作审计 · 实时预警</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./audit-log.html">
+              <i class="fa-solid fa-clipboard-list text-muted mr-2"></i>查看审计
+            </a>
+            <a class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex items-center" href="./rules.html">
+              <i class="fa-solid fa-sliders mr-2"></i>规则配置
+            </a>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="grid grid-cols-12 gap-3">
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">采集合规校验覆盖率</div>
+              <div class="text-[22px] font-semibold mt-1">100%</div>
+              <div class="text-[12px] mt-1"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>已启用</span></div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">触达违规拦截</div>
+              <div class="text-[22px] font-semibold mt-1">0</div>
+              <div class="text-[12px] text-muted mt-1">本周</div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">退订处理SLA</div>
+              <div class="text-[22px] font-semibold mt-1">≤10分钟</div>
+              <div class="text-[12px] mt-1"><span class="chip"><i class="fa-regular fa-clock"></i>实时</span></div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">审计日志留存</div>
+              <div class="text-[22px] font-semibold mt-1">≥3年</div>
+              <div class="text-[12px] mt-1"><span class="chip"><i class="fa-solid fa-lock"></i>不可篡改</span></div>
+            </div>
+          </section>
+
+          <section class="grid grid-cols-12 gap-4">
+            <div class="col-span-7 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[16px] font-semibold">实时监控（示例）</div>
+                  <div class="text-[12px] text-muted mt-1">触达频率阈值/话术违规/越权操作自动预警</div>
+                </div>
+              </div>
+              <div class="mt-3 space-y-2">
+                <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] flex items-center justify-between">
+                  <div class="font-semibold">触达频率监控</div>
+                  <span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>正常</span>
+                </div>
+                <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] flex items-center justify-between">
+                  <div class="font-semibold">话术违规检测</div>
+                  <span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>无命中</span>
+                </div>
+                <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] flex items-center justify-between">
+                  <div class="font-semibold">越权操作预警</div>
+                  <span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>无异常</span>
+                </div>
+              </div>
+
+              <div class="mt-4 p-3 rounded-xl border border-[rgba(201,205,212,.6)]">
+                <div class="text-[14px] font-semibold">触达合规阈值（摘要）</div>
+                <div class="mt-2 text-[12px] text-muted">
+                  外呼≤3次/天/客户；短信≤1条/天；邮件≤1封/周；退订客户禁止再次触达。
+                </div>
+                <div class="mt-3">
+                  <a class="text-primary font-semibold" href="./rules.html">去配置</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-5 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[16px] font-semibold">退订名单（示例）</div>
+                  <div class="text-[12px] text-muted mt-1">永久拦截触达；移除需管理员审核</div>
+                </div>
+              </div>
+              <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+                <table class="w-full table">
+                  <thead class="bg-[rgba(245,247,250,.9)]">
+                    <tr>
+                      <th class="text-left px-3 py-2">客户</th>
+                      <th class="text-left px-3 py-2">渠道</th>
+                      <th class="text-left px-3 py-2">时间</th>
+                      <th class="text-right px-3 py-2">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-surface">
+                    <tr class="border-t border-[rgba(201,205,212,.6)]">
+                      <td class="px-3 py-3">
+                        <div class="font-semibold">某某客户</div>
+                        <div class="text-[12px] text-muted mt-1">客户ID：C-20260410-000009</div>
+                      </td>
+                      <td class="px-3 py-3">短信</td>
+                      <td class="px-3 py-3">2026-04-10 09:22</td>
+                      <td class="px-3 py-3 text-right">
+                        <button class="text-primary font-semibold" data-open-modal="remove">申请移除</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="mt-3 p-3 rounded-xl border border-[rgba(201,205,212,.6)] text-[12px] text-muted">
+                退订请求需 10 分钟内处理完成；误加入支持申诉，审核通过后移除。
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal: remove -->
+    <div class="overlay" data-overlay="remove" data-open="false"></div>
+    <div class="modal" data-modal="remove" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">申请移除退订名单（原型）</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="remove" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <div class="text-[12px] text-muted">仅管理员可移除，需合规审核并记录审计日志。</div>
+        <textarea class="mt-2 w-full h-24 rounded-xl border border-[rgba(201,205,212,.7)] p-3 text-[14px]" placeholder="填写移除理由（如：客户申诉恢复）"></textarea>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="remove">取消</button>
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="remove" data-simulate-loading>提交</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>
+

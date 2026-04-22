@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 联系人管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .tab-btn[aria-current="page"]{background:rgba(255,138,0,.10); border-color: rgba(255,138,0,.55); color: var(--text);}
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 搜索区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+                <button class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="contact-edit">
+                  <i class="fa-solid fa-plus text-muted mr-2"></i>添加联系人
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">客户名称（模糊）</div>
+                <input id="qCustomer" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入客户名称" />
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">姓名（模糊）</div>
+                <input id="qName" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入联系人姓名" />
+              </div>
+            </div>
+          </section>
+
+          <!-- 标签页 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex gap-2">
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="all" aria-current="page">全部联系人</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="mine">我负责的</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="subs">我下属负责的</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 列表区（批量操作 + 分页控件在列表上方） -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">联系人列表</div>
+              <div class="flex flex-wrap items-center gap-2">
+                <button id="btnSelectAllPage" class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">全选</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-selected">导出选中</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-all">导出全部</button>
+              </div>
+            </div>
+
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1200px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2 w-10"><input id="chkAll" type="checkbox" class="accent-primary" /></th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">姓名</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">职位</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">电话</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">联系人类型</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建人</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建时间</th>
+                    <th class="text-right px-3 py-2 whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>共 <span id="totalCount" class="text-text font-semibold">0</span> 条</div>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="pageSize" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button id="prevPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>
+                  <button id="pageNoBtn" type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button id="nextPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 新建/编辑联系人 -->
+    <div class="overlay" data-overlay="contact-edit" data-open="false"></div>
+    <div class="modal" data-modal="contact-edit" data-open="false" style="max-width: 860px; width: min(860px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold" id="contactModalTitle">添加联系人</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="contact-edit"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-4">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fCustomerId" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div id="errCustomer" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择客户</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">姓名 <span class="text-[#F53F3F]">*</span></div>
+            <input id="fName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入姓名" />
+            <div id="errName" class="hidden text-[12px] text-[#F53F3F] mt-1">姓名不能为空</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">电话</div>
+            <input id="fPhone" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="可选，手机号格式：1XXXXXXXXXX" />
+            <div id="errPhone" class="hidden text-[12px] text-[#F53F3F] mt-1">手机号格式不正确</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">职位</div>
+            <input id="fTitle" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="可选" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">联系人类型</div>
+            <select id="fType" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="">请选择</option>
+              <option>决策人</option>
+              <option>技术对接人</option>
+              <option>采购负责人</option>
+              <option>财务对接人</option>
+              <option>其他</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="contact-edit">取消</button>
+          <button id="btnSave" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除二次确认 -->
+    <div class="overlay" data-overlay="del" data-open="false"></div>
+    <div class="modal" data-modal="del" data-open="false" style="max-width: 520px; width: min(520px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">确认删除</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="del"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">确定要删除该联系人吗？删除后数据无法恢复。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="del">取消</button>
+          <button id="btnDoDelete" class="h-9 px-4 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出 -->
+    <div class="overlay" data-overlay="export-selected" data-open="false"></div>
+    <div class="modal" data-modal="export-selected" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出选中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-selected"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出勾选的联系人数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-selected">取消</button>
+          <button id="btnExportSelected" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="export-all" data-open="false"></div>
+    <div class="modal" data-modal="export-all" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出全部</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-all"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出当前筛选条件下的所有联系人数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-all">取消</button>
+          <button id="btnExportAll" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出进度 -->
+    <div class="overlay" data-overlay="exporting" data-open="false"></div>
+    <div class="modal" data-modal="exporting" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="exporting"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px] text-muted">
+          <i class="fa-solid fa-spinner fa-spin mr-2"></i>正在生成导出文件，请稍候…
+        </div>
+        <div class="mt-3 hidden" id="exportDoneBox">
+          <a id="exportDownloadLink" class="text-primary font-semibold" href="#" download>点击下载导出文件</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      // ===== 权限控制（原型示例）=====
+      const currentUser = {
+        id: "E-002",
+        name: "李雷",
+        subordinateIds: ["E-003"],
+        permissions: ["customer:manage"],
+      };
+      const hasPerm = (p) => currentUser.permissions.includes(p);
+      document.querySelectorAll("[data-perm]").forEach((el) => {
+        const p = el.getAttribute("data-perm");
+        if (!hasPerm(p)) el.classList.add("hidden");
+      });
+
+      // ===== 工具 =====
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      function openModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "true";
+        if (m) m.dataset.open = "true";
+      }
+      function closeModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "false";
+        if (m) m.dataset.open = "false";
+      }
+      function toast(type, title, desc) {
+        const color = type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+        const border = type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+        const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-triangle-exclamation";
+        const wrap = document.getElementById("toasts");
+        const el = document.createElement("div");
+        el.className = "toast bg-surface rounded-xl border shadow-card";
+        el.style.borderColor = border;
+        el.innerHTML = `
+          <div class="p-3 flex gap-3" style="background:${color}">
+            <i class="fa-solid ${icon} text-muted mt-0.5"></i>
+            <div class="min-w-0">
+              <div class="text-[14px] font-semibold">${escapeHtml(title)}</div>
+              ${desc ? `<div class="text-[12px] text-muted mt-0.5">${escapeHtml(desc)}</div>` : ""}
+            </div>
+            <button class="ml-auto w-8 h-8 rounded-lg hover:bg-[rgba(245,247,250,.9)]" title="关闭"><i class="fa-solid fa-xmark text-muted"></i></button>
+          </div>
+        `;
+        el.querySelector("button").addEventListener("click", () => el.remove());
+        wrap.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
+      }
+      function setFieldError(inputEl, errEl, on) {
+        if (on) {
+          inputEl.classList.add("border-[#F53F3F]");
+          errEl.classList.remove("hidden");
+        } else {
+          inputEl.classList.remove("border-[#F53F3F]");
+          errEl.classList.add("hidden");
+        }
+      }
+
+      // ===== 客户数据（优先从客户档案 localStorage 获取）=====
+      /** @type {{id:string,name:string,ownerId:string}[]} */
+      let customers = [
+        { id: "C-0001", name: "苏州XX半导体设备有限公司", ownerId: "E-002" },
+        { id: "C-0002", name: "上海某某电子制造", ownerId: "" },
+        { id: "C-0003", name: "北京某某研究院", ownerId: "" },
+        { id: "C-0004", name: "上海某某PCB有限公司", ownerId: "E-001" },
+        // 下属负责（用于“我下属负责的”标签页示例）
+        { id: "C-0005", name: "杭州某某智能制造有限公司", ownerId: "E-003" },
+      ];
+      try {
+        const raw = localStorage.getItem("customerArchiveData");
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) {
+            customers = arr.map((x) => ({ id: x.id, name: x.name, ownerId: x.ownerId || "" })).filter((x) => x.id && x.name);
+          }
+        }
+      } catch (e) {}
+
+      // ===== mock 联系人数据 =====
+      /** @type {{id:string,customerId:string,name:string,title:string,phone:string,type:string,createdBy:string,createdAt:string}[]} */
+      let contacts = [
+        { id: "P-0001", customerId: "C-0001", name: "王强", title: "采购经理", phone: "13812345678", type: "采购负责人", createdBy: "管理员", createdAt: "2026-04-10 10:22" },
+        { id: "P-0002", customerId: "C-0001", name: "刘敏", title: "技术负责人", phone: "13923456789", type: "技术对接人", createdBy: "管理员", createdAt: "2026-04-10 11:05" },
+        { id: "P-0003", customerId: "C-0004", name: "赵磊", title: "总经理", phone: "13700001111", type: "决策人", createdBy: "管理员", createdAt: "2026-04-09 09:40" },
+        // 下属负责（造数）
+        { id: "P-0004", customerId: "C-0005", name: "周倩", title: "采购主管", phone: "13611112222", type: "采购负责人", createdBy: "张敏", createdAt: "2026-04-12 14:20" },
+        { id: "P-0005", customerId: "C-0005", name: "陈杰", title: "技术经理", phone: "13522223333", type: "技术对接人", createdBy: "张敏", createdAt: "2026-04-12 14:35" },
+      ];
+
+      // ===== Tabs =====
+      let activeTab = "all"; // all | mine | subs
+      document.querySelectorAll(".tab-btn").forEach((b) => {
+        b.addEventListener("click", () => {
+          activeTab = b.getAttribute("data-tab");
+          document.querySelectorAll(".tab-btn").forEach((x) => x.removeAttribute("aria-current"));
+          b.setAttribute("aria-current", "page");
+          pageNo = 1;
+          render();
+        });
+      });
+
+      function getCustomerById(id) {
+        return customers.find((c) => c.id === id) || null;
+      }
+
+      function passesTab(row) {
+        const cust = getCustomerById(row.customerId);
+        const ownerId = cust?.ownerId || "";
+        if (activeTab === "mine") return ownerId && ownerId === currentUser.id;
+        if (activeTab === "subs") return ownerId && currentUser.subordinateIds.includes(ownerId);
+        return true;
+      }
+
+      // ===== Filters =====
+      function passesQuery(row) {
+        const qCustomer = (document.getElementById("qCustomer").value || "").trim();
+        const qName = (document.getElementById("qName").value || "").trim();
+        const custName = getCustomerById(row.customerId)?.name || "";
+        if (qCustomer && !custName.includes(qCustomer)) return false;
+        if (qName && !row.name.includes(qName)) return false;
+        return true;
+      }
+
+      // ===== Pagination & selection =====
+      let pageNo = 1;
+      const tbody = document.getElementById("tbody");
+      const totalCount = document.getElementById("totalCount");
+      const pageSize = document.getElementById("pageSize");
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      const pageNoBtn = document.getElementById("pageNoBtn");
+      const chkAll = document.getElementById("chkAll");
+
+      function paged(rows) {
+        const size = parseInt(pageSize.value, 10);
+        const total = rows.length;
+        const pages = Math.max(1, Math.ceil(total / size));
+        pageNo = Math.min(pageNo, pages);
+        const start = (pageNo - 1) * size;
+        return { total, pages, slice: rows.slice(start, start + size) };
+      }
+      function getSelectedIds() {
+        return Array.from(document.querySelectorAll("[data-row-chk]:checked")).map((c) => c.getAttribute("data-row-chk"));
+      }
+      function guardSelection() {
+        const ids = getSelectedIds();
+        if (!ids.length) {
+          toast("error", "未选择联系人", "请先勾选至少一条联系人数据");
+          return null;
+        }
+        return ids;
+      }
+
+      // ===== Render =====
+      function render() {
+        const filtered = contacts.filter(passesTab).filter(passesQuery);
+        const { total, pages, slice } = paged(filtered);
+        totalCount.textContent = String(total);
+        pageNoBtn.textContent = String(pageNo);
+        prevPage.disabled = pageNo <= 1;
+        nextPage.disabled = pageNo >= pages;
+
+        tbody.innerHTML = slice
+          .map((r) => {
+            const custName = getCustomerById(r.customerId)?.name || "—";
+            const ops =
+              activeTab === "subs"
+                ? ""
+                : (() => {
+                    const editBtn = hasPerm("customer:manage")
+                      ? `<button class="text-primary font-semibold" data-edit="${r.id}">编辑</button>`
+                      : `<button class="text-muted font-semibold opacity-50 cursor-not-allowed" disabled title="无客户管理权限">编辑</button>`;
+                    const delBtn = hasPerm("customer:manage")
+                      ? `<button class="text-[#F53F3F] font-semibold" data-del="${r.id}">删除</button>`
+                      : `<button class="text-muted font-semibold opacity-50 cursor-not-allowed" disabled title="无客户管理权限">删除</button>`;
+                    return `${editBtn}${delBtn ? `\n                  ${delBtn}` : ""}`;
+                  })();
+            return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${r.id}" /></td>
+                <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(custName)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.name)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.title || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.phone || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.type || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.createdBy)}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.createdAt)}</td>
+                <td class="px-3 py-3 text-right whitespace-nowrap space-x-3">
+                  ${ops}
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        chkAll.checked = false;
+        bindRowActions();
+      }
+
+      // ===== Modal: create/edit =====
+      const contactModalTitle = document.getElementById("contactModalTitle");
+      const fCustomerId = document.getElementById("fCustomerId");
+      const fName = document.getElementById("fName");
+      const fPhone = document.getElementById("fPhone");
+      const fTitle = document.getElementById("fTitle");
+      const fType = document.getElementById("fType");
+      const errCustomer = document.getElementById("errCustomer");
+      const errName = document.getElementById("errName");
+      const errPhone = document.getElementById("errPhone");
+      let editingId = null;
+
+      function fillCustomerOptions() {
+        fCustomerId.innerHTML = "";
+        const ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = "请选择客户";
+        fCustomerId.appendChild(ph);
+        customers.forEach((c) => {
+          const o = document.createElement("option");
+          o.value = c.id;
+          o.textContent = c.name;
+          fCustomerId.appendChild(o);
+        });
+      }
+      fillCustomerOptions();
+
+      function resetForm() {
+        editingId = null;
+        contactModalTitle.textContent = "添加联系人";
+        fCustomerId.value = "";
+        fName.value = "";
+        fPhone.value = "";
+        fTitle.value = "";
+        fType.value = "";
+        setFieldError(fCustomerId, errCustomer, false);
+        setFieldError(fName, errName, false);
+        setFieldError(fPhone, errPhone, false);
+      }
+
+      function openCreate() {
+        resetForm();
+        openModal("contact-edit");
+      }
+      function openEdit(id) {
+        const row = contacts.find((x) => x.id === id);
+        if (!row) return;
+        editingId = id;
+        contactModalTitle.textContent = "编辑联系人";
+        fCustomerId.value = row.customerId;
+        fName.value = row.name;
+        fPhone.value = row.phone || "";
+        fTitle.value = row.title || "";
+        fType.value = row.type || "";
+        setFieldError(fCustomerId, errCustomer, false);
+        setFieldError(fName, errName, false);
+        setFieldError(fPhone, errPhone, false);
+        openModal("contact-edit");
+      }
+
+      // ===== Delete =====
+      let deletingId = null;
+      function openDelete(id) {
+        deletingId = id;
+        openModal("del");
+      }
+
+      // ===== Bind row actions =====
+      function bindRowActions() {
+        document.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openEdit(b.getAttribute("data-edit"))));
+        document.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => openDelete(b.getAttribute("data-del"))));
+      }
+
+      // ===== Buttons =====
+      document.getElementById("btnSearch").addEventListener("click", () => {
+        pageNo = 1;
+        toast("success", "已应用筛选", "列表已更新");
+        render();
+      });
+      document.getElementById("btnReset").addEventListener("click", () => {
+        document.getElementById("qCustomer").value = "";
+        document.getElementById("qName").value = "";
+        pageNo = 1;
+        toast("success", "已重置", "已恢复默认筛选条件");
+        render();
+      });
+
+      document.querySelectorAll("[data-open-modal]").forEach((b) => {
+        const id = b.getAttribute("data-open-modal");
+        b.addEventListener("click", () => {
+          if (id === "contact-edit") openCreate();
+          else openModal(id);
+        });
+      });
+
+      document.getElementById("btnSelectAllPage").addEventListener("click", () => {
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = true));
+        chkAll.checked = true;
+        toast("success", "已全选", "已勾选当前页联系人");
+      });
+
+      chkAll.addEventListener("change", () => {
+        const v = chkAll.checked;
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = v));
+      });
+
+      pageSize.addEventListener("change", () => {
+        pageNo = 1;
+        render();
+      });
+      prevPage.addEventListener("click", () => {
+        pageNo = Math.max(1, pageNo - 1);
+        render();
+      });
+      nextPage.addEventListener("click", () => {
+        pageNo = pageNo + 1;
+        render();
+      });
+
+      // ===== Save contact =====
+      document.getElementById("btnSave").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法操作");
+          return;
+        }
+        const customerId = fCustomerId.value;
+        const name = (fName.value || "").trim();
+        const phone = (fPhone.value || "").trim();
+        const title = (fTitle.value || "").trim();
+        const type = fType.value || "";
+
+        const badCustomer = !customerId;
+        const badName = !name;
+        const badPhone = !!phone && !/^1\d{10}$/.test(phone);
+        setFieldError(fCustomerId, errCustomer, badCustomer);
+        setFieldError(fName, errName, badName);
+        setFieldError(fPhone, errPhone, badPhone);
+        if (badCustomer) {
+          toast("error", "保存失败", "请选择客户");
+          return;
+        }
+        if (badName) {
+          toast("error", "保存失败", "请填写姓名");
+          return;
+        }
+        if (badPhone) {
+          toast("error", "保存失败", "手机号格式不正确");
+          return;
+        }
+
+        const btn = document.getElementById("btnSave");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>保存中...';
+        setTimeout(() => {
+          if (editingId) {
+            const row = contacts.find((x) => x.id === editingId);
+            if (row) {
+              row.customerId = customerId;
+              row.name = name;
+              row.phone = phone;
+              row.title = title;
+              row.type = type;
+            }
+            toast("success", "编辑成功", "联系人信息已更新");
+          } else {
+            const id = `P-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+            contacts.unshift({
+              id,
+              customerId,
+              name,
+              title,
+              phone,
+              type,
+              createdBy: currentUser.name,
+              createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+            });
+            toast("success", "创建成功", "联系人创建成功");
+          }
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("contact-edit");
+          pageNo = 1;
+          render();
+        }, 800);
+      });
+
+      // ===== Delete confirm =====
+      document.getElementById("btnDoDelete").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法删除");
+          return;
+        }
+        if (!deletingId) return;
+        const btn = document.getElementById("btnDoDelete");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>删除中...';
+        setTimeout(() => {
+          contacts = contacts.filter((x) => x.id !== deletingId);
+          deletingId = null;
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("del");
+          toast("success", "删除成功", "联系人已删除");
+          render();
+        }, 700);
+      });
+
+      // ===== Export =====
+      let exportUrl = null;
+      function exportCsv(rows, filename) {
+        const header = ["客户名称", "姓名", "职位", "电话", "联系人类型", "创建人", "创建时间"];
+        const lines = [header.join(",")];
+        rows.forEach((r) => {
+          const custName = getCustomerById(r.customerId)?.name || "";
+          lines.push(
+            [custName, r.name, r.title || "", r.phone || "", r.type || "", r.createdBy, r.createdAt]
+              .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
+              .join(",")
+          );
+        });
+        const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        return { url, filename };
+      }
+      function startExport(rows, filename) {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法导出");
+          return;
+        }
+        document.getElementById("exportDoneBox").classList.add("hidden");
+        openModal("exporting");
+        toast("warn", "导出中", "正在生成导出文件，请稍候");
+        setTimeout(() => {
+          if (exportUrl) URL.revokeObjectURL(exportUrl);
+          const out = exportCsv(rows, filename);
+          exportUrl = out.url;
+          const a = document.getElementById("exportDownloadLink");
+          a.href = out.url;
+          a.download = out.filename;
+          document.getElementById("exportDoneBox").classList.remove("hidden");
+          toast("success", "导出完成", "文件已生成，可点击下载");
+        }, 900);
+      }
+      document.getElementById("btnExportSelected").addEventListener("click", () => {
+        const ids = guardSelection();
+        if (!ids) return;
+        closeModal("export-selected");
+        const rows = contacts.filter((c) => ids.includes(c.id)).filter(passesTab).filter(passesQuery);
+        startExport(rows, "联系人-选中.csv");
+      });
+      document.getElementById("btnExportAll").addEventListener("click", () => {
+        closeModal("export-all");
+        const rows = contacts.filter(passesTab).filter(passesQuery);
+        startExport(rows, "联系人-全部.csv");
+      });
+
+      // overlay click close
+      document.querySelectorAll("[data-overlay]").forEach((ov) => {
+        ov.addEventListener("click", () => closeModal(ov.getAttribute("data-overlay")));
+      });
+
+      // init
+      render();
+    </script>
+  </body>
+</html>

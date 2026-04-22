@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能触达 · 跟进频率配置</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button
+            class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]"
+            title="折叠侧边栏"
+            data-sidebar-toggle
+          >
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <p class="text-[14px] text-muted leading-relaxed">
+              配置不同等级客户的自动跟进间隔，系统将按规则提醒销售跟进；到达间隔仍未跟进的客户会出现在系统消息铃铛中，并可在首页弹出提醒。
+            </p>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="text-[14px] font-semibold mb-3">等级间隔（天）</div>
+            <div id="frCfgErr" class="hidden text-[13px] text-[#F53F3F] mb-3"></div>
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <label class="text-[12px] text-muted">A级</label>
+                <input
+                  id="frCfgA"
+                  type="text"
+                  inputmode="numeric"
+                  class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]"
+                  placeholder="请输入A级客户跟进间隔（天）"
+                />
+                <div class="text-[11px] text-muted mt-1">必填、正整数，且须小于 B 级间隔</div>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <label class="text-[12px] text-muted">B级</label>
+                <input
+                  id="frCfgB"
+                  type="text"
+                  inputmode="numeric"
+                  class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]"
+                  placeholder="请输入B级客户跟进间隔（天）"
+                />
+                <div class="text-[11px] text-muted mt-1">必填、正整数，须大于 A 且小于 C</div>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <label class="text-[12px] text-muted">C级</label>
+                <input
+                  id="frCfgC"
+                  type="text"
+                  inputmode="numeric"
+                  class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]"
+                  placeholder="请输入C级客户跟进间隔（天）"
+                />
+                <div class="text-[11px] text-muted mt-1">必填、正整数，须大于 B 且小于 D</div>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <label class="text-[12px] text-muted">D级</label>
+                <input
+                  id="frCfgD"
+                  type="text"
+                  inputmode="numeric"
+                  class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]"
+                  placeholder="请输入D级客户跟进间隔（天）"
+                />
+                <div class="text-[11px] text-muted mt-1">必填、正整数，须大于 C</div>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mt-5">
+              <button
+                id="frCfgReset"
+                type="button"
+                class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold"
+              >
+                重置默认
+              </button>
+              <button id="frCfgSave" type="button" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold disabled:opacity-45 disabled:pointer-events-none">
+                保存配置
+              </button>
+            </div>
+
+            <p class="text-[12px] text-muted mt-4 leading-relaxed">配置生效后，系统将自动触发待跟进客户的提醒。</p>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 报价</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .tab-btn[aria-current="page"]{background:rgba(255,138,0,.10); border-color: rgba(255,138,0,.55); color: var(--text);}
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 搜索区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+                <button class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="quote-edit">
+                  <i class="fa-solid fa-plus text-muted mr-2"></i>新增报价
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">客户名称（模糊）</div>
+                <input id="qCustomer" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入客户名称" />
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">区域</div>
+                <select id="qRegion" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">创建时间（日期范围）</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="qDateStart" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                  <input id="qDateEnd" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 标签页 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex gap-2">
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="all" aria-current="page">全部</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="mine">我负责的</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="subs">我下属的</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 列表 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">报价列表</div>
+              <div class="flex items-center gap-2">
+                <button id="btnSelectAllPage" class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">全选</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-selected">导出选中</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-all">导出全部</button>
+                <button id="btnBatchDelete" class="h-9 px-3 rounded-lg border border-[rgba(245,63,63,.35)] bg-[rgba(245,63,63,.06)] text-[14px] font-semibold text-[#F53F3F] hidden" data-perm="customer:manage">
+                  批量删除
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1200px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2 w-10"><input id="chkAll" type="checkbox" class="accent-primary" /></th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">商机编号</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">报价金额</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">报价附件</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建人</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建时间</th>
+                    <th class="text-right px-3 py-2 whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>共 <span id="totalCount" class="text-text font-semibold">0</span> 条</div>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="pageSize" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button id="prevPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>
+                  <button id="pageNoBtn" type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button id="nextPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 新增/编辑报价 -->
+    <div class="overlay" data-overlay="quote-edit" data-open="false"></div>
+    <div class="modal" data-modal="quote-edit" data-open="false" style="max-width: 980px; width: min(980px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold" id="quoteModalTitle">新增报价</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="quote-edit"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-4">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户名称 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fCustomerId" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div id="errCustomer" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择客户</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">商机编号 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fNeedNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div id="errNeedNo" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择商机编号</div>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">报价金额 <span class="text-[#F53F3F]">*</span></div>
+            <input id="fAmount" inputmode="decimal" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="例如：120000.00" />
+            <div id="errAmount" class="hidden text-[12px] text-[#F53F3F] mt-1">请输入合法金额（支持两位小数）</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">报价附件（PDF/Excel/Word）</div>
+            <input id="fFile" type="file" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px] pt-2" />
+            <div id="fileHint" class="text-[12px] text-muted mt-1">最大 10MB，支持 .pdf/.xls/.xlsx/.doc/.docx</div>
+            <div id="errFile" class="hidden text-[12px] text-[#F53F3F] mt-1">附件格式或大小不符合要求</div>
+          </div>
+
+          <div class="col-span-12">
+            <div class="text-[12px] text-muted mb-1">备注</div>
+            <textarea id="fRemark" rows="3" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="可选，填写报价说明"></textarea>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="quote-edit">取消</button>
+          <button id="btnSave" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除二次确认（单条） -->
+    <div class="overlay" data-overlay="del" data-open="false"></div>
+    <div class="modal" data-modal="del" data-open="false" style="max-width: 520px; width: min(520px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">确认删除</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="del"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">确定要删除该报价记录吗？删除后数据无法恢复。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="del">取消</button>
+          <button id="btnDoDelete" class="h-9 px-4 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除二次确认（批量） -->
+    <div class="overlay" data-overlay="batch-del" data-open="false"></div>
+    <div class="modal" data-modal="batch-del" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">确认批量删除</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="batch-del"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">确定要删除选中的所有报价记录吗？删除后数据无法恢复。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="batch-del">取消</button>
+          <button id="btnDoBatchDelete" class="h-9 px-4 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出 -->
+    <div class="overlay" data-overlay="export-selected" data-open="false"></div>
+    <div class="modal" data-modal="export-selected" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出选中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-selected"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出勾选的报价数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-selected">取消</button>
+          <button id="btnExportSelected" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="export-all" data-open="false"></div>
+    <div class="modal" data-modal="export-all" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出全部</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-all"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出当前筛选条件下的所有报价数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-all">取消</button>
+          <button id="btnExportAll" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出进度 -->
+    <div class="overlay" data-overlay="exporting" data-open="false"></div>
+    <div class="modal" data-modal="exporting" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="exporting"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px] text-muted">
+          <i class="fa-solid fa-spinner fa-spin mr-2"></i>正在生成导出文件，请稍候…
+        </div>
+        <div class="mt-3 hidden" id="exportDoneBox">
+          <a id="exportDownloadLink" class="text-primary font-semibold" href="#" download>点击下载导出文件</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      // ===== 权限控制（原型示例）=====
+      const currentUser = {
+        id: "E-002",
+        name: "李雷",
+        subordinateIds: ["E-003"],
+        permissions: ["customer:manage"],
+      };
+      const hasPerm = (p) => currentUser.permissions.includes(p);
+      document.querySelectorAll("[data-perm]").forEach((el) => {
+        const p = el.getAttribute("data-perm");
+        if (!hasPerm(p)) el.classList.add("hidden");
+      });
+
+      // ===== 工具 =====
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      function openModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "true";
+        if (m) m.dataset.open = "true";
+      }
+      function closeModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "false";
+        if (m) m.dataset.open = "false";
+      }
+      function toast(type, title, desc) {
+        const color = type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+        const border = type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+        const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-triangle-exclamation";
+        const wrap = document.getElementById("toasts");
+        const el = document.createElement("div");
+        el.className = "toast bg-surface rounded-xl border shadow-card";
+        el.style.borderColor = border;
+        el.innerHTML = `
+          <div class="p-3 flex gap-3" style="background:${color}">
+            <i class="fa-solid ${icon} text-muted mt-0.5"></i>
+            <div class="min-w-0">
+              <div class="text-[14px] font-semibold">${escapeHtml(title)}</div>
+              ${desc ? `<div class="text-[12px] text-muted mt-0.5">${escapeHtml(desc)}</div>` : ""}
+            </div>
+            <button class="ml-auto w-8 h-8 rounded-lg hover:bg-[rgba(245,247,250,.9)]" title="关闭"><i class="fa-solid fa-xmark text-muted"></i></button>
+          </div>
+        `;
+        el.querySelector("button").addEventListener("click", () => el.remove());
+        wrap.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
+      }
+      function setFieldError(inputEl, errEl, on) {
+        if (on) {
+          inputEl.classList.add("border-[#F53F3F]");
+          errEl.classList.remove("hidden");
+        } else {
+          inputEl.classList.remove("border-[#F53F3F]");
+          errEl.classList.add("hidden");
+        }
+      }
+
+      // ===== mock data =====
+      const creators = [
+        { id: "E-001", name: "张敏" },
+        { id: "E-002", name: "李雷" },
+        { id: "E-003", name: "王芳" },
+      ];
+      const regions = ["全部区域", "上海大区", "苏州片区", "北京片区"];
+      /** @type {{id:string,name:string,region:string,ownerId:string}[]} */
+      const customers = [
+        { id: "C-0001", name: "苏州XX半导体设备有限公司", region: "苏州片区", ownerId: "E-002" },
+        { id: "C-0004", name: "上海某某PCB有限公司", region: "上海大区", ownerId: "E-001" },
+        { id: "C-0005", name: "北京某某研究院", region: "北京片区", ownerId: "E-003" },
+      ];
+      /** @type {{id:string,customerId:string,no:string}[]} */
+      const needs = [
+        { id: "N-1", customerId: "C-0001", no: "NX-2026-0001" },
+        { id: "N-2", customerId: "C-0001", no: "NX-2026-0004" },
+        { id: "N-3", customerId: "C-0004", no: "NX-2026-0002" },
+        { id: "N-4", customerId: "C-0005", no: "NX-2026-0003" },
+      ];
+
+      function getCustomer(id) {
+        return customers.find((c) => c.id === id) || null;
+      }
+      function getCreatorName(id) {
+        return creators.find((e) => e.id === id)?.name || "—";
+      }
+
+      // 搜索下拉
+      const qRegion = document.getElementById("qRegion");
+      regions.forEach((r, idx) => {
+        const o = document.createElement("option");
+        o.value = idx === 0 ? "" : r;
+        o.textContent = r;
+        qRegion.appendChild(o);
+      });
+
+      // 表单下拉
+      const fCustomerId = document.getElementById("fCustomerId");
+      const fNeedNo = document.getElementById("fNeedNo");
+      function fillCustomerOptions() {
+        fCustomerId.innerHTML = "";
+        const ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = "请选择客户";
+        fCustomerId.appendChild(ph);
+        customers.forEach((c) => {
+          const o = document.createElement("option");
+          o.value = c.id;
+          o.textContent = c.name;
+          fCustomerId.appendChild(o);
+        });
+      }
+      function fillNeedOptions(customerId) {
+        fNeedNo.innerHTML = "";
+        const ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = "请选择商机编号";
+        fNeedNo.appendChild(ph);
+        needs.filter((n) => n.customerId === customerId).forEach((n) => {
+          const o = document.createElement("option");
+          o.value = n.no;
+          o.textContent = n.no;
+          fNeedNo.appendChild(o);
+        });
+      }
+      fillCustomerOptions();
+      fCustomerId.addEventListener("change", () => fillNeedOptions(fCustomerId.value));
+      fillNeedOptions("");
+
+      // 数据
+      /** @type {{id:string,customerId:string,needNo:string,amount:number,fileName:string,fileType:string,fileSize:number,remark:string,createdById:string,createdAt:string}[]} */
+      let quotes = [
+        { id: "Q-1", customerId: "C-0001", needNo: "NX-2026-0001", amount: 120000, fileName: "报价单-苏州XX.pdf", fileType: "application/pdf", fileSize: 860 * 1024, remark: "含运输与安装", createdById: "E-002", createdAt: "2026-04-12 16:10" },
+        { id: "Q-2", customerId: "C-0004", needNo: "NX-2026-0002", amount: 68000.5, fileName: "上海PCB-报价.xlsx", fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileSize: 420 * 1024, remark: "", createdById: "E-001", createdAt: "2026-04-10 09:12" },
+        { id: "Q-3", customerId: "C-0005", needNo: "NX-2026-0003", amount: 300000, fileName: "", fileType: "", fileSize: 0, remark: "待补充附件", createdById: "E-003", createdAt: "2026-04-11 14:30" },
+      ];
+
+      // ===== tabs & query =====
+      let activeTab = "all"; // all/mine/subs
+      function passesTab(row) {
+        const cust = getCustomer(row.customerId);
+        const ownerId = cust?.ownerId || "";
+        if (activeTab === "mine") return ownerId === currentUser.id;
+        if (activeTab === "subs") return currentUser.subordinateIds.includes(ownerId);
+        return true;
+      }
+      function passesQuery(row) {
+        const qCust = (document.getElementById("qCustomer").value || "").trim();
+        const regionQ = document.getElementById("qRegion").value || "";
+        const ds = document.getElementById("qDateStart").value || "";
+        const de = document.getElementById("qDateEnd").value || "";
+        const cust = getCustomer(row.customerId);
+        const cn = cust?.name || "";
+        if (qCust && !cn.includes(qCust)) return false;
+        if (regionQ && cust?.region !== regionQ) return false;
+        if (ds && row.createdAt.slice(0, 10) < ds) return false;
+        if (de && row.createdAt.slice(0, 10) > de) return false;
+        return true;
+      }
+
+      // ===== pagination & selection =====
+      let pageNo = 1;
+      const tbody = document.getElementById("tbody");
+      const totalCount = document.getElementById("totalCount");
+      const pageSize = document.getElementById("pageSize");
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      const pageNoBtn = document.getElementById("pageNoBtn");
+      const chkAll = document.getElementById("chkAll");
+      const btnBatchDelete = document.getElementById("btnBatchDelete");
+
+      function paged(rows) {
+        const size = parseInt(pageSize.value, 10);
+        const total = rows.length;
+        const pages = Math.max(1, Math.ceil(total / size));
+        pageNo = Math.min(pageNo, pages);
+        const start = (pageNo - 1) * size;
+        return { total, pages, slice: rows.slice(start, start + size) };
+      }
+      function getSelectedIds() {
+        return Array.from(document.querySelectorAll("[data-row-chk]:checked")).map((c) => c.getAttribute("data-row-chk"));
+      }
+      function guardSelection(tip) {
+        const ids = getSelectedIds();
+        if (!ids.length) {
+          toast("error", "未选择记录", tip || "请先勾选至少一条报价记录");
+          return null;
+        }
+        return ids;
+      }
+
+      // ===== render =====
+      function money(n) {
+        const v = Number(n || 0);
+        return v.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function render() {
+        const filtered = quotes.filter(passesTab).filter(passesQuery);
+        const { total, pages, slice } = paged(filtered);
+        totalCount.textContent = String(total);
+        pageNoBtn.textContent = String(pageNo);
+        prevPage.disabled = pageNo <= 1;
+        nextPage.disabled = pageNo >= pages;
+        chkAll.checked = false;
+
+        // 批量删除仅在「我负责的」显示
+        if (activeTab === "mine") btnBatchDelete.classList.remove("hidden");
+        else btnBatchDelete.classList.add("hidden");
+
+        tbody.innerHTML = slice
+          .map((r) => {
+            const cust = getCustomer(r.customerId);
+            const file =
+              r.fileName
+                ? `<span class="inline-flex items-center gap-2 text-primary font-semibold">
+                    <i class="fa-solid fa-paperclip text-muted"></i>${escapeHtml(r.fileName)}
+                  </span>`
+                : `<span class="text-muted">—</span>`;
+
+            const viewBtn = `<a class="text-primary font-semibold" href="./quote-detail.html?id=${encodeURIComponent(r.id)}">查看</a>`;
+            const canEditDel = activeTab === "mine"; // 仅我负责的标签页可编辑/删除
+            const editBtn = canEditDel ? `<button class="text-primary font-semibold" data-edit="${r.id}">编辑</button>` : "";
+            const delBtn = canEditDel ? `<button class="text-[#F53F3F] font-semibold" data-del="${r.id}">删除</button>` : "";
+            const ops = `${viewBtn}${editBtn ? `\n                  ${editBtn}` : ""}${delBtn ? `\n                  ${delBtn}` : ""}`;
+
+            return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${r.id}" /></td>
+                <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(cust?.name || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.needNo)}</td>
+                <td class="px-3 py-3 whitespace-nowrap font-semibold">¥ ${escapeHtml(money(r.amount))}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${file}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(getCreatorName(r.createdById))}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.createdAt)}</td>
+                <td class="px-3 py-3 text-right whitespace-nowrap space-x-3">${ops}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        bindRowActions();
+      }
+
+      // ===== modal: create/edit =====
+      const quoteModalTitle = document.getElementById("quoteModalTitle");
+      const fAmount = document.getElementById("fAmount");
+      const fFile = document.getElementById("fFile");
+      const fRemark = document.getElementById("fRemark");
+      const errCustomer = document.getElementById("errCustomer");
+      const errNeedNo = document.getElementById("errNeedNo");
+      const errAmount = document.getElementById("errAmount");
+      const errFile = document.getElementById("errFile");
+      let editingId = null;
+
+      function resetForm() {
+        editingId = null;
+        quoteModalTitle.textContent = "新增报价";
+        fCustomerId.value = "";
+        fillNeedOptions("");
+        fNeedNo.value = "";
+        fAmount.value = "";
+        fFile.value = "";
+        fRemark.value = "";
+        setFieldError(fCustomerId, errCustomer, false);
+        setFieldError(fNeedNo, errNeedNo, false);
+        setFieldError(fAmount, errAmount, false);
+        errFile.classList.add("hidden");
+      }
+      function openCreate() {
+        if (activeTab !== "mine") {
+          toast("error", "不可新增", "请切换到“我负责的”标签页新增报价");
+          return;
+        }
+        resetForm();
+        openModal("quote-edit");
+      }
+      function openEdit(id) {
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可编辑报价");
+          return;
+        }
+        const row = quotes.find((x) => x.id === id);
+        if (!row) return;
+        editingId = id;
+        quoteModalTitle.textContent = "编辑报价";
+        fCustomerId.value = row.customerId;
+        fillNeedOptions(row.customerId);
+        fNeedNo.value = row.needNo;
+        fAmount.value = String(row.amount ?? "");
+        fFile.value = "";
+        fRemark.value = row.remark || "";
+        setFieldError(fCustomerId, errCustomer, false);
+        setFieldError(fNeedNo, errNeedNo, false);
+        setFieldError(fAmount, errAmount, false);
+        errFile.classList.add("hidden");
+        openModal("quote-edit");
+      }
+
+      // ===== delete =====
+      let deletingId = null;
+      let batchDeletingIds = [];
+      function openDelete(id) {
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可删除报价");
+          return;
+        }
+        deletingId = id;
+        openModal("del");
+      }
+
+      function bindRowActions() {
+        document.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openEdit(b.getAttribute("data-edit"))));
+        document.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => openDelete(b.getAttribute("data-del"))));
+      }
+
+      // ===== file validation =====
+      const allowedExt = [".pdf", ".xls", ".xlsx", ".doc", ".docx"];
+      const maxSize = 10 * 1024 * 1024;
+      function validateFile(file) {
+        if (!file) return { ok: true };
+        const name = (file.name || "").toLowerCase();
+        const ext = allowedExt.find((e) => name.endsWith(e));
+        if (!ext) return { ok: false, msg: "仅支持 PDF/Excel/Word 格式" };
+        if (file.size > maxSize) return { ok: false, msg: "文件过大（最大 10MB）" };
+        return { ok: true };
+      }
+      fFile.addEventListener("change", () => {
+        const file = fFile.files?.[0] || null;
+        const v = validateFile(file);
+        if (!v.ok) {
+          errFile.textContent = v.msg || "附件格式或大小不符合要求";
+          errFile.classList.remove("hidden");
+        } else {
+          errFile.classList.add("hidden");
+        }
+      });
+
+      // ===== events =====
+      document.getElementById("btnSearch").addEventListener("click", () => {
+        pageNo = 1;
+        toast("success", "已应用筛选", "列表已更新");
+        render();
+      });
+      document.getElementById("btnReset").addEventListener("click", () => {
+        document.getElementById("qCustomer").value = "";
+        document.getElementById("qRegion").value = "";
+        document.getElementById("qDateStart").value = "";
+        document.getElementById("qDateEnd").value = "";
+        pageNo = 1;
+        toast("success", "已重置", "已恢复默认筛选条件");
+        render();
+      });
+
+      document.querySelectorAll("[data-open-modal]").forEach((b) => {
+        const id = b.getAttribute("data-open-modal");
+        b.addEventListener("click", () => {
+          if (id === "quote-edit") openCreate();
+          else openModal(id);
+        });
+      });
+
+      // tabs
+      document.querySelectorAll(".tab-btn[data-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeTab = btn.getAttribute("data-tab");
+          document.querySelectorAll(".tab-btn[data-tab]").forEach((b) => {
+            b.setAttribute("aria-current", b.getAttribute("data-tab") === activeTab ? "page" : "false");
+          });
+          pageNo = 1;
+          chkAll.checked = false;
+          toast("success", "已切换标签页", activeTab === "all" ? "全部" : activeTab === "mine" ? "我负责的" : "我下属的");
+          render();
+        });
+      });
+
+      // selection
+      document.getElementById("btnSelectAllPage").addEventListener("click", () => {
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = true));
+        chkAll.checked = true;
+        toast("success", "已全选", "已勾选当前页报价记录");
+      });
+      chkAll.addEventListener("change", () => {
+        const v = chkAll.checked;
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = v));
+      });
+
+      // pagination
+      pageSize.addEventListener("change", () => {
+        pageNo = 1;
+        render();
+      });
+      prevPage.addEventListener("click", () => {
+        pageNo = Math.max(1, pageNo - 1);
+        render();
+      });
+      nextPage.addEventListener("click", () => {
+        pageNo = pageNo + 1;
+        render();
+      });
+
+      // save
+      document.getElementById("btnSave").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法操作");
+          return;
+        }
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可新增/编辑报价");
+          return;
+        }
+
+        const customerId = fCustomerId.value;
+        const needNo = fNeedNo.value;
+        const amountStr = (fAmount.value || "").trim();
+        const remark = (fRemark.value || "").trim();
+        const file = fFile.files?.[0] || null;
+
+        const badCustomer = !customerId;
+        const badNeed = !needNo;
+        const badAmount = !/^\d+(\.\d{1,2})?$/.test(amountStr) || Number(amountStr) <= 0;
+        setFieldError(fCustomerId, errCustomer, badCustomer);
+        setFieldError(fNeedNo, errNeedNo, badNeed);
+        setFieldError(fAmount, errAmount, badAmount);
+
+        const vf = validateFile(file);
+        if (!vf.ok) {
+          errFile.textContent = vf.msg || "附件格式或大小不符合要求";
+          errFile.classList.remove("hidden");
+        } else {
+          errFile.classList.add("hidden");
+        }
+
+        if (badCustomer || badNeed || badAmount || !vf.ok) {
+          toast("error", "保存失败", "请先修正必填项/附件校验错误");
+          return;
+        }
+
+        const btn = document.getElementById("btnSave");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>保存中...';
+        setTimeout(() => {
+          const at = new Date().toISOString().slice(0, 19).replace("T", " ");
+          const amount = Number(amountStr);
+          const fileName = file ? file.name : "";
+          const fileType = file ? (file.type || "") : "";
+          const fileSize = file ? file.size : 0;
+
+          if (editingId) {
+            const row = quotes.find((x) => x.id === editingId);
+            if (row) {
+              row.customerId = customerId;
+              row.needNo = needNo;
+              row.amount = amount;
+              row.remark = remark;
+              if (file) {
+                row.fileName = fileName;
+                row.fileType = fileType;
+                row.fileSize = fileSize;
+              }
+            }
+            toast("success", "编辑成功", "报价编辑成功");
+          } else {
+            const id = `Q-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+            quotes.unshift({
+              id,
+              customerId,
+              needNo,
+              amount,
+              fileName,
+              fileType,
+              fileSize,
+              remark,
+              createdById: currentUser.id,
+              createdAt: at,
+            });
+            toast("success", "创建成功", "报价创建成功");
+          }
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("quote-edit");
+          pageNo = 1;
+          render();
+        }, 850);
+      });
+
+      // delete confirm (single)
+      document.getElementById("btnDoDelete").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法删除");
+          return;
+        }
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可删除");
+          closeModal("del");
+          return;
+        }
+        if (!deletingId) return;
+        const btn = document.getElementById("btnDoDelete");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>删除中...';
+        setTimeout(() => {
+          quotes = quotes.filter((x) => x.id !== deletingId);
+          deletingId = null;
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("del");
+          toast("success", "删除成功", "报价记录已删除");
+          render();
+        }, 750);
+      });
+
+      // batch delete
+      btnBatchDelete.addEventListener("click", () => {
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可批量删除");
+          return;
+        }
+        const ids = guardSelection("请先勾选要删除的报价记录");
+        if (!ids) return;
+        batchDeletingIds = ids.slice();
+        openModal("batch-del");
+      });
+      document.getElementById("btnDoBatchDelete").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法删除");
+          return;
+        }
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "仅“我负责的”可批量删除");
+          closeModal("batch-del");
+          return;
+        }
+        const ids = batchDeletingIds || [];
+        if (!ids.length) return;
+        const btn = document.getElementById("btnDoBatchDelete");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>删除中...';
+        setTimeout(() => {
+          quotes = quotes.filter((x) => !ids.includes(x.id));
+          batchDeletingIds = [];
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("batch-del");
+          toast("success", "删除成功", "已删除选中的报价记录");
+          render();
+        }, 850);
+      });
+
+      // export
+      let exportUrl = null;
+      function exportCsv(rows, filename) {
+        const header = ["客户名称", "商机编号", "报价金额", "报价附件", "创建人", "创建时间"];
+        const lines = [header.join(",")];
+        rows.forEach((r) => {
+          const cust = getCustomer(r.customerId);
+          lines.push(
+            [cust?.name || "", r.needNo, money(r.amount), r.fileName || "", getCreatorName(r.createdById), r.createdAt]
+              .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
+              .join(","),
+          );
+        });
+        const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        return { url, filename };
+      }
+      function startExport(rows, filename) {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法导出");
+          return;
+        }
+        document.getElementById("exportDoneBox").classList.add("hidden");
+        openModal("exporting");
+        toast("warn", "导出中", "正在生成导出文件，请稍候");
+        setTimeout(() => {
+          if (exportUrl) URL.revokeObjectURL(exportUrl);
+          const out = exportCsv(rows, filename);
+          exportUrl = out.url;
+          const a = document.getElementById("exportDownloadLink");
+          a.href = out.url;
+          a.download = out.filename;
+          document.getElementById("exportDoneBox").classList.remove("hidden");
+          toast("success", "导出完成", "文件已生成，可点击下载");
+        }, 900);
+      }
+      document.getElementById("btnExportSelected").addEventListener("click", () => {
+        const ids = guardSelection("请先勾选要导出的报价记录");
+        if (!ids) return;
+        closeModal("export-selected");
+        const rows = quotes.filter(passesTab).filter(passesQuery).filter((n) => ids.includes(n.id));
+        startExport(rows, "报价-选中.csv");
+      });
+      document.getElementById("btnExportAll").addEventListener("click", () => {
+        closeModal("export-all");
+        const rows = quotes.filter(passesTab).filter(passesQuery);
+        startExport(rows, "报价-全部.csv");
+      });
+
+      // overlay click close
+      document.querySelectorAll("[data-overlay]").forEach((ov) => {
+        ov.addEventListener("click", () => closeModal(ov.getAttribute("data-overlay")));
+      });
+
+      // init
+      render();
+    </script>
+  </body>
+</html>
+

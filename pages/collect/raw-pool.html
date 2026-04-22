@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据采集 · 原始数据池</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <script>
+      // Legacy page: merged into Leads Pool
+      location.replace("./leads-pool.html");
+    </script>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">原始数据池</div>
+              <div class="text-[12px] text-muted">采集后入池 · 格式校验 · 异常数据分流</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./clean-pool.html">
+              <i class="fa-solid fa-arrow-right text-muted mr-2"></i>去清洗池
+            </a>
+            <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>
+              <i class="fa-solid fa-broom mr-2"></i>立即清洗（原型）
+            </button>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">今日入池</div>
+                <div class="text-[22px] font-semibold mt-1">4,102</div>
+                <div class="text-[12px] text-muted mt-1">含工商/行业名录/招标/垂直平台</div>
+              </div>
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">字段校验通过</div>
+                <div class="text-[22px] font-semibold mt-1">4,095</div>
+                <div class="text-[12px] mt-1"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>99.8%</span></div>
+              </div>
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">异常数据</div>
+                <div class="text-[22px] font-semibold mt-1">7</div>
+                <div class="text-[12px] mt-1"><button class="text-primary font-semibold" data-open-drawer="exceptions">进入异常池</button></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">原始记录</div>
+                <div class="text-[12px] text-muted mt-1">用于后续去重清洗与字段补全，保留来源与采集时间</div>
+              </div>
+              <div class="flex gap-2">
+                <input class="w-[280px] h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="搜索企业/统一社会信用代码" />
+                <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold">
+                  <i class="fa-solid fa-filter text-muted mr-2"></i>筛选
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">企业</th>
+                    <th class="text-left px-3 py-2">来源</th>
+                    <th class="text-left px-3 py-2">关键字段</th>
+                    <th class="text-left px-3 py-2">采集时间</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-surface">
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">苏州XX半导体设备有限公司</div>
+                      <div class="text-[12px] text-muted mt-1">USCC：9132***********（公开）</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-file-contract"></i>招标采购</span></td>
+                    <td class="px-3 py-3">
+                      <div class="text-[14px]">预算：¥120万 · 需求：检测设备</div>
+                      <div class="text-[12px] text-muted mt-1">字段校验：通过</div>
+                    </td>
+                    <td class="px-3 py-3">2026-04-13 09:12</td>
+                    <td class="px-3 py-3 text-right">
+                      <button class="text-primary font-semibold" data-open-drawer="record">查看</button>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">深圳XX电子制造（SMT）</div>
+                      <div class="text-[12px] text-muted mt-1">电话：公开可查（入库前脱敏）</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-list"></i>行业名录</span></td>
+                    <td class="px-3 py-3">
+                      <div class="text-[14px]">行业：SMT · 地区：广东</div>
+                      <div class="text-[12px] text-muted mt-1">字段校验：通过</div>
+                    </td>
+                    <td class="px-3 py-3">2026-04-13 02:08</td>
+                    <td class="px-3 py-3 text-right">
+                      <button class="text-primary font-semibold" data-open-drawer="record">查看</button>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">某某科技有限公司（字段缺失）</div>
+                      <div class="text-[12px] text-muted mt-1">缺：企业名称全称 / USCC</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-globe"></i>自媒体</span></td>
+                    <td class="px-3 py-3">
+                      <div class="text-[14px]">招聘：设备工程师 · 方向：制程优化</div>
+                      <div class="text-[12px] text-muted mt-1">字段校验：<span class="text-danger font-semibold">不通过</span></div>
+                    </td>
+                    <td class="px-3 py-3">2026-04-13 15:33</td>
+                    <td class="px-3 py-3 text-right">
+                      <button class="text-primary font-semibold" data-open-drawer="exceptions">处理异常</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Drawer: record -->
+    <div class="overlay" data-overlay="record" data-open="false"></div>
+    <aside class="drawer" data-drawer="record" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="font-semibold text-[16px]">原始记录详情</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="record" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+          <div class="text-[12px] text-muted">来源</div>
+          <div class="text-[14px] font-semibold mt-1">招标采购 · 中国政府采购网（公开）</div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">企业名称</div>
+            <div class="mt-1 font-semibold">苏州XX半导体设备有限公司</div>
+          </div>
+          <div class="p-3 rounded-xl border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">采集时间</div>
+            <div class="mt-1 font-semibold">2026-04-13 09:12</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl border border-[rgba(201,205,212,.6)]">
+          <div class="text-[12px] text-muted">非结构化内容（示例）</div>
+          <div class="mt-2 text-[12px] text-muted leading-relaxed">
+            “采购需求：半导体检测设备，预算 120 万，截止时间 2026-04-20…（此处为原型示例）”
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <a class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1 text-center leading-9" href="./clean-pool.html">进入清洗</a>
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="record">关闭</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Drawer: exceptions -->
+    <div class="overlay" data-overlay="exceptions" data-open="false"></div>
+    <aside class="drawer" data-drawer="exceptions" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="font-semibold text-[16px]">异常数据池</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="exceptions" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[12px] text-muted leading-relaxed">
+          规则：关键字段缺失（企业名称/USCC）或格式异常将分流到异常池。运营人员核查后可补全并回流至清洗流程。
+        </div>
+        <div class="p-3 rounded-xl border border-[rgba(201,205,212,.6)]">
+          <div class="font-semibold">某某科技有限公司（字段缺失）</div>
+          <div class="text-[12px] text-muted mt-1">缺失：企业名称全称、USCC · 来源：自媒体招聘</div>
+          <div class="mt-3 grid grid-cols-2 gap-3">
+            <input class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="补全企业名称" />
+            <input class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="补全 USCC（可选）" />
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1" data-simulate-loading>
+              回流清洗（原型）
+            </button>
+            <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="exceptions">关闭</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>
+

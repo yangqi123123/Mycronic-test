@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 客户档案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .tab-btn[aria-current="page"]{background:rgba(255,138,0,.10); border-color: rgba(255,138,0,.55); color: var(--text);}
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 搜索区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">客户名称（模糊）</div>
+                <input id="qName" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-surface" placeholder="请输入客户名称" />
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">负责人</div>
+                <select id="qOwner" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <div class="text-[12px] text-muted mb-1">客户等级</div>
+                <select id="qGrade" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                </select>
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">省市区（三级联动）</div>
+                <div class="grid grid-cols-3 gap-2">
+                  <select id="qProv" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+                  <select id="qCity" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+                  <select id="qDist" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+                </div>
+              </div>
+
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">客户来源</div>
+                <select id="qSource" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>线索池入库</option>
+                  <option>展会活动</option>
+                  <option>招标采购</option>
+                  <option>行业名录</option>
+                  <option>手工新增</option>
+                </select>
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">行业类型</div>
+                <select id="qIndustry" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>半导体</option>
+                  <option>SMT/电子制造</option>
+                  <option>PCB</option>
+                  <option>科研院所</option>
+                  <option>招标采购</option>
+                </select>
+              </div>
+              <div class="col-span-6">
+                <div class="text-[12px] text-muted mb-1">创建时间（日期范围）</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="qDateStart" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                  <input id="qDateEnd" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 标签页 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex gap-2">
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="all" aria-current="page">全部</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="pending">待分配</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="assigned">已分配</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 顶部操作区 + 列表 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">客户列表</div>
+              <div class="flex flex-wrap gap-2">
+                <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="cust-create">
+                  <i class="fa-solid fa-plus mr-2"></i>新增客户
+                </button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="batch-grade">
+                  批量修改客户等级
+                </button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="bulk-priority">
+                  设置优先级
+                </button>
+                <button
+                  id="btnOpenCustTags"
+                  type="button"
+                  class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold"
+                  data-perm="customer:manage"
+                >
+                  修改客户标签
+                </button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-selected">导出选中</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-all">导出全部</button>
+              </div>
+            </div>
+
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1580px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2 w-10"><input id="chkAll" type="checkbox" class="accent-primary" /></th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">联系方式</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">负责人</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户等级</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">优先级</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">省市区</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户来源</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">行业类型</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户标签</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建时间</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">状态</th>
+                    <th class="text-right px-3 py-2 whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>共 <span id="totalCount" class="text-text font-semibold">0</span> 条</div>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="pageSize" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button id="prevPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>
+                  <button id="pageNoBtn" type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button id="nextPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 新增客户 -->
+    <div class="overlay" data-overlay="cust-create" data-open="false"></div>
+    <div class="modal" data-modal="cust-create" data-open="false" style="max-width: 860px; width: min(860px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">新增客户</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="cust-create"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-4 overflow-y-auto" style="max-height: calc(100vh - 120px)">
+        <!-- 基础信息区（双列布局） -->
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-12">
+            <div class="text-[14px] font-semibold">基础信息</div>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户名称 <span class="text-[#F53F3F]">*</span></div>
+            <input id="cName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入客户名称" />
+            <div id="errCName" class="hidden text-[12px] text-[#F53F3F] mt-1">客户名称不能为空</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">统一社会信用代码</div>
+            <input id="cUscc" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入统一社会信用代码（18位）" />
+            <div id="errCUscc" class="hidden text-[12px] text-[#F53F3F] mt-1">统一社会信用代码格式不正确</div>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户等级</div>
+            <select id="cGrade" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C" selected>C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">联系方式 <span class="text-[#F53F3F]">*</span></div>
+            <input id="cContact" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入手机号" />
+            <div id="errCContact" class="hidden text-[12px] text-[#F53F3F] mt-1">请输入正确的手机号（11位）</div>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户来源</div>
+            <select id="cSource" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option>公开工商数据</option>
+              <option>行业名录</option>
+              <option>政府科研</option>
+              <option>招标采购</option>
+              <option>垂直平台</option>
+              <option>企业自媒体数据</option>
+              <option>展会活动</option>
+              <option selected>手工新增</option>
+            </select>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">行业</div>
+            <select id="cIndustry" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="">请选择</option>
+              <option>半导体</option>
+              <option>电子制造</option>
+              <option>PCB</option>
+              <option>科研院所</option>
+            </select>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">法定代表人</div>
+            <input id="cLegalRep" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入法定代表人" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">成立日期</div>
+            <input id="cEstablishedAt" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">省市区（三级联动）</div>
+            <div class="grid grid-cols-12 gap-2">
+              <select id="cProv" class="col-span-4 h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+              <select id="cCity" class="col-span-4 h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+              <select id="cDist" class="col-span-4 h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            </div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">注册地址</div>
+            <input id="cRegAddr" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入注册地址" />
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">注册资本</div>
+            <input id="cRegCapital" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="文本/数字（非必填）" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">实缴资本</div>
+            <input id="cPaidCapital" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="文本/数字（非必填）" />
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">工商注册号</div>
+            <input id="cRegNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入工商注册号" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">组织机构代码</div>
+            <input id="cOrgCode" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入组织机构代码" />
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">纳税人识别号</div>
+            <input id="cTaxId" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入纳税人识别号" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">营业期限</div>
+            <input id="cBizTerm" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="文本/日期区间（非必填）" />
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">登记机关</div>
+            <input id="cRegAuthority" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入登记机关" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">参保人数</div>
+            <input id="cInsuredCount" type="number" min="0" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="数字（非必填）" />
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">曾用名</div>
+            <input id="cFormerName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入曾用名" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">核准日期</div>
+            <input id="cApproveAt" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+          </div>
+        </div>
+
+        <!-- 扩展信息区（单列布局） -->
+        <div class="space-y-3">
+          <div class="text-[14px] font-semibold">扩展信息</div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">经营范围</div>
+            <textarea id="cBizScope" rows="4" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="可选，输入经营范围"></textarea>
+          </div>
+          <div>
+            <div class="flex items-center justify-between">
+              <div class="text-[12px] text-muted mb-1">关键需求摘要 <span class="text-muted">（最多240字）</span></div>
+              <div class="text-[12px] text-muted" id="cNeedSummaryCount">还可输入 240 字</div>
+            </div>
+            <textarea
+              id="cNeedSummary"
+              rows="3"
+              maxlength="240"
+              class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none"
+              placeholder="可选，描述关键需求、意向产品、交付周期等"
+            ></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="cust-create">取消</button>
+          <button id="btnCreate" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 批量修改等级 -->
+    <div class="overlay" data-overlay="batch-grade" data-open="false"></div>
+    <div class="modal" data-modal="batch-grade" data-open="false" style="max-width: 520px; width: min(520px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">批量修改客户等级</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="batch-grade"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="text-[14px] text-muted">选择目标等级（A/B/C/D），确认后批量更新。</div>
+        <select id="batchGrade" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+        <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="batch-grade">取消</button>
+          <button id="btnBatchGradeNext" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">下一步</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="batch-grade-confirm" data-open="false"></div>
+    <div class="modal" data-modal="batch-grade-confirm" data-open="false" style="max-width: 520px; width: min(520px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">二次确认</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="batch-grade-confirm"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted" id="batchGradeTip">确认批量更新？</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="batch-grade-confirm">取消</button>
+          <button id="btnBatchGradeDo" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认更新</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置优先级（与线索池一致） -->
+    <div class="overlay" data-overlay="bulk-priority" data-open="false"></div>
+    <div class="modal" data-modal="bulk-priority" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">设置优先级</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="bulk-priority"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-2">
+        <div class="text-[12px] text-muted">优先级（单选）</div>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="低" checked /> 低</label>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="一般" /> 一般</label>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="中" /> 中</label>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="紧急" /> 紧急</label>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="非常紧急" /> 非常紧急</label>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="bulk-priority">取消</button>
+          <button id="btnSetPrio" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 修改客户标签 -->
+    <div class="overlay" data-overlay="cust-tags" data-open="false"></div>
+    <div class="modal" data-modal="cust-tags" data-open="false" style="max-width: 560px; width: min(560px, 96vw)">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">修改客户标签</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="cust-tags" type="button">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div>
+          <div class="text-[12px] text-muted mb-1">客户标签</div>
+          <textarea
+            id="custTagsInput"
+            rows="4"
+            class="w-full rounded-lg border border-[rgba(201,205,212,.7)] p-3 text-[14px]"
+            placeholder="手动输入，多个标签请用英文逗号分隔，例如:设备制造，高精密 PCB，高校实验室，国家级研究院，企业技术中心"
+          ></textarea>
+          <div class="text-[12px] text-muted mt-1">将应用到当前勾选的所有客户；留空表示清空标签。</div>
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="cust-tags" type="button">取消</button>
+          <button id="btnSaveCustTags" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold" type="button">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出 -->
+    <div class="overlay" data-overlay="export-selected" data-open="false"></div>
+    <div class="modal" data-modal="export-selected" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出选中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-selected"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出勾选的客户数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-selected">取消</button>
+          <button id="btnExportSelected" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="export-all" data-open="false"></div>
+    <div class="modal" data-modal="export-all" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出全部</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-all"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出当前筛选条件下的所有客户数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-all">取消</button>
+          <button id="btnExportAll" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出进度 -->
+    <div class="overlay" data-overlay="exporting" data-open="false"></div>
+    <div class="modal" data-modal="exporting" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="exporting"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px] text-muted">
+          <i class="fa-solid fa-spinner fa-spin mr-2"></i>正在生成导出文件，请稍候…
+        </div>
+        <div class="mt-3 hidden" id="exportDoneBox">
+          <a id="exportDownloadLink" class="text-primary font-semibold" href="#" download>点击下载导出文件</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除（仅待分配） -->
+    <div class="overlay" data-overlay="cust-del" data-open="false"></div>
+    <div class="modal" data-modal="cust-del" data-open="false" style="max-width: 520px; width: min(520px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">确认删除</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="cust-del"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted" id="delTip">确认删除该客户吗？删除后数据无法恢复。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="cust-del">取消</button>
+          <button id="btnDoDelete" class="h-9 px-4 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      // ===== 权限控制（原型示例）=====
+      const currentUser = {
+        name: "管理员",
+        permissions: ["customer:manage"], // 去掉该权限可看到按钮自动隐藏/禁用
+      };
+      const hasPerm = (p) => currentUser.permissions.includes(p);
+      document.querySelectorAll("[data-perm]").forEach((el) => {
+        const p = el.getAttribute("data-perm");
+        if (!hasPerm(p)) el.classList.add("hidden");
+      });
+
+      // ===== 基础工具 =====
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      function openModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "true";
+        if (m) m.dataset.open = "true";
+      }
+      function closeModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "false";
+        if (m) m.dataset.open = "false";
+      }
+      function toast(type, title, desc) {
+        const color = type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+        const border = type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+        const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-triangle-exclamation";
+        const wrap = document.getElementById("toasts");
+        const el = document.createElement("div");
+        el.className = "toast bg-surface rounded-xl border shadow-card";
+        el.style.borderColor = border;
+        el.innerHTML = `
+          <div class="p-3 flex gap-3" style="background:${color}">
+            <i class="fa-solid ${icon} text-muted mt-0.5"></i>
+            <div class="min-w-0">
+              <div class="text-[14px] font-semibold">${escapeHtml(title)}</div>
+              ${desc ? `<div class="text-[12px] text-muted mt-0.5">${escapeHtml(desc)}</div>` : ""}
+            </div>
+            <button class="ml-auto w-8 h-8 rounded-lg hover:bg-[rgba(245,247,250,.9)]" title="关闭"><i class="fa-solid fa-xmark text-muted"></i></button>
+          </div>
+        `;
+        el.querySelector("button").addEventListener("click", () => el.remove());
+        wrap.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
+      }
+
+      // ===== mock 数据 =====
+      const REGION_TREE = {
+        上海: { 上海: ["浦东", "闵行", "徐汇"] },
+        江苏: { 苏州: ["吴中", "相城", "工业园区"], 南京: ["鼓楼", "雨花台"] },
+        北京: { 北京: ["海淀", "朝阳", "昌平"] },
+      };
+
+      function ensureReady(cb) {
+        if (window.CustomerStore && window.AssignPersonModal) return cb();
+        const on = () => {
+          if (window.CustomerStore && window.AssignPersonModal) {
+            window.removeEventListener("assign-person:ready", on);
+            window.removeEventListener("customer-store:ready", on);
+            cb();
+          }
+        };
+        window.addEventListener("assign-person:ready", on);
+        window.addEventListener("customer-store:ready", on);
+        setTimeout(on, 0);
+      }
+
+      let employees = [];
+      /** @type {any[]} */
+      let customers = [];
+
+      function refreshFromStore() {
+        const Store = window.CustomerStore;
+        employees = Store.listEmployees();
+        customers = Store.listCustomers();
+      }
+
+      // ===== 负责人下拉（来自全局 CustomerStore）=====
+      const qOwner = document.getElementById("qOwner");
+      function fillOwners() {
+        qOwner.innerHTML = `<option value="">全部</option>`;
+        employees.forEach((e) => {
+          const opt = document.createElement("option");
+          opt.value = e.id;
+          opt.textContent = `${e.name}（${e.phone.slice(0, 3)}****${e.phone.slice(-4)}）`;
+          qOwner.appendChild(opt);
+        });
+      }
+
+      // ===== 省市区联动 =====
+      const qProv = document.getElementById("qProv");
+      const qCity = document.getElementById("qCity");
+      const qDist = document.getElementById("qDist");
+      const cProv = document.getElementById("cProv");
+      const cCity = document.getElementById("cCity");
+      const cDist = document.getElementById("cDist");
+
+      function fillSelect(sel, options, placeholder) {
+        sel.innerHTML = "";
+        const ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = placeholder;
+        sel.appendChild(ph);
+        options.forEach((t) => {
+          const o = document.createElement("option");
+          o.value = t;
+          o.textContent = t;
+          sel.appendChild(o);
+        });
+      }
+      fillSelect(qProv, Object.keys(REGION_TREE), "省份");
+      fillSelect(qCity, [], "城市");
+      fillSelect(qDist, [], "县区");
+      fillSelect(cProv, Object.keys(REGION_TREE), "省份");
+      fillSelect(cCity, [], "城市");
+      fillSelect(cDist, [], "县区");
+      qProv.addEventListener("change", () => {
+        const prov = qProv.value;
+        const cities = prov ? Object.keys(REGION_TREE[prov] || {}) : [];
+        fillSelect(qCity, cities, "城市");
+        fillSelect(qDist, [], "县区");
+      });
+      qCity.addEventListener("change", () => {
+        const prov = qProv.value;
+        const city = qCity.value;
+        const dists = prov && city ? (REGION_TREE[prov]?.[city] || []) : [];
+        fillSelect(qDist, dists, "县区");
+      });
+      cProv.addEventListener("change", () => {
+        const prov = cProv.value;
+        const cities = prov ? Object.keys(REGION_TREE[prov] || {}) : [];
+        fillSelect(cCity, cities, "城市");
+        fillSelect(cDist, [], "县区");
+      });
+      cCity.addEventListener("change", () => {
+        const prov = cProv.value;
+        const city = cCity.value;
+        const dists = prov && city ? (REGION_TREE[prov]?.[city] || []) : [];
+        fillSelect(cDist, dists, "县区");
+      });
+
+      // ===== 标签页 =====
+      let activeTab = "all"; // all | pending | assigned
+      document.querySelectorAll(".tab-btn").forEach((b) => {
+        b.addEventListener("click", () => {
+          activeTab = b.getAttribute("data-tab");
+          document.querySelectorAll(".tab-btn").forEach((x) => x.removeAttribute("aria-current"));
+          b.setAttribute("aria-current", "page");
+          pageNo = 1;
+          render();
+        });
+      });
+
+      // ===== 列表渲染 =====
+      let pageNo = 1;
+      const tbody = document.getElementById("tbody");
+      const totalCount = document.getElementById("totalCount");
+      const pageSize = document.getElementById("pageSize");
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      const pageNoBtn = document.getElementById("pageNoBtn");
+      const chkAll = document.getElementById("chkAll");
+
+      function getOwnerName(id) {
+        if (!id) return "—";
+        return window.CustomerStore ? window.CustomerStore.getEmployeeName(id) || "—" : "—";
+      }
+      function statusLabel(s) {
+        return s === "pending"
+          ? '<span class="chip chip--warning"><i class="fa-solid fa-clock"></i>待分配</span>'
+          : '<span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>已分配</span>';
+      }
+
+      function passesQuery(row) {
+        const name = (document.getElementById("qName").value || "").trim();
+        const owner = document.getElementById("qOwner").value || "";
+        const grade = document.getElementById("qGrade").value || "";
+        const prov = qProv.value || "";
+        const city = qCity.value || "";
+        const dist = qDist.value || "";
+        const source = (document.getElementById("qSource").value || "").trim();
+        const industry = (document.getElementById("qIndustry").value || "").trim();
+        const ds = document.getElementById("qDateStart").value || "";
+        const de = document.getElementById("qDateEnd").value || "";
+
+        if (name && !row.name.includes(name)) return false;
+        if (owner && row.finalOwnerId !== owner) return false;
+        if (grade && row.grade !== grade) return false;
+        if (prov && row.prov !== prov) return false;
+        if (city && row.city !== city) return false;
+        if (dist && row.dist !== dist) return false;
+        if (source && row.source !== source) return false;
+        if (industry && row.industry !== industry) return false;
+        if (ds && row.createdAt < ds) return false;
+        if (de && row.createdAt > de) return false;
+        return true;
+      }
+
+      function passesTab(row) {
+        if (activeTab === "pending") return !row.finalOwnerId;
+        if (activeTab === "assigned") return !!row.finalOwnerId;
+        return true;
+      }
+
+      function paged(rows) {
+        const size = parseInt(pageSize.value, 10);
+        const total = rows.length;
+        const pages = Math.max(1, Math.ceil(total / size));
+        pageNo = Math.min(pageNo, pages);
+        const start = (pageNo - 1) * size;
+        return { total, pages, slice: rows.slice(start, start + size) };
+      }
+
+      function getSelectedIds() {
+        return Array.from(document.querySelectorAll("[data-row-chk]:checked")).map((c) => c.getAttribute("data-row-chk"));
+      }
+      function guardSelection() {
+        const ids = getSelectedIds();
+        if (!ids.length) {
+          toast("error", "未选择客户", "请先勾选至少一条客户数据");
+          return null;
+        }
+        return ids;
+      }
+
+      function parseCustTags(str) {
+        const seen = new Set();
+        const out = [];
+        for (const part of String(str || "").split(/[,，]/)) {
+          const t = part.trim();
+          if (!t) continue;
+          const key = t.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          out.push(t);
+        }
+        return out;
+      }
+
+      function getCustTags(row) {
+        return Array.isArray(row.tags) ? row.tags : [];
+      }
+
+      function formatCustTagsCell(r) {
+        const tags = getCustTags(r);
+        if (!tags.length) return '<span class="text-muted text-[13px]">—</span>';
+        return `<div class="flex flex-wrap gap-1 max-w-[280px]">${tags
+          .map((t) => {
+            const safe = escapeHtml(t);
+            return `<span class="chip text-[12px] max-w-[128px] truncate" title="${safe}">${safe}</span>`;
+          })
+          .join("")}</div>`;
+      }
+
+      function render() {
+        const filtered = customers.filter(passesTab).filter(passesQuery);
+        const { total, pages, slice } = paged(filtered);
+        totalCount.textContent = String(total);
+        pageNoBtn.textContent = String(pageNo);
+        prevPage.disabled = pageNo <= 1;
+        nextPage.disabled = pageNo >= pages;
+
+        tbody.innerHTML = slice
+          .map((r) => {
+            const regionText = `${r.prov || "—"}/${r.city || "—"}/${r.dist || "—"}`;
+            const assignBtn =
+              !r.finalOwnerId
+                ? hasPerm("customer:manage")
+                  ? `<button class="text-primary font-semibold" data-assign="${r.id}">分配</button>`
+                  : `<button class="text-muted font-semibold opacity-50 cursor-not-allowed" disabled title="无客户管理权限">分配</button>`
+                : ``;
+            const delBtn =
+              !r.finalOwnerId
+                ? hasPerm("customer:manage")
+                  ? `<button class="text-[#F53F3F] font-semibold" data-del="${r.id}">删除</button>`
+                  : ``
+                : ``;
+            const ownerDisplay = r.finalOwnerId ? escapeHtml(getOwnerName(r.finalOwnerId)) : "—";
+            const contact = escapeHtml(r.contactPhone || "—");
+            const op360 = `<a class="text-primary font-semibold" href="./customer-360.html?id=${encodeURIComponent(r.id)}" data-360="${r.id}">360档案</a>`;
+            return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${r.id}" /></td>
+                <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(r.name)}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${contact}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${ownerDisplay}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.grade)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.priority || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(regionText)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.source)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.industry)}</td>
+                <td class="px-3 py-3 align-top">${formatCustTagsCell(r)}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.createdAt)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${statusLabel(!r.finalOwnerId ? "pending" : "assigned")}</td>
+                <td class="px-3 py-3 text-right whitespace-nowrap space-x-3">
+                  ${op360}
+                  ${assignBtn}
+                  ${delBtn}
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        chkAll.checked = false;
+        bindRowActions();
+      }
+
+      function bindRowActions() {
+        document.querySelectorAll("[data-assign]").forEach((b) => {
+          b.addEventListener("click", () => {
+            const id = b.getAttribute("data-assign");
+            if (!id || !window.AssignPersonModal) return;
+            window.AssignPersonModal.open(id, { onDone: () => render() });
+          });
+        });
+        document.querySelectorAll("[data-del]").forEach((b) => {
+          b.addEventListener("click", () => {
+            const id = b.getAttribute("data-del");
+            if (!id) return;
+            if (!hasPerm("customer:manage")) {
+              toast("error", "无权限", "当前用户无客户管理权限");
+              return;
+            }
+            pendingDeleteId = id;
+            const row = customers.find((x) => x && x.id === id);
+            const name = row?.name ? `「${row.name}」` : "该客户";
+            document.getElementById("delTip").textContent = `确认删除${name}吗？删除后数据无法恢复。`;
+            openModal("cust-del");
+          });
+        });
+        // 360：存储当前列表数据，供360页读取展示
+        document.querySelectorAll("[data-360]").forEach((a) => {
+          a.addEventListener("click", () => {
+            try {
+              localStorage.setItem("customerArchiveData", JSON.stringify(customers));
+            } catch (e) {}
+          });
+        });
+      }
+
+      // ===== 分配逻辑 =====
+      // 已迁移为全局复用组件：AssignPersonModal + CustomerStore
+
+      // ===== 删除（仅待分配）=====
+      let pendingDeleteId = null;
+      document.getElementById("btnDoDelete").addEventListener("click", () => {
+        if (!pendingDeleteId) return;
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限");
+          closeModal("cust-del");
+          pendingDeleteId = null;
+          return;
+        }
+        const Store = window.CustomerStore;
+        if (!Store || typeof Store.removeCustomer !== "function") {
+          toast("error", "删除失败", "CustomerStore 未就绪，请刷新页面重试");
+          closeModal("cust-del");
+          pendingDeleteId = null;
+          return;
+        }
+        const row = customers.find((x) => x && x.id === pendingDeleteId);
+        // 仅待分配可删除
+        if (row && row.finalOwnerId) {
+          toast("error", "不可删除", "仅“待分配”状态支持删除");
+          closeModal("cust-del");
+          pendingDeleteId = null;
+          return;
+        }
+        const ok = Store.removeCustomer(pendingDeleteId);
+        closeModal("cust-del");
+        pendingDeleteId = null;
+        if (ok) toast("success", "删除成功", "客户已删除并刷新列表");
+        else toast("error", "删除失败", "客户不存在或已被删除");
+        // 立即刷新本页缓存并渲染（同时 Store 会 emit）
+        refreshFromStore();
+        render();
+      });
+
+      // ===== 批量等级 =====
+      let pendingBatchGrade = null;
+      document.getElementById("btnBatchGradeNext").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限");
+          return;
+        }
+        const ids = guardSelection();
+        if (!ids) return;
+        const g = document.getElementById("batchGrade").value;
+        pendingBatchGrade = { ids, grade: g };
+        document.getElementById("batchGradeTip").textContent = `确认将所选 ${ids.length} 个客户等级批量更新为「${g}」？`;
+        closeModal("batch-grade");
+        openModal("batch-grade-confirm");
+      });
+
+      document.getElementById("btnBatchGradeDo").addEventListener("click", () => {
+        if (!pendingBatchGrade) return;
+        const { ids, grade } = pendingBatchGrade;
+        const btn = document.getElementById("btnBatchGradeDo");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>更新中...';
+        setTimeout(() => {
+          const Store = window.CustomerStore;
+          if (Store) Store.updateCustomers(ids, { grade });
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("batch-grade-confirm");
+          toast("success", "更新成功", "客户等级已批量更新并刷新列表");
+          render();
+        }, 750);
+      });
+
+      // ===== 设置优先级（与线索池弹窗一致）=====
+      document.getElementById("btnSetPrio").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限");
+          return;
+        }
+        const ids = guardSelection();
+        if (!ids) return;
+        const v = (document.querySelector('input[name="prio"]:checked')?.value || "中").trim();
+        const Store = window.CustomerStore;
+        if (Store) Store.updateCustomers(ids, { priority: v });
+        closeModal("bulk-priority");
+        toast("success", "已设置优先级", `已将 ${ids.length} 条设置为「${v}」`);
+        render();
+      });
+
+      let pendingCustTagIds = null;
+      document.getElementById("btnOpenCustTags").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限");
+          return;
+        }
+        const ids = guardSelection();
+        if (!ids) return;
+        pendingCustTagIds = ids;
+        const inp = document.getElementById("custTagsInput");
+        if (ids.length === 1) {
+          const row = customers.find((c) => c && c.id === ids[0]);
+          inp.value = getCustTags(row || {}).join(", ");
+        } else {
+          inp.value = "";
+        }
+        openModal("cust-tags");
+      });
+
+      document.getElementById("btnSaveCustTags").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限");
+          return;
+        }
+        if (!pendingCustTagIds || !pendingCustTagIds.length) {
+          toast("error", "未选择客户", "请先勾选至少一条客户数据");
+          closeModal("cust-tags");
+          return;
+        }
+        const tags = parseCustTags(document.getElementById("custTagsInput").value);
+        const Store = window.CustomerStore;
+        if (Store) Store.updateCustomers(pendingCustTagIds, { tags });
+        closeModal("cust-tags");
+        pendingCustTagIds = null;
+        document.getElementById("custTagsInput").value = "";
+        toast("success", "已保存", "客户标签已更新");
+        refreshFromStore();
+        render();
+      });
+
+      // ===== 导出 =====
+      let exportUrl = null;
+      function exportCsv(rows, filename) {
+        const header = ["客户名称", "负责人", "客户等级", "省份", "城市", "县区", "客户来源", "行业类型", "客户标签", "创建时间", "状态"];
+        const lines = [header.join(",")];
+        rows.forEach((r) => {
+          const owner = getOwnerName(r.finalOwnerId);
+          const tagStr = getCustTags(r).join("；");
+          lines.push(
+            [r.name, owner, r.grade, r.prov, r.city, r.dist, r.source, r.industry, tagStr, r.createdAt, !r.finalOwnerId ? "待分配" : "已分配"]
+              .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
+              .join(",")
+          );
+        });
+        const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        return { url, filename };
+      }
+
+      function startExport(rows, filename) {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法导出");
+          return;
+        }
+        document.getElementById("exportDoneBox").classList.add("hidden");
+        openModal("exporting");
+        toast("warn", "导出中", "正在生成导出文件，请稍候");
+        setTimeout(() => {
+          if (exportUrl) URL.revokeObjectURL(exportUrl);
+          const out = exportCsv(rows, filename);
+          exportUrl = out.url;
+          const a = document.getElementById("exportDownloadLink");
+          a.href = out.url;
+          a.download = out.filename;
+          document.getElementById("exportDoneBox").classList.remove("hidden");
+          toast("success", "导出完成", "文件已生成，可点击下载");
+        }, 900);
+      }
+
+      document.getElementById("btnExportSelected").addEventListener("click", () => {
+        const ids = guardSelection();
+        if (!ids) return;
+        closeModal("export-selected");
+        const rows = customers.filter((c) => ids.includes(c.id));
+        startExport(rows, "客户档案-选中.csv");
+      });
+      document.getElementById("btnExportAll").addEventListener("click", () => {
+        closeModal("export-all");
+        const rows = customers.filter(passesTab).filter(passesQuery);
+        startExport(rows, "客户档案-全部.csv");
+      });
+
+      // ===== 新增客户 =====
+      // 关键需求摘要字数提示（最多240）
+      const cSummary = document.getElementById("cNeedSummary");
+      const cSummaryCount = document.getElementById("cNeedSummaryCount");
+      function updateSummaryCount() {
+        const max = 240;
+        const len = (cSummary.value || "").length;
+        cSummaryCount.textContent = `还可输入 ${Math.max(0, max - len)} 字`;
+      }
+      cSummary.addEventListener("input", updateSummaryCount);
+      updateSummaryCount();
+
+      function setFieldError(inputEl, errEl, on) {
+        if (on) {
+          inputEl.classList.add("border-[#F53F3F]");
+          errEl.classList.remove("hidden");
+        } else {
+          inputEl.classList.remove("border-[#F53F3F]");
+          errEl.classList.add("hidden");
+        }
+      }
+
+      document.getElementById("btnCreate").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法新增");
+          return;
+        }
+        const nameEl = document.getElementById("cName");
+        const usccEl = document.getElementById("cUscc");
+        const contactEl = document.getElementById("cContact");
+        const errName = document.getElementById("errCName");
+        const errUscc = document.getElementById("errCUscc");
+        const errContact = document.getElementById("errCContact");
+
+        const name = nameEl.value.trim();
+        const uscc = (usccEl.value || "").trim().toUpperCase();
+        const contact = (contactEl.value || "").trim();
+
+        const nameBad = !name;
+        const usccBad = !!uscc && !/^[0-9A-Z]{18}$/.test(uscc);
+        const contactBad = !/^1\d{10}$/.test(contact);
+        setFieldError(nameEl, errName, nameBad);
+        setFieldError(usccEl, errUscc, usccBad);
+        setFieldError(contactEl, errContact, contactBad);
+        if (nameBad || usccBad || contactBad) {
+          toast("error", "保存失败", "请先补全必填字段");
+          return;
+        }
+
+        const btn = document.getElementById("btnCreate");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>保存中...';
+        setTimeout(() => {
+          const id = `C-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+          const Store = window.CustomerStore;
+          if (Store) {
+            Store.addCustomer({
+              id,
+              name,
+              uscc,
+              grade: document.getElementById("cGrade").value,
+              priority: "中",
+              statusFlow: "待跟进",
+              nextFollowAt: "2026-04-16 10:00",
+              prov: document.getElementById("cProv").value,
+              city: document.getElementById("cCity").value,
+              dist: document.getElementById("cDist").value,
+              contactPhone: contact,
+              source: (document.getElementById("cSource").value || "").trim() || "手工新增",
+              industry: (document.getElementById("cIndustry").value || "").trim(),
+              createdAt: "2026-04-14",
+              regionOwner: currentUser.name,
+              finalOwnerId: null,
+              legalRep: (document.getElementById("cLegalRep").value || "").trim(),
+              establishedAt: document.getElementById("cEstablishedAt").value || "",
+              regCapital: (document.getElementById("cRegCapital").value || "").trim(),
+              paidCapital: (document.getElementById("cPaidCapital").value || "").trim(),
+              regNo: (document.getElementById("cRegNo").value || "").trim(),
+              orgCode: (document.getElementById("cOrgCode").value || "").trim(),
+              taxId: (document.getElementById("cTaxId").value || "").trim(),
+              bizTerm: (document.getElementById("cBizTerm").value || "").trim(),
+              regAuthority: (document.getElementById("cRegAuthority").value || "").trim(),
+              insuredCount: (() => {
+                const v = (document.getElementById("cInsuredCount").value || "").trim();
+                if (!v) return undefined;
+                const n = Number(v);
+                return Number.isFinite(n) ? n : undefined;
+              })(),
+              formerName: (document.getElementById("cFormerName").value || "").trim(),
+              approveAt: document.getElementById("cApproveAt").value || "",
+              regAddr: (document.getElementById("cRegAddr").value || "").trim(),
+              bizScope: (document.getElementById("cBizScope").value || "").trim(),
+              needSummary: (document.getElementById("cNeedSummary").value || "").slice(0, 240),
+              tags: [],
+            });
+          }
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("cust-create");
+          toast("success", "新增客户成功", "列表已自动刷新");
+
+          // reset form + errors
+          nameEl.value = "";
+          usccEl.value = "";
+          document.getElementById("cContact").value = "";
+          document.getElementById("cGrade").value = "C";
+          document.getElementById("cSource").value = "手工新增";
+          document.getElementById("cIndustry").value = "";
+          document.getElementById("cLegalRep").value = "";
+          document.getElementById("cEstablishedAt").value = "";
+          document.getElementById("cRegAddr").value = "";
+          document.getElementById("cRegCapital").value = "";
+          document.getElementById("cPaidCapital").value = "";
+          document.getElementById("cRegNo").value = "";
+          document.getElementById("cOrgCode").value = "";
+          document.getElementById("cTaxId").value = "";
+          document.getElementById("cBizTerm").value = "";
+          document.getElementById("cRegAuthority").value = "";
+          document.getElementById("cInsuredCount").value = "";
+          document.getElementById("cFormerName").value = "";
+          document.getElementById("cApproveAt").value = "";
+          document.getElementById("cBizScope").value = "";
+          document.getElementById("cNeedSummary").value = "";
+          updateSummaryCount();
+          document.getElementById("cProv").value = "";
+          fillSelect(document.getElementById("cCity"), [], "城市");
+          fillSelect(document.getElementById("cDist"), [], "县区");
+          setFieldError(nameEl, errName, false);
+          setFieldError(usccEl, errUscc, false);
+          setFieldError(contactEl, errContact, false);
+
+          pageNo = 1;
+          activeTab = "all";
+          document.querySelectorAll(".tab-btn").forEach((x) => x.removeAttribute("aria-current"));
+          document.querySelector('[data-tab="all"]').setAttribute("aria-current", "page");
+          render();
+        }, 800);
+      });
+
+      // ===== 统一遮罩点击关闭 =====
+      document.querySelectorAll("[data-overlay]").forEach((ov) => {
+        ov.addEventListener("click", () => closeModal(ov.getAttribute("data-overlay")));
+      });
+
+      // ===== checkbox全选 =====
+      chkAll.addEventListener("change", () => {
+        const v = chkAll.checked;
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = v));
+      });
+
+      // ===== 分页 =====
+      pageSize.addEventListener("change", () => {
+        pageNo = 1;
+        render();
+      });
+      prevPage.addEventListener("click", () => {
+        pageNo = Math.max(1, pageNo - 1);
+        render();
+      });
+      nextPage.addEventListener("click", () => {
+        pageNo = pageNo + 1;
+        render();
+      });
+
+      // ===== 搜索/重置 =====
+      document.getElementById("btnSearch").addEventListener("click", () => {
+        pageNo = 1;
+        toast("success", "已应用筛选", "列表已更新");
+        render();
+      });
+      document.getElementById("btnReset").addEventListener("click", () => {
+        document.getElementById("qName").value = "";
+        document.getElementById("qOwner").value = "";
+        document.getElementById("qGrade").value = "";
+        document.getElementById("qSource").value = "";
+        document.getElementById("qIndustry").value = "";
+        document.getElementById("qDateStart").value = "";
+        document.getElementById("qDateEnd").value = "";
+        qProv.value = "";
+        fillSelect(qCity, [], "城市");
+        fillSelect(qDist, [], "县区");
+        pageNo = 1;
+        toast("success", "已重置", "已恢复默认筛选条件");
+        render();
+      });
+
+      // ===== 权限保护：操作弹窗入口 =====
+      document.querySelectorAll("[data-open-modal]").forEach((b) => {
+        const id = b.getAttribute("data-open-modal");
+        b.addEventListener("click", () => {
+          if (id === "cust-create") {
+            // open 新增客户时，清理必填错误提示
+            const nameEl = document.getElementById("cName");
+            const usccEl = document.getElementById("cUscc");
+            const contactEl = document.getElementById("cContact");
+            const errName = document.getElementById("errCName");
+            const errUscc = document.getElementById("errCUscc");
+            const errContact = document.getElementById("errCContact");
+            if (nameEl && errName) {
+              nameEl.classList.remove("border-[#F53F3F]");
+              errName.classList.add("hidden");
+            }
+            if (usccEl && errUscc) {
+              usccEl.classList.remove("border-[#F53F3F]");
+              errUscc.classList.add("hidden");
+            }
+            if (contactEl && errContact) {
+              contactEl.classList.remove("border-[#F53F3F]");
+              errContact.classList.add("hidden");
+            }
+          }
+          openModal(id);
+        });
+      });
+
+      // init（绑定全局 CustomerStore，确保跨模块实时同步）
+      ensureReady(() => {
+        refreshFromStore();
+        fillOwners();
+        render();
+        window.CustomerStore.onChange(() => {
+          refreshFromStore();
+          fillOwners();
+          render();
+        });
+      });
+    </script>
+  </body>
+</html>

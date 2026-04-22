@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 报价详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">报价详情</div>
+              <div class="text-[12px] text-muted">查看报价全维度信息（示例）</div>
+            </div>
+          </div>
+          <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./quotes.html">
+            <i class="fa-solid fa-arrow-left text-muted mr-2"></i>返回报价列表
+          </a>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">报价信息</div>
+              <div class="text-[12px] text-muted">ID：<span id="qid">—</span></div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-12 gap-3">
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">客户名称</div>
+                <div class="font-semibold mt-1" id="qCustomer">—</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">意向需求编号</div>
+                <div class="font-semibold mt-1" id="qNeedNo">—</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">报价金额</div>
+                <div class="font-semibold mt-1" id="qAmount">—</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">创建人 / 创建时间</div>
+                <div class="font-semibold mt-1" id="qCreator">—</div>
+                <div class="text-[12px] text-muted mt-1" id="qCreatedAt">—</div>
+              </div>
+              <div class="col-span-12 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">报价附件</div>
+                <div class="mt-1" id="qFile">—</div>
+              </div>
+              <div class="col-span-12 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">备注</div>
+                <div class="mt-1 text-muted whitespace-pre-wrap" id="qRemark">—</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      function money(n) {
+        const v = Number(n || 0);
+        return v.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      const creators = [
+        { id: "E-001", name: "张敏" },
+        { id: "E-002", name: "李雷" },
+        { id: "E-003", name: "王芳" },
+      ];
+      const customers = [
+        { id: "C-0001", name: "苏州XX半导体设备有限公司", region: "苏州片区", ownerId: "E-002" },
+        { id: "C-0004", name: "上海某某PCB有限公司", region: "上海大区", ownerId: "E-001" },
+        { id: "C-0005", name: "北京某某研究院", region: "北京片区", ownerId: "E-003" },
+      ];
+      const quotes = [
+        { id: "Q-1", customerId: "C-0001", needNo: "NX-2026-0001", amount: 120000, fileName: "报价单-苏州XX.pdf", fileType: "application/pdf", fileSize: 860 * 1024, remark: "含运输与安装", createdById: "E-002", createdAt: "2026-04-12 16:10" },
+        { id: "Q-2", customerId: "C-0004", needNo: "NX-2026-0002", amount: 68000.5, fileName: "上海PCB-报价.xlsx", fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileSize: 420 * 1024, remark: "", createdById: "E-001", createdAt: "2026-04-10 09:12" },
+        { id: "Q-3", customerId: "C-0005", needNo: "NX-2026-0003", amount: 300000, fileName: "", fileType: "", fileSize: 0, remark: "待补充附件", createdById: "E-003", createdAt: "2026-04-11 14:30" },
+      ];
+      const getCustomerName = (id) => customers.find((c) => c.id === id)?.name || "—";
+      const getCreatorName = (id) => creators.find((e) => e.id === id)?.name || "—";
+
+      const url = new URL(location.href);
+      const id = url.searchParams.get("id") || "";
+      document.getElementById("qid").textContent = id || "—";
+
+      const row = quotes.find((x) => x.id === id) || null;
+      if (!row) {
+        document.getElementById("qCustomer").textContent = "未找到该报价";
+      } else {
+        document.getElementById("qCustomer").textContent = getCustomerName(row.customerId);
+        document.getElementById("qNeedNo").textContent = row.needNo;
+        document.getElementById("qAmount").textContent = `¥ ${money(row.amount)}`;
+        document.getElementById("qCreator").textContent = getCreatorName(row.createdById);
+        document.getElementById("qCreatedAt").textContent = row.createdAt;
+        document.getElementById("qRemark").textContent = row.remark || "—";
+        document.getElementById("qFile").innerHTML = row.fileName
+          ? `<span class="inline-flex items-center gap-2 text-primary font-semibold"><i class="fa-solid fa-paperclip text-muted"></i>${escapeHtml(row.fileName)}</span><span class="ml-2 text-[12px] text-muted">（原型：下载未接后端）</span>`
+          : `<span class="text-muted">—</span>`;
+      }
+    </script>
+  </body>
+</html>
+
