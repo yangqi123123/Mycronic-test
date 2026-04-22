@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 跟进记录</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .tab-btn[aria-current="page"]{background:rgba(255,138,0,.10); border-color: rgba(255,138,0,.55); color: var(--text);}
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 搜索区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+                <button class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="fu-edit">
+                  <i class="fa-solid fa-plus text-muted mr-2"></i>新增跟进记录
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">客户名称（模糊）</div>
+                <input id="qCustomer" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入客户名称" />
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">跟进人</div>
+                <input id="qFollower" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入跟进人" />
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">跟进时间（日期范围）</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="qDateStart" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                  <input id="qDateEnd" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 标签页：我创建的 / 我下属创建的 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex gap-2">
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="all" aria-current="page">全部</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="mine">我创建的</button>
+                <button class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-tab="subs">我下属创建的</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 列表区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">跟进记录列表</div>
+              <div class="flex items-center gap-2">
+                <button id="btnSelectAllPage" class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">全选</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-selected">导出选中</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-all">导出全部</button>
+              </div>
+            </div>
+
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1550px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2 w-10"><input id="chkAll" type="checkbox" class="accent-primary" /></th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">商机编号</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">跟进方式</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">跟进记录</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">位置</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">提示</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">跟进人</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">跟进时间</th>
+                    <th class="text-right px-3 py-2 whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+
+            <!-- 列表底部：分页 -->
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>共 <span id="totalCount" class="text-text font-semibold">0</span> 条</div>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="pageSize" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button id="prevPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>
+                  <button id="pageNoBtn" type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button id="nextPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 新增/编辑跟进记录 -->
+    <div class="overlay" data-overlay="fu-edit" data-open="false"></div>
+    <div class="modal" data-modal="fu-edit" data-open="false" style="max-width: 980px; width: min(980px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold" id="fuModalTitle">新增跟进记录</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="fu-edit"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-4">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fCustomerId" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div id="errCustomer" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择客户</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">跟进方式 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fWay" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div id="errWay" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择跟进方式</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">商机编号</div>
+            <input id="fNeedNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="如：SJ-2026-0001（可选）" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">跟进时间</div>
+            <input id="fAt" type="datetime-local" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12">
+            <div class="text-[12px] text-muted mb-1">跟进记录 <span class="text-[#F53F3F]">*</span></div>
+            <textarea id="fNote" rows="4" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="请输入跟进内容"></textarea>
+            <div id="errNote" class="hidden text-[12px] text-[#F53F3F] mt-1">跟进记录不能为空</div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">位置</div>
+            <input id="fPlace" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="可输入拜访地址/定位信息" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">提示</div>
+            <input id="fTip" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="注意事项或异常提示（如：地址不匹配）" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="fu-edit">取消</button>
+          <button id="btnSave" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 查看 -->
+    <div class="overlay" data-overlay="fu-view" data-open="false"></div>
+    <div class="modal" data-modal="fu-view" data-open="false" style="max-width: 920px; width: min(920px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">跟进记录详情</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="fu-view"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-[14px]">
+        <div class="grid grid-cols-12 gap-3">
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">客户名称</div>
+            <div class="font-semibold mt-1" id="vCustomer">—</div>
+          </div>
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">商机编号</div>
+            <div class="font-semibold mt-1" id="vNeedNo">—</div>
+          </div>
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">跟进方式</div>
+            <div class="font-semibold mt-1" id="vWay">—</div>
+          </div>
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">跟进人</div>
+            <div class="font-semibold mt-1" id="vFollower">—</div>
+          </div>
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">跟进时间</div>
+            <div class="font-semibold mt-1" id="vAt">—</div>
+          </div>
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">位置</div>
+            <div class="font-semibold mt-1" id="vPlace">—</div>
+          </div>
+          <div class="col-span-12 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">跟进记录</div>
+            <div class="mt-1 text-muted whitespace-pre-wrap" id="vNote">—</div>
+          </div>
+          <div class="col-span-12 p-3 rounded-xl border border-[rgba(201,205,212,.6)]" id="vTipBox">
+            <div class="text-[12px] text-muted">提示</div>
+            <div class="mt-1 font-semibold" id="vTip">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除二次确认 -->
+    <div class="overlay" data-overlay="del" data-open="false"></div>
+    <div class="modal" data-modal="del" data-open="false" style="max-width: 520px; width: min(520px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">确认删除</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="del"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">确定要删除该跟进记录吗？删除后数据无法恢复。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="del">取消</button>
+          <button id="btnDoDelete" class="h-9 px-4 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出 -->
+    <div class="overlay" data-overlay="export-selected" data-open="false"></div>
+    <div class="modal" data-modal="export-selected" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出选中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-selected"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出勾选的跟进记录数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-selected">取消</button>
+          <button id="btnExportSelected" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="export-all" data-open="false"></div>
+    <div class="modal" data-modal="export-all" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出全部</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-all"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出当前筛选条件与标签页范围下的所有跟进记录（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-all">取消</button>
+          <button id="btnExportAll" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出进度 -->
+    <div class="overlay" data-overlay="exporting" data-open="false"></div>
+    <div class="modal" data-modal="exporting" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="exporting"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px] text-muted">
+          <i class="fa-solid fa-spinner fa-spin mr-2"></i>正在生成导出文件，请稍候…
+        </div>
+        <div class="mt-3 hidden" id="exportDoneBox">
+          <a id="exportDownloadLink" class="text-primary font-semibold" href="#" download>点击下载导出文件</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      // ===== 权限控制（原型示例）=====
+      const currentUser = {
+        id: "E-002",
+        name: "李雷",
+        subordinateIds: ["E-003"],
+        permissions: ["customer:manage"],
+      };
+      const hasPerm = (p) => currentUser.permissions.includes(p);
+      document.querySelectorAll("[data-perm]").forEach((el) => {
+        const p = el.getAttribute("data-perm");
+        if (!hasPerm(p)) el.classList.add("hidden");
+      });
+
+      // ===== 工具 =====
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      function openModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "true";
+        if (m) m.dataset.open = "true";
+      }
+      function closeModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "false";
+        if (m) m.dataset.open = "false";
+      }
+      function toast(type, title, desc) {
+        const color = type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+        const border = type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+        const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-triangle-exclamation";
+        const wrap = document.getElementById("toasts");
+        const el = document.createElement("div");
+        el.className = "toast bg-surface rounded-xl border shadow-card";
+        el.style.borderColor = border;
+        el.innerHTML = `
+          <div class="p-3 flex gap-3" style="background:${color}">
+            <i class="fa-solid ${icon} text-muted mt-0.5"></i>
+            <div class="min-w-0">
+              <div class="text-[14px] font-semibold">${escapeHtml(title)}</div>
+              ${desc ? `<div class="text-[12px] text-muted mt-0.5">${escapeHtml(desc)}</div>` : ""}
+            </div>
+            <button class="ml-auto w-8 h-8 rounded-lg hover:bg-[rgba(245,247,250,.9)]" title="关闭"><i class="fa-solid fa-xmark text-muted"></i></button>
+          </div>
+        `;
+        el.querySelector("button").addEventListener("click", () => el.remove());
+        wrap.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
+      }
+      function setFieldError(inputEl, errEl, on) {
+        if (on) {
+          inputEl.classList.add("border-[#F53F3F]");
+          errEl.classList.remove("hidden");
+        } else {
+          inputEl.classList.remove("border-[#F53F3F]");
+          errEl.classList.add("hidden");
+        }
+      }
+
+      // ===== mock data =====
+      const followers = [
+        { id: "E-001", name: "张敏" },
+        { id: "E-002", name: "李雷" },
+        { id: "E-003", name: "王芳" },
+      ];
+      /** @type {{id:string,name:string}[]} */
+      const customers = [
+        { id: "C-0001", name: "苏州XX半导体设备有限公司" },
+        { id: "C-0004", name: "上海某某PCB有限公司" },
+        { id: "C-0005", name: "北京某某研究院" },
+      ];
+      const WAYS = ["线上沟通", "线下拜访", "电话", "邮件"];
+
+      function fillSelect(sel, placeholder, options, getValue, getLabel) {
+        sel.innerHTML = "";
+        const ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = placeholder;
+        sel.appendChild(ph);
+        options.forEach((x) => {
+          const o = document.createElement("option");
+          o.value = getValue(x);
+          o.textContent = getLabel(x);
+          sel.appendChild(o);
+        });
+      }
+
+      fillSelect(document.getElementById("fCustomerId"), "请选择客户", customers, (x) => x.id, (x) => x.name);
+      fillSelect(document.getElementById("fWay"), "请选择跟进方式", WAYS, (x) => x, (x) => x);
+
+      function getCustomerName(id) {
+        return customers.find((c) => c.id === id)?.name || "—";
+      }
+      function getFollowerName(id) {
+        return followers.find((e) => e.id === id)?.name || "—";
+      }
+
+      /** @type {{id:string,customerId:string,needNo:string,way:string,note:string,place:string,tip:string,tipLevel:"ok"|"warn",followerId:string,at:string,createdById:string}[]} */
+      let followups = [
+        { id: "FU-1", customerId: "C-0001", needNo: "NX-2026-0001", way: "线下拜访", note: "现场沟通产线布局与交付周期，确认需提供设备清单。", place: "苏州工业园区XX路88号", tip: "地址不匹配：定位偏差 3km", tipLevel: "warn", followerId: "E-002", at: "2026-04-13 15:20", createdById: "E-002" },
+        { id: "FU-2", customerId: "C-0004", needNo: "NX-2026-0002", way: "电话", note: "确认维保范围与驻场时段，待客户内部审批。", place: "", tip: "", tipLevel: "ok", followerId: "E-001", at: "2026-04-12 10:05", createdById: "E-001" },
+        { id: "FU-3", customerId: "C-0005", needNo: "NX-2026-0003", way: "线上沟通", note: "科研合作意向明确，需对接采购流程与验收标准。", place: "北京海淀区XX大厦", tip: "异常：需补充联系人信息", tipLevel: "warn", followerId: "E-003", at: "2026-04-11 19:30", createdById: "E-003" },
+      ];
+
+      // ===== tabs & query =====
+      let activeTab = "all"; // all/mine/subs
+      function passesTab(row) {
+        if (activeTab === "all") return true;
+        if (activeTab === "mine") return row.createdById === currentUser.id;
+        return currentUser.subordinateIds.includes(row.createdById);
+      }
+      function passesQuery(row) {
+        const qCust = (document.getElementById("qCustomer").value || "").trim();
+        const qFollower = (document.getElementById("qFollower").value || "").trim();
+        const ds = document.getElementById("qDateStart").value || "";
+        const de = document.getElementById("qDateEnd").value || "";
+
+        const cn = getCustomerName(row.customerId);
+        if (qCust && !cn.includes(qCust)) return false;
+        if (qFollower && !getFollowerName(row.followerId).includes(qFollower)) return false;
+        if (ds && row.at.slice(0, 10) < ds) return false;
+        if (de && row.at.slice(0, 10) > de) return false;
+        return true;
+      }
+
+      // ===== pagination & selection =====
+      let pageNo = 1;
+      const tbody = document.getElementById("tbody");
+      const totalCount = document.getElementById("totalCount");
+      const pageSize = document.getElementById("pageSize");
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      const pageNoBtn = document.getElementById("pageNoBtn");
+      const chkAll = document.getElementById("chkAll");
+
+      function paged(rows) {
+        const size = parseInt(pageSize.value, 10);
+        const total = rows.length;
+        const pages = Math.max(1, Math.ceil(total / size));
+        pageNo = Math.min(pageNo, pages);
+        const start = (pageNo - 1) * size;
+        return { total, pages, slice: rows.slice(start, start + size) };
+      }
+      function getSelectedIds() {
+        return Array.from(document.querySelectorAll("[data-row-chk]:checked")).map((c) => c.getAttribute("data-row-chk"));
+      }
+      function guardSelection() {
+        const ids = getSelectedIds();
+        if (!ids.length) {
+          toast("error", "未选择记录", "请先勾选至少一条跟进记录");
+          return null;
+        }
+        return ids;
+      }
+
+      // ===== render =====
+      function render() {
+        const filtered = followups.filter(passesTab).filter(passesQuery);
+        const { total, pages, slice } = paged(filtered);
+        totalCount.textContent = String(total);
+        pageNoBtn.textContent = String(pageNo);
+        prevPage.disabled = pageNo <= 1;
+        nextPage.disabled = pageNo >= pages;
+
+        tbody.innerHTML = slice
+          .map((r) => {
+            const tipBadge =
+              r.tip && r.tipLevel === "warn"
+                ? `<span class="inline-flex items-center px-2 py-1 rounded-lg text-[12px] font-semibold bg-[rgba(255,125,0,.12)] border border-[rgba(255,125,0,.35)] text-text">${escapeHtml(r.tip)}</span>`
+                : r.tip
+                  ? `<span class="text-muted">${escapeHtml(r.tip)}</span>`
+                  : `<span class="text-muted">—</span>`;
+
+            const canEditDel = activeTab === "mine" && r.createdById === currentUser.id;
+            const viewBtn = `<button class="text-primary font-semibold" data-view="${r.id}">查看</button>`;
+            const editBtn = canEditDel ? `<button class="text-primary font-semibold" data-edit="${r.id}">编辑</button>` : "";
+            const delBtn = canEditDel ? `<button class="text-[#F53F3F] font-semibold" data-del="${r.id}">删除</button>` : "";
+            const ops = `${viewBtn}${editBtn ? `\n                  ${editBtn}` : ""}${delBtn ? `\n                  ${delBtn}` : ""}`;
+
+            return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${r.id}" /></td>
+                <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(getCustomerName(r.customerId))}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.needNo || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.way)}</td>
+                <td class="px-3 py-3 min-w-[380px]">${escapeHtml(r.note)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.place || "—")}</td>
+                <td class="px-3 py-3 min-w-[260px]">${tipBadge}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(getFollowerName(r.followerId))}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.at)}</td>
+                <td class="px-3 py-3 text-right whitespace-nowrap space-x-3">${ops}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        chkAll.checked = false;
+        bindRowActions();
+      }
+
+      // ===== modal: create/edit/view =====
+      const fuModalTitle = document.getElementById("fuModalTitle");
+      const fCustomerId = document.getElementById("fCustomerId");
+      const fWay = document.getElementById("fWay");
+      const fNeedNo = document.getElementById("fNeedNo");
+      const fAt = document.getElementById("fAt");
+      const fNote = document.getElementById("fNote");
+      const fPlace = document.getElementById("fPlace");
+      const fTip = document.getElementById("fTip");
+      const errCustomer = document.getElementById("errCustomer");
+      const errWay = document.getElementById("errWay");
+      const errNote = document.getElementById("errNote");
+      let editingId = null;
+
+      function nowLocalValue() {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+
+      function resetForm() {
+        editingId = null;
+        fuModalTitle.textContent = "新增跟进记录";
+        fCustomerId.value = "";
+        fWay.value = "";
+        fNeedNo.value = "";
+        fAt.value = nowLocalValue();
+        fNote.value = "";
+        fPlace.value = "";
+        fTip.value = "";
+        setFieldError(fCustomerId, errCustomer, false);
+        setFieldError(fWay, errWay, false);
+        setFieldError(fNote, errNote, false);
+      }
+
+      function openCreate() {
+        if (activeTab !== "mine") {
+          toast("error", "不可新增", "请切换到“我创建的”标签页新增跟进记录");
+          return;
+        }
+        resetForm();
+        openModal("fu-edit");
+      }
+      function openEdit(id) {
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "下属创建的记录仅可查看");
+          return;
+        }
+        const row = followups.find((x) => x.id === id);
+        if (!row) return;
+        if (row.createdById !== currentUser.id) {
+          toast("error", "无权限", "仅创建人可编辑自己的跟进记录");
+          return;
+        }
+        editingId = id;
+        fuModalTitle.textContent = "编辑跟进记录";
+        fCustomerId.value = row.customerId;
+        fWay.value = row.way;
+        fNeedNo.value = row.needNo || "";
+        fAt.value = (row.at || "").replace(" ", "T").slice(0, 16);
+        fNote.value = row.note;
+        fPlace.value = row.place || "";
+        fTip.value = row.tip || "";
+        setFieldError(fCustomerId, errCustomer, false);
+        setFieldError(fWay, errWay, false);
+        setFieldError(fNote, errNote, false);
+        openModal("fu-edit");
+      }
+      function openView(id) {
+        const row = followups.find((x) => x.id === id);
+        if (!row) return;
+        document.getElementById("vCustomer").textContent = getCustomerName(row.customerId);
+        document.getElementById("vNeedNo").textContent = row.needNo || "—";
+        document.getElementById("vWay").textContent = row.way;
+        document.getElementById("vFollower").textContent = getFollowerName(row.followerId);
+        document.getElementById("vAt").textContent = row.at;
+        document.getElementById("vPlace").textContent = row.place || "—";
+        document.getElementById("vNote").textContent = row.note;
+        const tipBox = document.getElementById("vTipBox");
+        const isWarn = !!row.tip && row.tipLevel === "warn";
+        tipBox.style.background = isWarn ? "rgba(255,125,0,.10)" : "rgba(245,247,250,.9)";
+        tipBox.style.borderColor = isWarn ? "rgba(255,125,0,.45)" : "rgba(201,205,212,.6)";
+        document.getElementById("vTip").textContent = row.tip || "—";
+        openModal("fu-view");
+      }
+
+      // ===== delete =====
+      let deletingId = null;
+      function openDelete(id) {
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "下属创建的记录仅可查看");
+          return;
+        }
+        const row = followups.find((x) => x.id === id);
+        if (!row) return;
+        if (row.createdById !== currentUser.id) {
+          toast("error", "无权限", "仅创建人可删除自己的跟进记录");
+          return;
+        }
+        deletingId = id;
+        openModal("del");
+      }
+
+      function bindRowActions() {
+        document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => openView(b.getAttribute("data-view"))));
+        document.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openEdit(b.getAttribute("data-edit"))));
+        document.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => openDelete(b.getAttribute("data-del"))));
+      }
+
+      // ===== events =====
+      document.getElementById("btnSearch").addEventListener("click", () => {
+        pageNo = 1;
+        toast("success", "已应用筛选", "列表已更新");
+        render();
+      });
+      document.getElementById("btnReset").addEventListener("click", () => {
+        document.getElementById("qCustomer").value = "";
+        document.getElementById("qFollower").value = "";
+        document.getElementById("qDateStart").value = "";
+        document.getElementById("qDateEnd").value = "";
+        pageNo = 1;
+        toast("success", "已重置", "已恢复默认筛选条件");
+        render();
+      });
+
+      document.querySelectorAll("[data-open-modal]").forEach((b) => {
+        const id = b.getAttribute("data-open-modal");
+        b.addEventListener("click", () => {
+          if (id === "fu-edit") openCreate();
+          else openModal(id);
+        });
+      });
+
+      // tabs
+      document.querySelectorAll(".tab-btn[data-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeTab = btn.getAttribute("data-tab");
+          document.querySelectorAll(".tab-btn[data-tab]").forEach((b) => {
+            b.setAttribute("aria-current", b.getAttribute("data-tab") === activeTab ? "page" : "false");
+          });
+          pageNo = 1;
+          chkAll.checked = false;
+          toast(
+            "success",
+            "已切换标签页",
+            activeTab === "all" ? "全部" : activeTab === "mine" ? "我创建的" : "我下属创建的"
+          );
+          render();
+        });
+      });
+
+      document.getElementById("btnSelectAllPage").addEventListener("click", () => {
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = true));
+        chkAll.checked = true;
+        toast("success", "已全选", "已勾选当前页跟进记录");
+      });
+      chkAll.addEventListener("change", () => {
+        const v = chkAll.checked;
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = v));
+      });
+
+      pageSize.addEventListener("change", () => {
+        pageNo = 1;
+        render();
+      });
+      prevPage.addEventListener("click", () => {
+        pageNo = Math.max(1, pageNo - 1);
+        render();
+      });
+      nextPage.addEventListener("click", () => {
+        pageNo = pageNo + 1;
+        render();
+      });
+
+      // save
+      document.getElementById("btnSave").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法操作");
+          return;
+        }
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "下属创建的记录仅可查看");
+          return;
+        }
+        const customerId = fCustomerId.value;
+        const way = fWay.value;
+        const needNo = (fNeedNo.value || "").trim();
+        const at = (fAt.value || "").trim();
+        const note = (fNote.value || "").trim();
+        const place = (fPlace.value || "").trim();
+        const tip = (fTip.value || "").trim();
+
+        const badCustomer = !customerId;
+        const badWay = !way;
+        const badNote = !note;
+        setFieldError(fCustomerId, errCustomer, badCustomer);
+        setFieldError(fWay, errWay, badWay);
+        setFieldError(fNote, errNote, badNote);
+        if (badCustomer || badWay || badNote) {
+          toast("error", "保存失败", "请先补全必填字段");
+          return;
+        }
+
+        const btn = document.getElementById("btnSave");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>保存中...';
+        setTimeout(() => {
+          const atText = at ? at.replace("T", " ") + (at.length === 16 ? ":00" : "") : new Date().toISOString().slice(0, 19).replace("T", " ");
+          const tipLevel = tip && /(异常|不匹配|偏差|风险)/.test(tip) ? "warn" : "ok";
+
+          if (editingId) {
+            const row = followups.find((x) => x.id === editingId);
+            if (row && row.createdById === currentUser.id) {
+              row.customerId = customerId;
+              row.way = way;
+              row.needNo = needNo;
+              row.at = atText;
+              row.note = note;
+              row.place = place;
+              row.tip = tip;
+              row.tipLevel = tipLevel;
+            }
+            toast("success", "编辑成功", "跟进记录编辑成功");
+          } else {
+            const id = `FU-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+            followups.unshift({
+              id,
+              customerId,
+              needNo,
+              way,
+              note,
+              place,
+              tip,
+              tipLevel,
+              followerId: currentUser.id,
+              at: atText,
+              createdById: currentUser.id,
+            });
+            toast("success", "创建成功", "跟进记录创建成功");
+          }
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("fu-edit");
+          pageNo = 1;
+          render();
+        }, 850);
+      });
+
+      // delete confirm
+      document.getElementById("btnDoDelete").addEventListener("click", () => {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法删除");
+          return;
+        }
+        if (activeTab !== "mine") {
+          toast("error", "无权限", "下属创建的记录仅可查看");
+          closeModal("del");
+          return;
+        }
+        if (!deletingId) return;
+        const row = followups.find((x) => x.id === deletingId);
+        if (!row || row.createdById !== currentUser.id) {
+          toast("error", "无权限", "仅创建人可删除自己的记录");
+          closeModal("del");
+          return;
+        }
+        const btn = document.getElementById("btnDoDelete");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>删除中...';
+        setTimeout(() => {
+          followups = followups.filter((x) => x.id !== deletingId);
+          deletingId = null;
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("del");
+          toast("success", "删除成功", "跟进记录已删除");
+          render();
+        }, 750);
+      });
+
+      // export
+      let exportUrl = null;
+      function exportCsv(rows, filename) {
+        const header = ["客户名称", "商机编号", "跟进方式", "跟进记录", "位置", "提示", "跟进人", "跟进时间"];
+        const lines = [header.join(",")];
+        rows.forEach((r) => {
+          lines.push(
+            [getCustomerName(r.customerId), r.needNo || "", r.way, r.note, r.place || "", r.tip || "", getFollowerName(r.followerId), r.at]
+              .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
+              .join(","),
+          );
+        });
+        const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        return { url, filename };
+      }
+      function startExport(rows, filename) {
+        if (!hasPerm("customer:manage")) {
+          toast("error", "无权限", "当前用户无客户管理权限，无法导出");
+          return;
+        }
+        document.getElementById("exportDoneBox").classList.add("hidden");
+        openModal("exporting");
+        toast("warn", "导出中", "正在生成导出文件，请稍候");
+        setTimeout(() => {
+          if (exportUrl) URL.revokeObjectURL(exportUrl);
+          const out = exportCsv(rows, filename);
+          exportUrl = out.url;
+          const a = document.getElementById("exportDownloadLink");
+          a.href = out.url;
+          a.download = out.filename;
+          document.getElementById("exportDoneBox").classList.remove("hidden");
+          toast("success", "导出完成", "文件已生成，可点击下载");
+        }, 900);
+      }
+      document.getElementById("btnExportSelected").addEventListener("click", () => {
+        const ids = guardSelection();
+        if (!ids) return;
+        closeModal("export-selected");
+        const rows = followups.filter(passesTab).filter(passesQuery).filter((n) => ids.includes(n.id));
+        startExport(rows, "跟进记录-选中.csv");
+      });
+      document.getElementById("btnExportAll").addEventListener("click", () => {
+        closeModal("export-all");
+        const rows = followups.filter(passesTab).filter(passesQuery);
+        startExport(rows, "跟进记录-全部.csv");
+      });
+
+      // overlay click close
+      document.querySelectorAll("[data-overlay]").forEach((ov) => {
+        ov.addEventListener("click", () => closeModal(ov.getAttribute("data-overlay")));
+      });
+
+      // init
+      render();
+    </script>
+  </body>
+</html>

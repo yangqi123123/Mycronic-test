@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能触达 · 模板管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="text-[16px] font-semibold">模板列表</div>
+                <div class="text-[12px] text-muted mt-1">变量示例：{客户名称} {联系人} {需求}；发送前自动替换</div>
+              </div>
+              <button type="button" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold shrink-0" data-open-drawer="create">
+                <i class="fa-solid fa-plus mr-2"></i>新增模板
+              </button>
+            </div>
+            <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">模板</th>
+                    <th class="text-left px-3 py-2">渠道</th>
+                    <th class="text-left px-3 py-2">退订入口</th>
+                    <th class="text-left px-3 py-2">状态</th>
+                    <th class="text-left px-3 py-2">最近更新</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-surface">
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">A-定制化方案（邮件）</div>
+                      <div class="text-[12px] text-muted mt-1">主题：{客户名称} · 半导体检测设备定制方案</div>
+                    </td>
+                    <td class="px-3 py-3">
+                      <span class="chip"><i class="fa-regular fa-envelope"></i>邮件</span>
+                    </td>
+                    <td class="px-3 py-3 text-muted text-[13px]"></td>
+                    <td class="px-3 py-3"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>已审核</span></td>
+                    <td class="px-3 py-3">2026-04-12</td>
+                    <td class="px-3 py-3 text-right">
+                      <button type="button" class="text-primary font-semibold" data-open-drawer="edit" data-tpl-edit-id="A">编辑</button>
+                      <button class="text-primary font-semibold ml-3" data-open-modal="preview">预览</button>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">B-行业解决方案（短信）</div>
+                      <div class="text-[12px] text-muted mt-1">短信：{客户名称}，这里有一份行业解决方案…</div>
+                    </td>
+                    <td class="px-3 py-3">
+                      <span class="chip"><i class="fa-solid fa-message"></i>短信</span>
+                    </td>
+                    <td class="px-3 py-3 text-muted text-[13px]">回复T退订</td>
+                    <td class="px-3 py-3"><span class="chip chip--warning"><i class="fa-solid fa-triangle-exclamation"></i>待审核</span></td>
+                    <td class="px-3 py-3">2026-04-13</td>
+                    <td class="px-3 py-3 text-right">
+                      <button class="text-primary font-semibold" data-open-modal="approve">提交审核</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Drawer: create/edit -->
+    <div class="overlay" data-overlay="create" data-open="false"></div>
+    <aside class="drawer" data-drawer="create" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="font-semibold text-[16px]">新增模板</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="create" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div>
+          <div class="text-[12px] text-muted mb-1">渠道</div>
+          <select id="tplCreateChannel" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+            <option value="邮件">邮件</option>
+            <option value="短信">短信</option>
+          </select>
+          <div class="text-[12px] text-muted mt-1">邮件自动追加“邮件底部退订链接”，短信自动追加“回复T退订”</div>
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">模板名称</div>
+          <input id="tplCreateName" type="text" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="如：定制化方案（邮件）" />
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">内容</div>
+          <textarea id="tplCreateContent" class="w-full h-40 rounded-xl border border-[rgba(201,205,212,.7)] p-3 text-[14px]" placeholder="支持变量：{客户名称} {联系人} {需求}"></textarea>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button type="button" data-tpl-insert="{客户名称}" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] text-[13px] font-semibold text-text hover:bg-[rgba(245,247,250,1)]">{客户名称}</button>
+            <button type="button" data-tpl-insert="{联系人}" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] text-[13px] font-semibold text-text hover:bg-[rgba(245,247,250,1)]">{联系人}</button>
+            <button type="button" data-tpl-insert="{需求}" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] text-[13px] font-semibold text-text hover:bg-[rgba(245,247,250,1)]">{需求}</button>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1" data-close="create" data-simulate-loading>保存</button>
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="create">取消</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="overlay" data-overlay="edit" data-open="false"></div>
+    <aside class="drawer" data-drawer="edit" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="font-semibold text-[16px]">编辑模板</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="edit" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div>
+          <div class="text-[12px] text-muted mb-1">渠道</div>
+          <select id="tplEditChannel" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+            <option value="邮件">邮件</option>
+            <option value="短信">短信</option>
+          </select>
+          <div class="text-[12px] text-muted mt-1">邮件自动追加“邮件底部退订链接”，短信自动追加“回复T退订”</div>
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">模板名称</div>
+          <input id="tplEditName" type="text" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="如：定制化方案（邮件）" />
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">内容</div>
+          <textarea id="tplEditContent" class="w-full h-40 rounded-xl border border-[rgba(201,205,212,.7)] p-3 text-[14px]" placeholder="支持变量：{客户名称} {联系人} {需求}"></textarea>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button type="button" data-tpl-insert="{客户名称}" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] text-[13px] font-semibold text-text hover:bg-[rgba(245,247,250,1)]">{客户名称}</button>
+            <button type="button" data-tpl-insert="{联系人}" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] text-[13px] font-semibold text-text hover:bg-[rgba(245,247,250,1)]">{联系人}</button>
+            <button type="button" data-tpl-insert="{需求}" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] text-[13px] font-semibold text-text hover:bg-[rgba(245,247,250,1)]">{需求}</button>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1" data-close="edit" data-simulate-loading>保存</button>
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="edit">取消</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Modal: preview -->
+    <div class="overlay" data-overlay="preview" data-open="false"></div>
+    <div class="modal" data-modal="preview" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">模板预览（变量替换示例）</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="preview" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[14px] leading-relaxed">
+          尊敬的王工，针对苏州XX半导体设备有限公司在检测设备方面的需求，我们准备了定制化方案与交付计划…
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="preview">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: approve -->
+    <div class="overlay" data-overlay="approve" data-open="false"></div>
+    <div class="modal" data-modal="approve" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">提交审核（原型）</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="approve" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <div class="text-[14px]">提交后模板进入审核队列，审核通过方可用于发送。</div>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="approve">取消</button>
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="approve" data-simulate-loading>提交</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        /** 与列表行对应的已保存模板（原型回显） */
+        const TPL_SAVED = {
+          A: {
+            channel: "邮件",
+            name: "A-定制化方案（邮件）",
+            content:
+              "尊敬的{联系人}，针对{客户名称}在{需求}方面的需求，我们准备了定制化方案与交付计划…",
+          },
+        };
+
+        function insertAtCursor(ta, token) {
+          if (!ta) return;
+          const start = ta.selectionStart ?? ta.value.length;
+          const end = ta.selectionEnd ?? ta.value.length;
+          const val = ta.value;
+          ta.value = val.slice(0, start) + token + val.slice(end);
+          const pos = start + token.length;
+          ta.focus();
+          ta.setSelectionRange(pos, pos);
+        }
+
+        function wireTplVarButtons(drawerKey, textareaId) {
+          const drawer = document.querySelector(`[data-drawer="${drawerKey}"]`);
+          const ta = document.getElementById(textareaId);
+          if (!drawer || !ta) return;
+          drawer.querySelectorAll("[data-tpl-insert]").forEach((btn) => {
+            btn.addEventListener("click", () => insertAtCursor(ta, btn.getAttribute("data-tpl-insert") || ""));
+          });
+        }
+
+        function fillEditDrawer(id) {
+          const data = TPL_SAVED[id] || TPL_SAVED.A;
+          const ch = document.getElementById("tplEditChannel");
+          const nm = document.getElementById("tplEditName");
+          const tx = document.getElementById("tplEditContent");
+          if (ch) ch.value = data.channel;
+          if (nm) nm.value = data.name;
+          if (tx) tx.value = data.content;
+        }
+
+        wireTplVarButtons("create", "tplCreateContent");
+        wireTplVarButtons("edit", "tplEditContent");
+
+        document.querySelectorAll('[data-open-drawer="edit"]').forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-tpl-edit-id") || "A";
+            fillEditDrawer(id);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
+

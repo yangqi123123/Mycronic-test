@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据分析 · 线索来源</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">线索来源分析</div>
+              <div class="text-[12px] text-muted">统计各渠道线索量与转化率（线索→商机→成单）· 支持钻取</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./dashboard.html">
+              <i class="fa-solid fa-arrow-left text-muted mr-2"></i>返回总览
+            </a>
+            <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>
+              <i class="fa-solid fa-file-export mr-2"></i>导出报告
+            </button>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">工商数据</div>
+                <div class="text-[18px] font-semibold mt-1">42,180</div>
+                <div class="text-[12px] text-muted mt-1">线索→商机 10%</div>
+              </div>
+              <div class="col-span-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">行业名录</div>
+                <div class="text-[18px] font-semibold mt-1">18,540</div>
+                <div class="text-[12px] text-muted mt-1">线索→商机 13%</div>
+              </div>
+              <div class="col-span-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">招标采购</div>
+                <div class="text-[18px] font-semibold mt-1">9,820</div>
+                <div class="text-[12px] text-muted mt-1">线索→商机 22%</div>
+              </div>
+              <div class="col-span-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">展会</div>
+                <div class="text-[18px] font-semibold mt-1">6,120</div>
+                <div class="text-[12px] text-muted mt-1">线索→商机 15%</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">渠道明细（示例）</div>
+                <div class="text-[12px] text-muted mt-1">转化率=下一阶段数量/上一阶段数量×100%</div>
+              </div>
+              <div class="text-[12px] text-muted"><span class="chip"><i class="fa-solid fa-circle-info"></i>点击渠道可钻取</span></div>
+            </div>
+            <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">渠道</th>
+                    <th class="text-left px-3 py-2">线索量</th>
+                    <th class="text-left px-3 py-2">商机量</th>
+                    <th class="text-left px-3 py-2">成单量</th>
+                    <th class="text-left px-3 py-2">线索→商机</th>
+                    <th class="text-left px-3 py-2">商机→成单</th>
+                    <th class="text-right px-3 py-2">动作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-surface">
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-building"></i>工商</span></td>
+                    <td class="px-3 py-3">42,180</td>
+                    <td class="px-3 py-3">4,218</td>
+                    <td class="px-3 py-3">210</td>
+                    <td class="px-3 py-3">10%</td>
+                    <td class="px-3 py-3">5%</td>
+                    <td class="px-3 py-3 text-right"><button class="text-primary font-semibold" data-simulate-loading>钻取</button></td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-file-contract"></i>招标</span></td>
+                    <td class="px-3 py-3">9,820</td>
+                    <td class="px-3 py-3">2,160</td>
+                    <td class="px-3 py-3">180</td>
+                    <td class="px-3 py-3">22%</td>
+                    <td class="px-3 py-3">8%</td>
+                    <td class="px-3 py-3 text-right"><a class="text-primary font-semibold" href="../collect/sources.html">优化采集</a></td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-calendar-days"></i>展会</span></td>
+                    <td class="px-3 py-3">6,120</td>
+                    <td class="px-3 py-3">918</td>
+                    <td class="px-3 py-3">64</td>
+                    <td class="px-3 py-3">15%</td>
+                    <td class="px-3 py-3">7%</td>
+                    <td class="px-3 py-3 text-right"><a class="text-primary font-semibold" href="../events/events.html">回到活动</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>
+

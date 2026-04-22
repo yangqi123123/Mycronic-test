@@ -1,0 +1,1553 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 360档案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      /* 仅底部内容区内滚动：顶部概览 + Tabs 固定不动 */
+      .c360-screen {
+        height: 100vh;
+        overflow: hidden;
+      }
+      .c360-content {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .c360-panel-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+      }
+      .c360-tab-active {
+        color: #8a3b00;
+        background: rgba(255, 138, 0, 0.1);
+        border-color: rgba(255, 138, 0, 0.35);
+      }
+      .c360-required::after {
+        content: "*";
+        color: #f53f3f;
+        margin-left: 4px;
+      }
+      .c360-cell-label {
+        width: 140px;
+      }
+      @media (min-width: 1280px) {
+        .c360-cell-label {
+          width: 160px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0 flex flex-col c360-screen">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button
+            class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]"
+            title="折叠侧边栏"
+            data-sidebar-toggle
+          >
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 c360-content" id="c360Root">
+          <!-- Loading -->
+          <div id="c360Loading" class="space-y-4 h-full overflow-auto">
+            <section class="rounded-xl border border-[rgba(201,205,212,.6)] shadow-card bg-[rgba(245,247,250,.9)] p-4">
+              <div class="grid grid-cols-12 gap-3">
+                <div class="col-span-12 lg:col-span-3">
+                  <div class="h-3 w-20 rounded-md bg-[rgba(134,144,156,.18)] animate-pulse"></div>
+                  <div class="mt-2 h-5 w-56 rounded-md bg-[rgba(134,144,156,.18)] animate-pulse"></div>
+                </div>
+                <div class="col-span-12 lg:col-span-9">
+                  <div class="h-3 w-72 rounded-md bg-[rgba(134,144,156,.18)] animate-pulse"></div>
+                  <div class="mt-2 h-3 w-56 rounded-md bg-[rgba(134,144,156,.18)] animate-pulse"></div>
+                </div>
+              </div>
+            </section>
+            <div class="h-12 rounded-xl border border-[rgba(201,205,212,.6)] bg-surface animate-pulse"></div>
+            <div class="h-80 rounded-xl border border-[rgba(201,205,212,.6)] bg-surface animate-pulse"></div>
+          </div>
+
+          <!-- Error -->
+          <div id="c360Error" class="hidden">
+            <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-6">
+              <div class="text-[16px] font-semibold">加载失败</div>
+              <div class="text-[13px] text-muted mt-2">请稍后重试或检查数据初始化。</div>
+              <button id="c360Retry" class="mt-4 h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">重试</button>
+            </section>
+          </div>
+
+          <!-- Content -->
+          <div id="c360Content" class="hidden h-full flex flex-col gap-4 min-h-0">
+            <!-- 顶部客户概览区 -->
+            <section id="c360OverviewWrap" class="rounded-xl border border-[rgba(201,205,212,.6)] shadow-card bg-[rgba(245,247,250,.9)]">
+              <div class="p-4">
+                <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between xl:gap-4">
+                  <div class="min-w-0 flex-1">
+                    <div class="grid grid-cols-12 gap-3 items-center">
+                      <div class="col-span-12 xl:col-span-3">
+                        <div class="text-[12px] text-muted">客户名称</div>
+                        <div class="mt-1 text-[16px] font-semibold text-text" id="ovName">—</div>
+                      </div>
+                      <div class="col-span-6 md:col-span-4 xl:col-span-2">
+                        <div class="text-[12px] text-muted">客户等级</div>
+                        <div class="mt-1" id="ovGrade">—</div>
+                      </div>
+                      <div class="col-span-6 md:col-span-4 xl:col-span-2">
+                        <div class="text-[12px] text-muted">联系方式</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovPhone">—</div>
+                      </div>
+                      <div class="col-span-12 md:col-span-4 xl:col-span-2">
+                        <div class="text-[12px] text-muted">省市区</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovRegion">—</div>
+                      </div>
+                      <div class="col-span-6 md:col-span-6 xl:col-span-1">
+                        <div class="text-[12px] text-muted">客户来源</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovSource">—</div>
+                      </div>
+                      <div class="col-span-6 md:col-span-6 xl:col-span-2">
+                        <div class="text-[12px] text-muted">行业</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovIndustry">—</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="shrink-0 flex justify-end xl:pt-0.5">
+                    <a
+                      class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold inline-flex items-center whitespace-nowrap"
+                      href="./customer-archive.html"
+                    >
+                      <i class="fa-solid fa-arrow-left text-muted mr-2"></i>返回列表
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 中间标签切换区 -->
+            <section id="c360TabsWrap" class="bg-surface rounded-xl border border-[rgba(201,205,212,.6)] shadow-card">
+              <div class="px-3 py-2 flex flex-wrap items-center gap-2" id="c360Tabs"></div>
+            </section>
+
+            <!-- 底部内容展示区 -->
+            <section class="bg-surface rounded-xl border border-[rgba(201,205,212,.6)] shadow-card c360-panel-scroll">
+              <div class="p-4" id="c360Panel"></div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal: 通用提示/查看 -->
+    <div class="overlay" data-overlay="c360-modal" data-open="false"></div>
+    <div class="modal" data-modal="c360-modal" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold" id="c360ModalTitle">查看</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="c360-modal" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <div class="text-[12px] text-muted" id="c360ModalMeta"></div>
+        <div class="mt-3 text-[14px] leading-relaxed whitespace-pre-wrap" id="c360ModalBody"></div>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="c360-modal">知道了</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        const K_DETAIL = "customer_360_detail_v1";
+        const K_REL = "customer_360_rel_v1";
+
+        const Tabs = [
+          { key: "info", label: "客户信息" },
+          { key: "score", label: "客户评分" },
+          { key: "leads", label: "线索" },
+          { key: "contacts", label: "联系人" },
+          { key: "follows", label: "跟进记录" },
+          { key: "opps", label: "商机" },
+          { key: "quotes", label: "报价" },
+          { key: "contracts", label: "合同" },
+          { key: "deliveries", label: "交付" },
+        ];
+
+        const Dictionaries = {
+          contactType: ["决策", "技术", "采购", "财务", "其他"],
+          followWay: ["电话", "面谈", "邮件", "短信", "企微"],
+          tips: ["需尽快跟进", "重点客户", "预算明确", "需主管支持", "无"],
+          deliveryStatus: ["待交付", "交付中", "已交付"],
+        };
+
+        function sleep(ms) {
+          return new Promise((r) => setTimeout(r, ms));
+        }
+
+        function esc(s) {
+          return String(s ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function parseQuery() {
+          const q = new URLSearchParams(location.search);
+          return {
+            customerId: q.get("customerId") || q.get("id") || "",
+          };
+        }
+
+        function getGradeTag(grade) {
+          const g = String(grade || "").toUpperCase();
+          const map = {
+            A: { bg: "rgba(54,207,201,.18)", border: "rgba(54,207,201,.45)", color: "#0a6d6a" },
+            B: { bg: "rgba(64,128,255,.14)", border: "rgba(64,128,255,.35)", color: "#1f4bb8" },
+            C: { bg: "rgba(255,125,0,.14)", border: "rgba(255,125,0,.35)", color: "#a64b00" },
+            D: { bg: "rgba(134,144,156,.14)", border: "rgba(134,144,156,.35)", color: "#4e5969" },
+          };
+          const v = map[g] || map["D"];
+          return `<span class="inline-flex items-center h-7 px-2 rounded-lg border text-[12px] font-semibold" style="background:${v.bg};border-color:${v.border};color:${v.color}">${esc(g || "—")}</span>`;
+        }
+
+        function getStatusTag(status) {
+          const s = String(status || "");
+          const map = {
+            待交付: { bg: "rgba(255,125,0,.12)", border: "rgba(255,125,0,.35)", color: "#a64b00" },
+            交付中: { bg: "rgba(64,128,255,.12)", border: "rgba(64,128,255,.35)", color: "#1f4bb8" },
+            已交付: { bg: "rgba(54,207,201,.16)", border: "rgba(54,207,201,.45)", color: "#0a6d6a" },
+          };
+          const v = map[s] || { bg: "rgba(134,144,156,.12)", border: "rgba(134,144,156,.35)", color: "#4e5969" };
+          return `<span class="inline-flex items-center h-7 px-2 rounded-lg border text-[12px] font-semibold" style="background:${v.bg};border-color:${v.border};color:${v.color}">${esc(s || "—")}</span>`;
+        }
+
+        function formatMoney(n) {
+          const v = Number(n);
+          if (!Number.isFinite(v)) return "—";
+          return "¥ " + v.toFixed(2);
+        }
+
+        function formatDateTime(s) {
+          const str = String(s || "");
+          if (!str) return "—";
+          return str.replace("T", " ").slice(0, 16);
+        }
+
+        function formatDateTimeSec(s) {
+          const str = String(s || "");
+          if (!str) return "—";
+          return str.replace("T", " ").slice(0, 19);
+        }
+
+        function downloadText(filename, text) {
+          const blob = new Blob([String(text || "")], { type: "text/plain;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename || "download.txt";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 3000);
+        }
+
+        function loadDetailMap() {
+          try {
+            const raw = localStorage.getItem(K_DETAIL);
+            const m = raw ? JSON.parse(raw) : {};
+            return m && typeof m === "object" ? m : {};
+          } catch (_) {
+            return {};
+          }
+        }
+
+        function saveDetailMap(m) {
+          try {
+            localStorage.setItem(K_DETAIL, JSON.stringify(m || {}));
+          } catch (_) {}
+        }
+
+        function loadRelMap() {
+          try {
+            const raw = localStorage.getItem(K_REL);
+            const m = raw ? JSON.parse(raw) : {};
+            return m && typeof m === "object" ? m : {};
+          } catch (_) {
+            return {};
+          }
+        }
+
+        function saveRelMap(m) {
+          try {
+            localStorage.setItem(K_REL, JSON.stringify(m || {}));
+          } catch (_) {}
+        }
+
+        function seedRel(customerId, custName) {
+          const map = loadRelMap();
+          if (map && map[customerId]) return;
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = String(now.getMonth() + 1).padStart(2, "0");
+          const d = String(now.getDate()).padStart(2, "0");
+          const baseDay = `${y}-${m}-${d}`;
+
+          map[customerId] = {
+            contacts: [],
+            follows: [
+              {
+                id: `FR-${customerId}-001`,
+                oppNo: "OPP-2026-0001",
+                way: "电话",
+                content: "初次沟通，客户对方案感兴趣，需补充规格参数与交期。",
+                location: "线上",
+                tip: "需尽快跟进",
+                owner: "销售A",
+                followAt: `${baseDay} 10:30`,
+              },
+            ],
+            opps: [
+              { oppNo: "OPP-2026-0001", desc: "半导体检测设备采购意向，预算待确认", owner: "销售A", createdAt: `${baseDay} 11:10` },
+            ],
+            quotes: [
+              { oppNo: "OPP-2026-0001", amount: 1200000, file: { name: "报价单", ext: "pdf" }, owner: "销售A", createdAt: `${baseDay} 12:30` },
+            ],
+            contracts: [
+              {
+                oppNo: "OPP-2026-0001",
+                contractNo: "CT-2026-00088",
+                contractName: "设备采购合同",
+                amount: 1180000,
+                signedAt: `${baseDay} 00:00`,
+                expireAt: `${y + 1}-${m}-${d} 00:00`,
+                fileA: { name: "合同附件", ext: "pdf" },
+                fileB: { name: "纸质合同扫描件", ext: "pdf" },
+                owner: "销售A",
+                createdAt: `${baseDay} 13:40`,
+              },
+            ],
+            deliveries: [
+              {
+                contractNo: "CT-2026-00088",
+                contractName: "设备采购合同",
+                deliveredAt: `${baseDay} 00:00`,
+                dealAmount: 1180000,
+                status: "交付中",
+                file: { name: "交付清单", ext: "xlsx" },
+                owner: "交付A",
+                createdAt: `${baseDay} 16:20`,
+              },
+            ],
+          };
+
+          // 一些客户默认联系人为空，满足空态展示
+          if (String(custName || "").includes("苏州")) {
+            map[customerId].contacts = [
+              { name: "王工", title: "采购经理", phone: "13812341234", type: "采购", createdBy: "管理员", createdAt: `${baseDay} 09:30` },
+              { name: "李经理", title: "技术负责人", phone: "18600000088", type: "技术", createdBy: "管理员", createdAt: `${baseDay} 09:35` },
+            ];
+          }
+
+          saveRelMap(map);
+        }
+
+        function getCustomerById(id) {
+          try {
+            const list = window.CustomerStore.listCustomers();
+            return list.find((c) => c && c.id === id) || null;
+          } catch (_) {
+            return null;
+          }
+        }
+
+        function showLoading() {
+          document.getElementById("c360Loading").classList.remove("hidden");
+          document.getElementById("c360Error").classList.add("hidden");
+          document.getElementById("c360Content").classList.add("hidden");
+        }
+
+        function showError() {
+          document.getElementById("c360Loading").classList.add("hidden");
+          document.getElementById("c360Error").classList.remove("hidden");
+          document.getElementById("c360Content").classList.add("hidden");
+        }
+
+        function showContent() {
+          document.getElementById("c360Loading").classList.add("hidden");
+          document.getElementById("c360Error").classList.add("hidden");
+          document.getElementById("c360Content").classList.remove("hidden");
+        }
+
+        function openModal(title, body, meta) {
+          const t = document.getElementById("c360ModalTitle");
+          const b = document.getElementById("c360ModalBody");
+          const m = document.getElementById("c360ModalMeta");
+          t.textContent = title || "查看";
+          b.textContent = body || "";
+          m.textContent = meta || "";
+          const overlay = document.querySelector('[data-overlay="c360-modal"]');
+          const modal = document.querySelector('[data-modal="c360-modal"]');
+          if (overlay) overlay.dataset.open = "true";
+          if (modal) modal.dataset.open = "true";
+        }
+
+        function renderOverview(cust) {
+          document.getElementById("ovName").textContent = cust ? cust.name || "—" : "—";
+          document.getElementById("ovGrade").innerHTML = getGradeTag(cust && cust.grade);
+          document.getElementById("ovPhone").textContent = (cust && cust.contactPhone) || "—";
+          document.getElementById("ovRegion").textContent = cust ? [cust.prov, cust.city, cust.dist].filter(Boolean).join(" / ") || "—" : "—";
+          document.getElementById("ovSource").textContent = (cust && cust.source) || "—";
+          document.getElementById("ovIndustry").textContent = (cust && cust.industry) || "—";
+        }
+
+        let state = {
+          customerId: "",
+          activeTab: "info",
+          editMode: false,
+          contactPage: 1,
+        };
+
+        function renderTabs() {
+          const box = document.getElementById("c360Tabs");
+          box.innerHTML = Tabs.map((t) => {
+            const active = t.key === state.activeTab;
+            return `
+              <button
+                class="h-9 px-3 rounded-lg border text-[14px] font-semibold ${active ? "c360-tab-active" : "bg-surface hover:bg-[rgba(245,247,250,.9)] border-[rgba(201,205,212,.7)]"}"
+                data-c360-tab="${esc(t.key)}"
+              >${esc(t.label)}</button>
+            `;
+          }).join("");
+
+          box.querySelectorAll("[data-c360-tab]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const key = btn.getAttribute("data-c360-tab");
+              if (!key) return;
+              state.activeTab = key;
+              state.editMode = false;
+              state.contactPage = 1;
+              renderTabs();
+              renderPanel();
+            });
+          });
+        }
+
+        function fieldRow(labelLeft, valueLeft, labelRight, valueRight) {
+          return `
+            <tr class="border-b border-[rgba(201,205,212,.6)]">
+              <td class="py-3 pr-3 text-[12px] text-muted c360-cell-label align-top">${labelLeft}</td>
+              <td class="py-3 pr-6 text-[14px] text-text align-top">${valueLeft}</td>
+              <td class="py-3 pr-3 text-[12px] text-muted c360-cell-label align-top">${labelRight || "—"}</td>
+              <td class="py-3 text-[14px] text-text align-top">${valueRight || "—"}</td>
+            </tr>
+          `;
+        }
+
+        function getDetail(customerId) {
+          const map = loadDetailMap();
+          return (map && map[customerId]) || {};
+        }
+
+        function setDetail(customerId, patch) {
+          const map = loadDetailMap();
+          map[customerId] = { ...(map[customerId] || {}), ...(patch || {}) };
+          saveDetailMap(map);
+          return map[customerId];
+        }
+
+        function renderInfoTab(cust) {
+          const d = getDetail(state.customerId);
+          const edit = !!state.editMode;
+
+          const left = [
+            { key: "name", label: "客户名称", required: true, type: "text", value: cust.name || "" },
+            { key: "grade", label: "客户等级", required: false, type: "select-grade", value: cust.grade || "D" },
+            { key: "source", label: "客户来源", required: false, type: "text", value: cust.source || "" },
+            { key: "legalPerson", label: "法定代表人", required: false, type: "text", value: d.legalPerson || "" },
+            { key: "region", label: "省市区", required: false, type: "region", value: [cust.prov, cust.city, cust.dist].filter(Boolean).join("/") },
+            { key: "paidInCapital", label: "实缴资本", required: false, type: "text", value: d.paidInCapital || "" },
+            { key: "orgCode", label: "组织机构代码", required: false, type: "text", value: d.orgCode || "" },
+            { key: "businessTerm", label: "营业期限", required: false, type: "text", value: d.businessTerm || "" },
+            { key: "insuredCount", label: "参保人数", required: false, type: "text", value: d.insuredCount || "" },
+            { key: "approvedAt", label: "核准日期", required: false, type: "date", value: d.approvedAt || "" },
+            { key: "scope", label: "经营范围", required: false, type: "textarea", value: d.scope || "" },
+            { key: "needSummary", label: "关键需求摘要", required: false, type: "textarea", value: d.needSummary || "" },
+          ];
+
+          const right = [
+            { key: "uscc", label: "统一社会信用代码", required: false, type: "text", value: cust.uscc || "" },
+            { key: "contactPhone", label: "联系方式", required: true, type: "text", value: cust.contactPhone || "" },
+            { key: "industry", label: "行业", required: false, type: "text", value: cust.industry || "" },
+            { key: "establishedAt", label: "成立日期", required: false, type: "date", value: d.establishedAt || "" },
+            { key: "registeredCapital", label: "注册资本", required: false, type: "text", value: d.registeredCapital || "" },
+            { key: "regNo", label: "工商注册号", required: false, type: "text", value: d.regNo || "" },
+            { key: "taxNo", label: "纳税人识别号", required: false, type: "text", value: d.taxNo || "" },
+            { key: "regAuthority", label: "登记机关", required: false, type: "text", value: d.regAuthority || "" },
+            { key: "formerName", label: "曾用名", required: false, type: "text", value: d.formerName || "" },
+            { key: "registeredAddress", label: "注册地址", required: false, type: "textarea", value: d.registeredAddress || "" },
+          ];
+
+          function renderField(f) {
+            const label = `<span class="${f.required ? "c360-required" : ""}">${esc(f.label)}</span>`;
+            if (!edit) return { label, value: esc(f.value || "—") };
+
+            if (f.type === "textarea") {
+              return {
+                label,
+                value: `<textarea class="w-full min-h-[72px] rounded-xl border border-[rgba(201,205,212,.7)] p-3 text-[14px]" data-c360-input="${esc(f.key)}">${esc(
+                  f.value || ""
+                )}</textarea>`,
+              };
+            }
+            if (f.type === "date") {
+              return {
+                label,
+                value: `<input type="date" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" data-c360-input="${esc(f.key)}" value="${esc(
+                  f.value || ""
+                )}" />`,
+              };
+            }
+            if (f.type === "select-grade") {
+              const opts = ["A", "B", "C", "D"]
+                .map((g) => `<option value="${g}" ${String(f.value || "D") === g ? "selected" : ""}>${g}</option>`)
+                .join("");
+              return {
+                label,
+                value: `<select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]" data-c360-input="${esc(
+                  f.key
+                )}">${opts}</select>`,
+              };
+            }
+            if (f.type === "region") {
+              const parts = String(f.value || "").split("/").map((x) => x.trim());
+              const prov = parts[0] || cust.prov || "";
+              const city = parts[1] || cust.city || "";
+              const dist = parts[2] || cust.dist || "";
+              return {
+                label,
+                value: `
+                  <div class="grid grid-cols-3 gap-2">
+                    <input class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="省" data-c360-input="prov" value="${esc(prov)}" />
+                    <input class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="市" data-c360-input="city" value="${esc(city)}" />
+                    <input class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="区" data-c360-input="dist" value="${esc(dist)}" />
+                  </div>
+                `,
+              };
+            }
+            return {
+              label,
+              value: `<input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" data-c360-input="${esc(f.key)}" value="${esc(
+                f.value || ""
+              )}" />`,
+            };
+          }
+
+          const rows = [];
+          const max = Math.max(left.length, right.length);
+          for (let i = 0; i < max; i++) {
+            const L = left[i];
+            const R = right[i];
+            const Lr = L ? renderField(L) : { label: "—", value: "—" };
+            const Rr = R ? renderField(R) : { label: "—", value: "—" };
+            rows.push(fieldRow(Lr.label, Lr.value, Rr.label, Rr.value));
+          }
+
+          return `
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">客户信息</div>
+                <div class="text-[12px] text-muted mt-1">线索可获取字段自动回显；不可获取字段可补全。</div>
+              </div>
+              <div class="flex items-center gap-2">
+                ${
+                  edit
+                    ? `
+                      <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold" data-c360-cancel>
+                        取消
+                      </button>
+                      <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-c360-save>
+                        保存
+                      </button>
+                    `
+                    : `
+                      <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-c360-edit>
+                        编辑
+                      </button>
+                    `
+                }
+              </div>
+            </div>
+
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[920px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+                <tbody>
+                  ${rows.join("")}
+                </tbody>
+              </table>
+              <div class="mt-3 text-[12px] text-muted">
+                <span class="c360-required">必填项</span>：客户名称、联系方式
+              </div>
+            </div>
+          `;
+        }
+
+        function renderContactsTab(cust) {
+          const map = loadRelMap();
+          const list = (map[state.customerId] && map[state.customerId].contacts) || [];
+          const pageSize = 10;
+          const total = list.length;
+          const pages = Math.max(1, Math.ceil(total / pageSize));
+          const page = Math.min(pages, Math.max(1, state.contactPage));
+          const slice = list.slice((page - 1) * pageSize, page * pageSize);
+
+          const rows =
+            slice.length === 0
+              ? `<tr><td colspan="6" class="py-10 text-center text-[13px] text-muted">暂无联系人</td></tr>`
+              : slice
+                  .map(
+                    (r) => `
+                      <tr class="border-b border-[rgba(201,205,212,.6)]">
+                        <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.name || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.title || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.phone || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.type || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.createdBy || "—")}</td>
+                        <td class="py-3 px-3 text-[14px] text-muted whitespace-nowrap">${esc(r.createdAt || "—")}</td>
+                      </tr>
+                    `
+                  )
+                  .join("");
+
+          return `
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">联系人</div>
+              </div>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[860px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr class="border-b border-[rgba(201,205,212,.6)]">
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">姓名</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">职位</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">电话</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">联系人类型</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建人</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建时间</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[12px] text-muted">
+              <div>共 ${total} 条</div>
+              <div class="flex items-center gap-2">
+                <button class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] disabled:opacity-40" ${
+                  page <= 1 ? "disabled" : ""
+                } data-c360-contact-prev>上一页</button>
+                <div>${page} / ${pages}</div>
+                <button class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] disabled:opacity-40" ${
+                  page >= pages ? "disabled" : ""
+                } data-c360-contact-next>下一页</button>
+              </div>
+            </div>
+          `;
+        }
+
+        function renderFollowsTab() {
+          const map = loadRelMap();
+          const list = (map[state.customerId] && map[state.customerId].follows) || [];
+          const rows =
+            list.length === 0
+              ? `<tr><td colspan="7" class="py-10 text-center text-[13px] text-muted">暂无跟进记录</td></tr>`
+              : list
+                  .map(
+                    (r) => `
+                      <tr class="border-b border-[rgba(201,205,212,.6)]">
+                        <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.id || "—")}<div class="text-[12px] text-muted mt-1">${esc(
+                          r.oppNo || "—"
+                        )}</div></td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.way || "—")}</td>
+                        <td class="py-3 px-3 text-[14px] max-w-[420px]">
+                          <div class="line-clamp-2">${esc(r.content || "—")}</div>
+                          <button class="mt-1 text-primary font-semibold text-[12px]" data-c360-view='${esc(
+                            JSON.stringify({ title: "跟进记录", body: r.content || "", meta: `跟进时间：${formatDateTime(r.followAt)}` })
+                          )}'>查看</button>
+                        </td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.location || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${r.tip && r.tip !== "无" ? `<span class="chip chip--warning">${esc(r.tip)}</span>` : "—"}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.owner || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(formatDateTime(r.followAt))}</td>
+                      </tr>
+                    `
+                  )
+                  .join("");
+
+          return `
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">跟进记录</div>
+              </div>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[980px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr class="border-b border-[rgba(201,205,212,.6)]">
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">跟进编号/商机编号</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">跟进方式</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">跟进记录</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">位置</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">提示</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">跟进人</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">跟进时间</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        function renderOppsTab() {
+          const map = loadRelMap();
+          const list = (map[state.customerId] && map[state.customerId].opps) || [];
+          const rows =
+            list.length === 0
+              ? `<tr><td colspan="4" class="py-10 text-center text-[13px] text-muted">暂无商机</td></tr>`
+              : list
+                  .map(
+                    (r) => `
+                      <tr class="border-b border-[rgba(201,205,212,.6)]">
+                        <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.oppNo || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.desc || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.owner || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(formatDateTime(r.createdAt))}</td>
+                      </tr>
+                    `
+                  )
+                  .join("");
+          return `
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">商机</div>
+              </div>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[920px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr class="border-b border-[rgba(201,205,212,.6)]">
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">商机编号</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">商机描述</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建人</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建时间</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        function renderQuotesTab() {
+          const map = loadRelMap();
+          const list = (map[state.customerId] && map[state.customerId].quotes) || [];
+          const rows =
+            list.length === 0
+              ? `<tr><td colspan="5" class="py-10 text-center text-[13px] text-muted">暂无报价</td></tr>`
+              : list
+                  .map((r) => {
+                    const file = r.file ? `${r.file.name}.${r.file.ext}` : "";
+                    const fileHtml = file
+                      ? `<button class="text-primary font-semibold" data-c360-download='${esc(
+                          JSON.stringify({ name: file, text: `报价附件：${file}\n客户：${state.customerId}` })
+                        )}'>${esc(file)}</button>`
+                      : `<span class="text-muted">暂无附件</span>`;
+                    return `
+                      <tr class="border-b border-[rgba(201,205,212,.6)]">
+                        <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.oppNo || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(formatMoney(r.amount))}</td>
+                        <td class="py-3 px-3 text-[14px]">${fileHtml}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.owner || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(formatDateTime(r.createdAt))}</td>
+                      </tr>
+                    `;
+                  })
+                  .join("");
+          return `
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">报价</div>
+              </div>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[920px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr class="border-b border-[rgba(201,205,212,.6)]">
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">商机编号</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">报价金额</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">报价附件</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建人</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建时间</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        function renderContractsTab() {
+          const map = loadRelMap();
+          const list = (map[state.customerId] && map[state.customerId].contracts) || [];
+          const rows =
+            list.length === 0
+              ? `<tr><td colspan="10" class="py-10 text-center text-[13px] text-muted">暂无合同</td></tr>`
+              : list
+                  .map((r) => {
+                    const a = r.fileA ? `${r.fileA.name}.${r.fileA.ext}` : "";
+                    const b = r.fileB ? `${r.fileB.name}.${r.fileB.ext}` : "";
+                    const aHtml = a
+                      ? `<button class="text-primary font-semibold" data-c360-download='${esc(
+                          JSON.stringify({ name: a, text: `合同附件：${a}\n合同编号：${r.contractNo || ""}` })
+                        )}'>${esc(a)}</button>`
+                      : `<span class="text-muted">暂无附件</span>`;
+                    const bHtml = b
+                      ? `<button class="text-primary font-semibold" data-c360-download='${esc(
+                          JSON.stringify({ name: b, text: `纸质合同附件：${b}\n合同编号：${r.contractNo || ""}` })
+                        )}'>${esc(b)}</button>`
+                      : `<span class="text-muted">暂无附件</span>`;
+                    return `
+                      <tr class="border-b border-[rgba(201,205,212,.6)]">
+                        <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.oppNo || "—")}</td>
+                        <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.contractNo || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.contractName || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(formatMoney(r.amount))}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc((r.signedAt || "").slice(0, 10) || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc((r.expireAt || "").slice(0, 10) || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${aHtml}</td>
+                        <td class="py-3 px-3 text-[14px]">${bHtml}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.owner || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(formatDateTime(r.createdAt))}</td>
+                      </tr>
+                    `;
+                  })
+                  .join("");
+          return `
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">合同</div>
+              </div>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[1120px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr class="border-b border-[rgba(201,205,212,.6)]">
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">商机编号</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">合同编号</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">合同名称</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">合同金额</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">签署时间</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">到期时间</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">合同附件</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">纸质合同附件</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建人</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建时间</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        function renderDeliveriesTab() {
+          const map = loadRelMap();
+          const list = (map[state.customerId] && map[state.customerId].deliveries) || [];
+          const rows =
+            list.length === 0
+              ? `<tr><td colspan="8" class="py-10 text-center text-[13px] text-muted">暂无交付</td></tr>`
+              : list
+                  .map((r) => {
+                    const file = r.file ? `${r.file.name}.${r.file.ext}` : "";
+                    const fileHtml = file
+                      ? `<button class="text-primary font-semibold" data-c360-download='${esc(
+                          JSON.stringify({ name: file, text: `交付附件：${file}\n合同编号：${r.contractNo || ""}` })
+                        )}'>${esc(file)}</button>`
+                      : `<span class="text-muted">暂无附件</span>`;
+                    return `
+                      <tr class="border-b border-[rgba(201,205,212,.6)]">
+                        <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.contractNo || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.contractName || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc((r.deliveredAt || "").slice(0, 10) || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(formatMoney(r.dealAmount))}</td>
+                        <td class="py-3 px-3 text-[14px]">${getStatusTag(r.status)}</td>
+                        <td class="py-3 px-3 text-[14px]">${fileHtml}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.owner || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(formatDateTime(r.createdAt))}</td>
+                      </tr>
+                    `;
+                  })
+                  .join("");
+          return `
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">交付</div>
+              </div>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[1120px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr class="border-b border-[rgba(201,205,212,.6)]">
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">合同编号</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">合同名称</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">交付时间</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">成交金额</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">交付状态</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">附件</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建人</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建时间</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        function getAiGradeTag(grade) {
+          const g = String(grade || "").toUpperCase();
+          const map = {
+            A: { bg: "rgba(0,180,42,.10)", border: "rgba(0,180,42,.25)", color: "#067a2a" }, // 绿
+            B: { bg: "rgba(64,128,255,.12)", border: "rgba(64,128,255,.35)", color: "#1f4bb8" }, // 蓝
+            C: { bg: "rgba(255,125,0,.12)", border: "rgba(255,125,0,.25)", color: "#8a3b00" }, // 橙
+            D: { bg: "rgba(134,144,156,.12)", border: "rgba(134,144,156,.35)", color: "#4e5969" }, // 灰
+          };
+          const v = map[g] || map.D;
+          return `<span class="inline-flex items-center h-7 px-2 rounded-lg border text-[12px] font-semibold" style="background:${v.bg};border-color:${v.border};color:${v.color}">${esc(g || "—")}</span>`;
+        }
+
+        function hashStr(s) {
+          const str = String(s || "");
+          let h = 2166136261;
+          for (let i = 0; i < str.length; i++) {
+            h ^= str.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+          }
+          return (h >>> 0) || 1;
+        }
+        function rand01(seed) {
+          // deterministic LCG
+          let x = seed >>> 0;
+          x = (Math.imul(1664525, x) + 1013904223) >>> 0;
+          return x / 4294967296;
+        }
+        function clamp(n, a, b) {
+          const v = Number(n);
+          if (!Number.isFinite(v)) return a;
+          return Math.min(b, Math.max(a, v));
+        }
+
+        function buildCustomerAiScore(customerId, cust) {
+          // allow empty-state for some customers (示例)
+          if (String(customerId || "").endsWith("8")) return null;
+
+          const seed = hashStr(customerId || cust?.name || "seed");
+          const pick = (arr, k) => arr[Math.floor(rand01(seed + k) * arr.length)] || arr[0] || "—";
+
+          const kw = pick(["检测设备", "良率提升", "SMT产线", "半导体封装", "AOI/AXI"], 11);
+          const indA = pick(["半导体", "SMT", "电子制造", "PCB"], 12);
+          const indB = pick(["检测设备", "工艺优化", "自动化"], 13);
+          const plA = pick(["检测设备", "贴片线", "焊接工艺"], 14);
+          const plB = pick(["AOI", "AXI", "SPI"], 15);
+
+          const valBudget = pick(["¥50-100万", "¥100-300万", "¥300-800万", "¥800万+"], 21);
+          const prop = pick(["制造业", "科研院所", "贸易", "外资"], 22);
+          const qual = pick(["高新技术企业", "专精特新", "省级重点"], 23);
+
+          const bidKw = pick(["招标公告", "中标公示", "采购意向"], 31);
+          const bidBudget = pick(["¥30-80万", "¥80-200万", "¥200-500万"], 32);
+
+          const techRole = pick(["工艺工程师", "设备工程师", "质量工程师"], 41);
+          const upgrade = pick(["产线升级", "良率专项", "国产替代"], 42);
+
+          const openN = Math.floor(rand01(seed + 51) * 6);
+          const clickN = Math.floor(rand01(seed + 52) * 4);
+          const smsN = Math.floor(rand01(seed + 53) * 3);
+
+          // raw dimension scores (0-100)
+          const sDemand = Math.round(clamp(72 + rand01(seed + 1) * 26, 0, 100));
+          const sValue = Math.round(clamp(58 + rand01(seed + 2) * 34, 0, 100));
+          const sPurchase = Math.round(clamp(50 + rand01(seed + 3) * 40, 0, 100));
+          const sTech = Math.round(clamp(46 + rand01(seed + 4) * 44, 0, 100));
+          const sReach = Math.round(clamp(30 + rand01(seed + 5) * 55, 0, 100));
+
+          const weights = { demand: 40, value: 25, purchase: 20, tech: 10, reach: 5 };
+          const total = (sDemand * weights.demand + sValue * weights.value + sPurchase * weights.purchase + sTech * weights.tech + sReach * weights.reach) / 100;
+          const total2 = Math.round(total * 100) / 100;
+          const grade = total2 >= 80 ? "A" : total2 >= 60 ? "B" : total2 >= 30 ? "C" : "D";
+
+          // detail item point splits (just for display)
+          const demandPts = {
+            kw: Math.round(sDemand * 0.34),
+            ind1: Math.round(sDemand * 0.22),
+            ind2: Math.round(sDemand * 0.16),
+            pl1: Math.round(sDemand * 0.14),
+            pl2: Math.max(0, sDemand - (Math.round(sDemand * 0.34) + Math.round(sDemand * 0.22) + Math.round(sDemand * 0.16) + Math.round(sDemand * 0.14))),
+          };
+          const valuePts = {
+            budget: Math.round(sValue * 0.45),
+            prop: Math.round(sValue * 0.28),
+            qual: Math.max(0, sValue - (Math.round(sValue * 0.45) + Math.round(sValue * 0.28))),
+          };
+          const purchasePts = {
+            bid: Math.round(sPurchase * 0.55),
+            budget: Math.max(0, sPurchase - Math.round(sPurchase * 0.55)),
+          };
+          const techPts = {
+            role: Math.round(sTech * 0.58),
+            plan: Math.max(0, sTech - Math.round(sTech * 0.58)),
+          };
+          const reachPts = {
+            open: Math.round(sReach * 0.42),
+            click: Math.round(sReach * 0.36),
+            sms: Math.max(0, sReach - (Math.round(sReach * 0.42) + Math.round(sReach * 0.36))),
+          };
+
+          return {
+            total: total2,
+            grade,
+            dims: {
+              demand: {
+                name: "需求匹配度",
+                score: sDemand,
+                items: [
+                  { k: "关键词", t: `${kw} `, p: demandPts.kw },
+                  { k: "行业匹配", t: `${indA} `, p: demandPts.ind1, t2: `${indB} `, p2: demandPts.ind2 },
+                  { k: "产品线匹配", t: `${plA} `, p: demandPts.pl1, t2: `${plB} `, p2: demandPts.pl2 },
+                ],
+              },
+              value: {
+                name: "企业价值",
+                score: sValue,
+                items: [
+                  { k: "营收预算金额区间匹配", t: `${valBudget} `, p: valuePts.budget },
+                  { k: "企业性质匹配", t: `${prop} `, p: valuePts.prop },
+                  { k: "资质等级匹配", t: `${qual} `, p: valuePts.qual },
+                ],
+              },
+              purchase: {
+                name: "采购潜力",
+                score: sPurchase,
+                items: [
+                  { k: "招采信号关键词匹配", t: `${bidKw} `, p: purchasePts.bid },
+                  { k: "预算金额区间匹配", t: `${bidBudget} `, p: purchasePts.budget },
+                ],
+              },
+              tech: {
+                name: "技术敏感度",
+                score: sTech,
+                items: [
+                  { k: "技术岗位关键词匹配", t: `${techRole} `, p: techPts.role },
+                  { k: "技术升级计划匹配", t: `${upgrade} `, p: techPts.plan },
+                ],
+              },
+              reach: {
+                name: "触达有效性",
+                score: sReach,
+                items: [
+                  { k: "邮件打开匹配", t: `打开 ${openN} 次 `, p: reachPts.open },
+                  { k: "邮件点击匹配", t: `点击 ${clickN} 次 `, p: reachPts.click },
+                  { k: "短信回复匹配", t: `回复 ${smsN} 次 `, p: reachPts.sms },
+                ],
+              },
+            },
+          };
+        }
+
+        function renderAiScoreTab(cust) {
+          const data = buildCustomerAiScore(state.customerId, cust);
+          if (!data) {
+            return `
+              <div class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-10 text-center">
+                <div class="text-[16px] font-semibold">暂无评分数据</div>
+                <div class="text-[12px] text-muted mt-1">该客户暂未生成 AI 评分明细</div>
+              </div>
+            `;
+          }
+
+          const rule = "所有维度统一满分100分，按权重折算后总分不超过100分，避免单维度分数溢出";
+          const dims = data.dims;
+
+          function scoreItemRow(title, contentHtml) {
+            return `
+              <div class="text-[13px] leading-relaxed">
+                <span class="text-muted">${esc(title)}：</span>${contentHtml}
+              </div>
+            `;
+          }
+
+          function pts(text, p) {
+            return `<span class="text-text">${esc(text)}</span><span class="text-primary font-semibold">+${esc(p)}分</span>`;
+          }
+
+          function dimCard(title, score, rowsHtml) {
+            return `
+              <div class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="text-[14px] font-semibold">${esc(title)}</div>
+                  <div class="text-[20px] font-semibold text-text shrink-0">${esc(score)}</div>
+                </div>
+                <div class="mt-3 space-y-2">${rowsHtml}</div>
+              </div>
+            `;
+          }
+
+          const demandRows = [
+            scoreItemRow("关键词", pts(dims.demand.items[0].t, dims.demand.items[0].p)),
+            scoreItemRow(
+              "行业匹配",
+              `${pts(dims.demand.items[1].t, dims.demand.items[1].p)}<span class="text-muted">、</span>${pts(dims.demand.items[1].t2, dims.demand.items[1].p2)}`,
+            ),
+            scoreItemRow(
+              "产品线匹配",
+              `${pts(dims.demand.items[2].t, dims.demand.items[2].p)}<span class="text-muted">、</span>${pts(dims.demand.items[2].t2, dims.demand.items[2].p2)}`,
+            ),
+          ].join("");
+
+          const valueRows = [
+            scoreItemRow(dims.value.items[0].k, pts(dims.value.items[0].t, dims.value.items[0].p)),
+            scoreItemRow(dims.value.items[1].k, pts(dims.value.items[1].t, dims.value.items[1].p)),
+            scoreItemRow(dims.value.items[2].k, pts(dims.value.items[2].t, dims.value.items[2].p)),
+          ].join("");
+
+          const purchaseRows = [
+            scoreItemRow(dims.purchase.items[0].k, pts(dims.purchase.items[0].t, dims.purchase.items[0].p)),
+            scoreItemRow(dims.purchase.items[1].k, pts(dims.purchase.items[1].t, dims.purchase.items[1].p)),
+          ].join("");
+
+          const techRows = [
+            scoreItemRow(dims.tech.items[0].k, pts(dims.tech.items[0].t, dims.tech.items[0].p)),
+            scoreItemRow(dims.tech.items[1].k, pts(dims.tech.items[1].t, dims.tech.items[1].p)),
+          ].join("");
+
+          const reachRows = [
+            scoreItemRow(dims.reach.items[0].k, pts(dims.reach.items[0].t, dims.reach.items[0].p)),
+            scoreItemRow(dims.reach.items[1].k, pts(dims.reach.items[1].t, dims.reach.items[1].p)),
+            scoreItemRow(dims.reach.items[2].k, pts(dims.reach.items[2].t, dims.reach.items[2].p)),
+          ].join("");
+
+          return `
+            <div class="space-y-4">
+              <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="text-[12px] text-muted">客户总得分</div>
+                    <div class="mt-1 text-[26px] font-semibold text-text">${esc(Number(data.total).toFixed(2))}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-[12px] text-muted">AI客户评级（原始）</div>
+                    <div class="mt-1">${getAiGradeTag(data.grade)}</div>
+                  </div>
+                </div>
+                <div class="mt-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[12px] text-muted leading-relaxed">
+                  AI评分规则：${esc(rule)}
+                </div>
+              </section>
+
+              <section class="grid grid-cols-12 gap-3">
+                <div class="col-span-12 lg:col-span-6">${dimCard(dims.demand.name, dims.demand.score, demandRows)}</div>
+                <div class="col-span-12 lg:col-span-6">${dimCard(dims.value.name, dims.value.score, valueRows)}</div>
+                <div class="col-span-12 lg:col-span-6">${dimCard(dims.purchase.name, dims.purchase.score, purchaseRows)}</div>
+                <div class="col-span-12 lg:col-span-6">${dimCard(dims.tech.name, dims.tech.score, techRows)}</div>
+                <div class="col-span-12">${dimCard(dims.reach.name, dims.reach.score, reachRows)}</div>
+              </section>
+            </div>
+          `;
+        }
+
+        function buildCustomerLeads(customerId, cust) {
+          const id = String(customerId || "");
+          if (!id) return [];
+
+          // 优先展示真实入库的线索源记录（来自线索池批量入库）
+          const rel = loadRelMap();
+          const saved = rel && rel[id] && Array.isArray(rel[id].leads) ? rel[id].leads : null;
+          if (saved && saved.length) {
+            const rows = saved
+              .map((x) => ({
+                leadId: x.id || x.leadId || "",
+                projectName: x.projectName || "",
+                projNo: x.projectNo || "",
+                contact: x.contact || "",
+                collector: x.collector || x.collectorName || "",
+                source: x.source || "",
+                industry: x.industry || "",
+                prov: x.prov || "",
+                city: x.city || "",
+                dist: x.county || x.dist || "",
+                collectedAt: x.collectedAt || "",
+              }))
+              .filter((x) => x.leadId || x.projectName || x.collectedAt);
+            rows.sort((a, b) => String(b.collectedAt).localeCompare(String(a.collectedAt)));
+            return rows;
+          }
+
+          // 示例：部分客户展示空态
+          if (id.endsWith("8")) return [];
+
+          const seed = hashStr(id || cust?.name || "seed");
+          const pick = (arr, k) => arr[Math.floor(rand01(seed + k) * arr.length)] || arr[0] || "—";
+          const n = 2 + Math.floor(rand01(seed + 77) * 4); // 2~5条
+
+          const industries = ["半导体", "电子制造", "SMT", "PCB", "自动化", "新能源", "汽车电子"];
+          const sources = ["展会采集", "官网表单", "线索池导入", "市场活动", "第三方数据"];
+          const collectors = ["接口采集器-A", "爬虫采集器-B", "展会采集器-C"];
+          const provs = ["河南省", "江苏省", "上海市", "北京市", "浙江省", "广东省", "四川省"];
+          const cities = ["郑州", "洛阳", "苏州", "南京", "浦东", "海淀", "杭州", "深圳", "成都"];
+          const dists = ["金水区", "高新区", "工业园区", "浦东新区", "海淀区", "余杭区", "南山区", "武侯区"];
+
+          const projPrefix = pick(["智能检测", "产线升级", "良率提升", "国产替代", "自动化改造"], 91);
+          const nameBase = cust?.name ? String(cust.name).replaceAll("有限公司", "").slice(0, 8) : "客户";
+
+          const today = new Date();
+          const base = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 30, 0, 0).getTime();
+
+          const rows = [];
+          for (let i = 0; i < n; i++) {
+            const t = base - Math.floor(rand01(seed + 100 + i) * 1000 * 60 * 60 * 24 * 15); // 最近15天
+            const dt = new Date(t);
+            const yyyy = dt.getFullYear();
+            const MM = String(dt.getMonth() + 1).padStart(2, "0");
+            const DD = String(dt.getDate()).padStart(2, "0");
+            const hh = String(dt.getHours()).padStart(2, "0");
+            const mm = String(dt.getMinutes()).padStart(2, "0");
+            const ss = String(dt.getSeconds()).padStart(2, "0");
+
+            const prov = pick(provs, 120 + i);
+            const city = pick(cities, 140 + i);
+            const dist = pick(dists, 160 + i);
+            const industry = pick(industries, 180 + i);
+            const source = pick(sources, 200 + i);
+            const collector = pick(collectors, 210 + i);
+
+            const projNo = `PRJ-2026-${String(1000 + Math.floor(rand01(seed + 220 + i) * 8999)).padStart(4, "0")}`;
+            const contact =
+              cust?.contactPhone ||
+              `1${Math.floor(3000000000 + rand01(seed + 260 + i) * 699999999)
+                .toString()
+                .padStart(10, "0")}`;
+            const collectedAt = `${yyyy}-${MM}-${DD} ${hh}:${mm}:${ss}`;
+
+            const leadId = `LD-${id}-${String(i + 1).padStart(3, "0")}`;
+            const projectName = `${nameBase}-${projPrefix}（线索）`;
+
+            rows.push({
+              leadId,
+              projectName,
+              projNo,
+              contact,
+              collector,
+              source,
+              industry,
+              prov,
+              city,
+              dist,
+              collectedAt,
+            });
+          }
+
+          // 倒序：新数据在上
+          rows.sort((a, b) => String(b.collectedAt).localeCompare(String(a.collectedAt)));
+          return rows;
+        }
+
+        function renderLeadsTab(cust) {
+          const rows = buildCustomerLeads(state.customerId, cust);
+          if (!rows || rows.length === 0) {
+            return `
+              <div class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-10 text-center">
+                <div class="text-[16px] font-semibold">暂无线索数据</div>
+                <div class="text-[12px] text-muted mt-1">该客户暂未关联线索记录</div>
+              </div>
+            `;
+          }
+
+          const body = rows
+            .map((r) => {
+              const href = `https://example.com/lead-source-detail?leadId=${encodeURIComponent(r.leadId)}&customerId=${encodeURIComponent(
+                state.customerId || ""
+              )}`;
+              return `
+                <tr class="border-t border-[rgba(201,205,212,.45)]">
+                  <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.projectName)}</td>
+                  <td class="py-3 px-3 text-[14px] text-muted whitespace-nowrap">${esc(r.projNo)}</td>
+                  <td class="py-3 px-3 text-[14px] whitespace-nowrap">${esc(r.contact || "—")}</td>
+                  <td class="py-3 px-3 text-[14px] whitespace-nowrap">${esc(r.collector || "—")}</td>
+                  <td class="py-3 px-3 text-[14px]">${esc(r.source || "—")}</td>
+                  <td class="py-3 px-3 text-[14px]">${esc(r.industry || "—")}</td>
+                  <td class="py-3 px-3 text-[14px] whitespace-nowrap text-muted">${esc(
+                    [r.prov || "—", r.city || "—", r.dist || "—"].join("/")
+                  )}</td>
+                  <td class="py-3 px-3 text-[14px] whitespace-nowrap">${esc(formatDateTimeSec(r.collectedAt))}</td>
+                  <td class="py-3 px-3 text-[14px] whitespace-nowrap">
+                    <a class="text-primary font-semibold" href="${esc(href)}" target="_blank" rel="noopener noreferrer">查看</a>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+
+          return `
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">线索</div>
+              </div>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[1220px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr class="border-b border-[rgba(201,205,212,.6)]">
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">项目名称</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">项目编号</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">联系方式</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">所属采集器</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">数据来源</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">行业类型</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">省市区</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">采集时间</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">操作</th>
+                  </tr>
+                </thead>
+                <tbody>${body}</tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        function renderPanel() {
+          const panel = document.getElementById("c360Panel");
+          const cust = getCustomerById(state.customerId);
+          if (!cust) {
+            panel.innerHTML = `<div class="py-12 text-center text-[13px] text-muted">客户不存在或未初始化：${esc(state.customerId)}</div>`;
+            return;
+          }
+
+          if (state.activeTab === "info") panel.innerHTML = renderInfoTab(cust);
+          else if (state.activeTab === "contacts") panel.innerHTML = renderContactsTab(cust);
+          else if (state.activeTab === "follows") panel.innerHTML = renderFollowsTab();
+          else if (state.activeTab === "opps") panel.innerHTML = renderOppsTab();
+          else if (state.activeTab === "quotes") panel.innerHTML = renderQuotesTab();
+          else if (state.activeTab === "contracts") panel.innerHTML = renderContractsTab();
+          else if (state.activeTab === "deliveries") panel.innerHTML = renderDeliveriesTab();
+          else if (state.activeTab === "score") panel.innerHTML = renderAiScoreTab(cust);
+          else if (state.activeTab === "leads") panel.innerHTML = renderLeadsTab(cust);
+          else panel.innerHTML = `<div class="py-10 text-center text-muted">未实现</div>`;
+
+          // bind per-panel actions
+          const editBtn = panel.querySelector("[data-c360-edit]");
+          if (editBtn) {
+            editBtn.addEventListener("click", () => {
+              state.editMode = true;
+              renderPanel();
+            });
+          }
+
+          const cancelBtn = panel.querySelector("[data-c360-cancel]");
+          if (cancelBtn) {
+            cancelBtn.addEventListener("click", () => {
+              state.editMode = false;
+              renderPanel();
+            });
+          }
+
+          const saveBtn = panel.querySelector("[data-c360-save]");
+          if (saveBtn) {
+            saveBtn.addEventListener("click", () => {
+              const get = (k) => {
+                const el = panel.querySelector(`[data-c360-input="${CSS.escape(k)}"]`);
+                return el ? String(el.value || "").trim() : "";
+              };
+
+              const name = get("name");
+              const contactPhone = get("contactPhone");
+              if (!name) return openModal("校验失败", "客户名称不能为空。", "必填项校验");
+              if (!contactPhone) return openModal("校验失败", "联系方式不能为空。", "必填项校验");
+
+              const grade = get("grade") || "D";
+              const source = get("source");
+              const industry = get("industry");
+              const uscc = get("uscc");
+              const prov = get("prov");
+              const city = get("city");
+              const dist = get("dist");
+
+              // sync to global CustomerStore (影响工作台/档案列表/提醒等)
+              try {
+                window.CustomerStore.updateCustomer(state.customerId, {
+                  name,
+                  grade,
+                  source,
+                  industry,
+                  uscc,
+                  contactPhone,
+                  prov,
+                  city,
+                  dist,
+                });
+              } catch (_) {}
+
+              // store extended fields locally
+              const patch = {
+                legalPerson: get("legalPerson"),
+                establishedAt: get("establishedAt"),
+                registeredCapital: get("registeredCapital"),
+                paidInCapital: get("paidInCapital"),
+                regNo: get("regNo"),
+                orgCode: get("orgCode"),
+                taxNo: get("taxNo"),
+                businessTerm: get("businessTerm"),
+                regAuthority: get("regAuthority"),
+                insuredCount: get("insuredCount"),
+                formerName: get("formerName"),
+                approvedAt: get("approvedAt"),
+                registeredAddress: get("registeredAddress"),
+                scope: get("scope"),
+                needSummary: get("needSummary"),
+              };
+              setDetail(state.customerId, patch);
+
+              state.editMode = false;
+              refresh();
+              openModal("保存成功", "客户信息已更新，并已全局同步。", `客户：${name}`);
+            });
+          }
+
+          panel.querySelectorAll("[data-c360-contact-prev]").forEach((btn) =>
+            btn.addEventListener("click", () => {
+              state.contactPage = Math.max(1, state.contactPage - 1);
+              renderPanel();
+            })
+          );
+          panel.querySelectorAll("[data-c360-contact-next]").forEach((btn) =>
+            btn.addEventListener("click", () => {
+              state.contactPage = state.contactPage + 1;
+              renderPanel();
+            })
+          );
+
+          panel.querySelectorAll("[data-c360-download]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              try {
+                const payload = JSON.parse(btn.getAttribute("data-c360-download") || "{}");
+                downloadText(payload.name || "附件.txt", payload.text || "");
+              } catch (_) {}
+            });
+          });
+
+          panel.querySelectorAll("[data-c360-view]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              try {
+                const payload = JSON.parse(btn.getAttribute("data-c360-view") || "{}");
+                openModal(payload.title || "查看", payload.body || "", payload.meta || "");
+              } catch (_) {}
+            });
+          });
+        }
+
+        function refresh() {
+          const cust = getCustomerById(state.customerId);
+          renderOverview(cust || null);
+          renderPanel();
+        }
+
+        async function ensureCustomerStoreReady() {
+          if (window.CustomerStore && window.CustomerStore.listCustomers) return true;
+          let ok = false;
+          const t0 = Date.now();
+          while (Date.now() - t0 < 1500) {
+            if (window.CustomerStore && window.CustomerStore.listCustomers) {
+              ok = true;
+              break;
+            }
+            await sleep(50);
+          }
+          if (ok) return true;
+          return await new Promise((resolve) => {
+            let done = false;
+            const timer = setTimeout(() => {
+              if (done) return;
+              done = true;
+              resolve(false);
+            }, 1800);
+            window.addEventListener(
+              "customer-store:ready",
+              () => {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                resolve(true);
+              },
+              { once: true }
+            );
+          });
+        }
+
+        async function bootstrap() {
+          showLoading();
+          const q = parseQuery();
+          state.customerId = q.customerId;
+
+          const ready = await ensureCustomerStoreReady();
+          if (!ready) return showError();
+
+          // default customerId: first one
+          if (!state.customerId) {
+            try {
+              const list = window.CustomerStore.listCustomers();
+              state.customerId = (list && list[0] && list[0].id) || "";
+            } catch (_) {}
+          }
+
+          const cust = getCustomerById(state.customerId);
+          if (!cust) return showError();
+
+          seedRel(state.customerId, cust.name);
+          renderTabs();
+          renderOverview(cust);
+          showContent();
+          renderPanel();
+
+          // global sync
+          try {
+            window.CustomerStore.onChange(() => refresh());
+          } catch (_) {}
+        }
+
+        document.getElementById("c360Retry").addEventListener("click", () => bootstrap());
+
+        bootstrap();
+      })();
+    </script>
+  </body>
+</html>
+

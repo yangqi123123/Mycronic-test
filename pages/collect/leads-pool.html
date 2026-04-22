@@ -1,0 +1,1608 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据采集 · 线索池</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 搜索区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="text-[16px] font-semibold">搜索查询</div>
+            <div class="mt-3 grid grid-cols-12 gap-3 items-end">
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">客户名称</div>
+                <input id="qName" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-surface" placeholder="请输入客户名称" />
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">行业类型</div>
+                <select id="qIndustry" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>半导体</option>
+                  <option>SMT/电子制造</option>
+                  <option>PCB</option>
+                  <option>科研院所</option>
+                </select>
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">数据来源</div>
+                <select id="qSource" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>公开工商数据</option>
+                  <option>行业名录</option>
+                  <option>政府科研数据</option>
+                  <option>招标采购</option>
+                  <option>垂直平台数据</option>
+                  <option>企业自媒体数据</option>
+                  <option>展会活动</option>
+                </select>
+              </div>
+
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">所属采集器</div>
+                <input id="qCollector" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入所属采集器" />
+              </div>
+              <div class="col-span-4">
+                <div class="text-[12px] text-muted mb-1">采集时间（起止）</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="qCollectedStart" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                  <input id="qCollectedEnd" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+                </div>
+              </div>
+              <div class="col-span-4 flex gap-2 justify-end">
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 列表视图：批量操作 + 列表 + 分页 -->
+          <section id="leadsView" class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">线索列表</div>
+              <div class="flex flex-wrap gap-2">
+                <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="bulk-in">批量入库（到CRM）</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-open-modal="bulk-grade">批量修改客户等级</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-open-modal="bulk-priority">设置优先级</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-open-modal="bulk-export-selected">导出选中</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-open-modal="bulk-export-all">导出全部</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold text-[#F53F3F]" data-open-modal="bulk-del">批量删除</button>
+              </div>
+            </div>
+
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1500px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2 w-10"><input id="chkAll" type="checkbox" class="accent-primary" /></th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">联系方式</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">客户等级</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">优先级</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">项目名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">项目编号</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">所属采集器</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">数据来源</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">行业类型</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">省市区</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">采集时间</th>
+                    <th class="text-right px-3 py-2 whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>共 <span id="totalCount" class="text-text font-semibold">0</span> 条</div>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="pageSize" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button id="prevPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>
+                  <button id="pageNoBtn" type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button id="nextPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 查重结果视图 -->
+          <section id="dedupeView" class="hidden bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div class="text-[16px] font-semibold">入库唯一性校验</div>
+                <div class="text-[12px] text-muted mt-1">批量入库前自动校验客户唯一性：需用户处理完所有重复组后才能继续入库。</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnRetryIngest" class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold">
+                  <i class="fa-solid fa-circle-check mr-2"></i>重新入库
+                </button>
+                <button id="btnReRunDedupe" class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">
+                  <i class="fa-solid fa-rotate text-muted mr-2"></i>重新校验
+                </button>
+                <button id="btnBackToList" class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold">
+                  <i class="fa-solid fa-arrow-left mr-2"></i>返回线索列表
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">总重复组数</div>
+                <div class="text-[22px] font-semibold mt-1"><span id="dupGroupCount">0</span></div>
+              </div>
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">总重复条数</div>
+                <div class="text-[22px] font-semibold mt-1"><span id="dupItemCount">0</span></div>
+              </div>
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">查重规则</div>
+                <div class="text-[13px] mt-1 text-muted leading-relaxed">
+                  统一社会信用代码 + 客户名称（双重确认）<br />
+                  <span class="chip"><i class="fa-solid fa-circle-info"></i>两项同时命中（同一客户主体）才判定为重复客户</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 space-y-4" id="dupGroups"></div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>当前页：<span id="dupPageNo" class="text-text font-semibold">1</span>/<span id="dupPageTotal" class="text-text font-semibold">1</span></div>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="dupPageSize" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option value="5">5组/页</option>
+                  <option value="10">10组/页</option>
+                  <option value="20">20组/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button id="dupPrevPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>
+                  <button id="dupPageBtn" type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button id="dupNextPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 补全字段 -->
+    <div class="overlay" data-overlay="edit" data-open="false"></div>
+    <div class="modal" data-modal="edit" data-open="false" style="max-width: 980px; width: min(980px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">补全字段</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="edit"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-6 space-y-4 max-h-[min(78vh,720px)] overflow-y-auto">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户名称</div>
+            <input id="fName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">联系方式</div>
+            <input id="fContact" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">统一社会信用代码</div>
+            <input id="fUscc" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">项目名称</div>
+            <input id="fProjectName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">项目编号</div>
+            <input id="fProjectNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">数据来源</div>
+            <select id="fSource" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option>公开工商数据</option>
+              <option>行业名录</option>
+              <option>政府科研数据</option>
+              <option>招标采购</option>
+              <option>垂直平台数据</option>
+              <option>企业自媒体数据</option>
+              <option>展会活动</option>
+            </select>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">行业类型</div>
+            <select id="fIndustry" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option>SMT/电子制造</option>
+              <option>PCB</option>
+              <option>半导体</option>
+              <option>科研院所</option>
+            </select>
+          </div>
+          <div class="col-span-4">
+            <div class="text-[12px] text-muted mb-1">省份</div>
+            <input id="fProv" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-4">
+            <div class="text-[12px] text-muted mb-1">城市</div>
+            <input id="fCity" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-4">
+            <div class="text-[12px] text-muted mb-1">县区</div>
+            <input id="fCounty" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12">
+            <div class="text-[12px] text-muted mb-1">关键需求摘要</div>
+            <textarea
+              id="fNeedSummary"
+              maxlength="240"
+              class="w-full min-h-[84px] rounded-xl border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] bg-surface"
+              placeholder="最多输入 240 字"
+            ></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="edit">取消</button>
+          <button id="btnSaveEdit" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 批量入库 -->
+    <div class="overlay" data-overlay="bulk-in" data-open="false"></div>
+    <div class="modal" data-modal="bulk-in" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">批量入库（到CRM）</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="bulk-in"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">
+          批量入库前自动校验客户唯一性，需用户处理完所有重复组后才能继续入库，确认将所选线索入库到 CRM 客户库？
+        </p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="bulk-in">取消</button>
+          <button id="btnBulkIn" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认入库</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 合并重复线索（选择主数据） -->
+    <div class="overlay" data-overlay="merge-leads" data-open="false"></div>
+    <div class="modal" data-modal="merge-leads" data-open="false" style="max-width: 860px; width: min(860px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">合并重复线索</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="merge-leads"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px] text-muted">
+          请选择要保留的主数据。确认后将合并为 1 条，其余线索源将合并入客户并保留可追溯记录。
+        </div>
+        <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+          <table class="w-full table min-w-[820px]">
+            <thead class="bg-[rgba(245,247,250,.9)]">
+              <tr>
+                <th class="text-left px-3 py-2 w-12">保留</th>
+                <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                <th class="text-left px-3 py-2 whitespace-nowrap">联系方式</th>
+                <th class="text-left px-3 py-2 whitespace-nowrap">统一社会信用代码</th>
+                <th class="text-left px-3 py-2 whitespace-nowrap">项目编号</th>
+                <th class="text-left px-3 py-2 whitespace-nowrap">采集时间</th>
+                <th class="text-left px-3 py-2 whitespace-nowrap">数据来源</th>
+              </tr>
+            </thead>
+            <tbody id="mergeLeadsTbody" class="bg-surface"></tbody>
+          </table>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="merge-leads">取消</button>
+          <button id="btnConfirmMergeLeads" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认合并</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 查重入口已并入「批量入库」流程 -->
+
+    <!-- 旧「查重-合并」弹窗已移除：当前合并在校验页逐组完成 -->
+
+    <!-- 批量删除 -->
+    <div class="overlay" data-overlay="bulk-del" data-open="false"></div>
+    <div class="modal" data-modal="bulk-del" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">批量删除</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="bulk-del"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">确认删除所选线索？删除后不可恢复。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="bulk-del">取消</button>
+          <button id="btnBulkDel" class="h-9 px-4 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">确认删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置优先级 -->
+    <div class="overlay" data-overlay="bulk-priority" data-open="false"></div>
+    <div class="modal" data-modal="bulk-priority" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">设置优先级</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="bulk-priority"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-2">
+        <div class="text-[12px] text-muted">优先级（单选）</div>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="低" checked /> 低</label>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="一般" /> 一般</label>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="中" /> 中</label>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="紧急" /> 紧急</label>
+        <label class="flex items-center gap-2 text-[14px]"><input type="radio" name="prio" class="accent-primary" value="非常紧急" /> 非常紧急</label>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="bulk-priority">取消</button>
+          <button id="btnSetPrio" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 批量修改客户等级 -->
+    <div class="overlay" data-overlay="bulk-grade" data-open="false"></div>
+    <div class="modal" data-modal="bulk-grade" data-open="false" style="max-width: 520px; width: min(520px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">批量修改客户等级</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="bulk-grade"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="text-[14px] text-muted">选择目标等级（A/B/C/D），确认后批量更新所选线索的客户等级字段。</div>
+        <select id="bulkGrade" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C" selected>C</option>
+          <option value="D">D</option>
+        </select>
+        <div class="mt-4 flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="bulk-grade">取消</button>
+          <button id="btnBulkGradeDo" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认修改</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出 -->
+    <div class="overlay" data-overlay="bulk-export-selected" data-open="false"></div>
+    <div class="modal" data-modal="bulk-export-selected" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出选中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="bulk-export-selected"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出所选线索为 CSV（示例）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="bulk-export-selected">取消</button>
+          <button id="btnExportSelected" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="bulk-export-all" data-open="false"></div>
+    <div class="modal" data-modal="bulk-export-all" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出全部</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="bulk-export-all"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出全部线索为 CSV（示例）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="bulk-export-all">取消</button>
+          <button id="btnExportAll" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      // ----- utilities -----
+      const PRIORITIES = ["低", "一般", "中", "紧急", "非常紧急"];
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function openModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "true";
+        if (m) m.dataset.open = "true";
+      }
+      function closeModal(id) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = "false";
+        if (m) m.dataset.open = "false";
+      }
+
+      function toast(type, title, desc) {
+        const color =
+          type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+        const border =
+          type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+        const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-triangle-exclamation";
+
+        const wrap = document.getElementById("toasts");
+        const el = document.createElement("div");
+        el.className = "toast bg-surface rounded-xl border shadow-card";
+        el.style.borderColor = border;
+        el.innerHTML = `
+          <div class="p-3 flex gap-3" style="background:${color}">
+            <i class="fa-solid ${icon} text-muted mt-0.5"></i>
+            <div class="min-w-0">
+              <div class="text-[14px] font-semibold">${escapeHtml(title)}</div>
+              ${desc ? `<div class="text-[12px] text-muted mt-0.5">${escapeHtml(desc)}</div>` : ""}
+            </div>
+            <button class="ml-auto w-8 h-8 rounded-lg hover:bg-[rgba(245,247,250,.9)]" title="关闭">
+              <i class="fa-solid fa-xmark text-muted"></i>
+            </button>
+          </div>
+        `;
+        el.querySelector("button").addEventListener("click", () => el.remove());
+        wrap.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
+      }
+
+      function norm(s) {
+        return String(s || "")
+          .toLowerCase()
+          .replaceAll(/\s+/g, "")
+          .replaceAll(/[()（）\-_\/\\.,，。·:：]/g, "")
+          .replaceAll(/(有限公司|有限责任公司|股份有限公司|集团|公司|研究院|研究所|分公司)$/g, "");
+      }
+
+      function bigramSim(a, b) {
+        const A = norm(a);
+        const B = norm(b);
+        if (!A || !B) return 0;
+        if (A === B) return 1;
+        const grams = (x) => {
+          if (x.length <= 1) return [x];
+          const out = [];
+          for (let i = 0; i < x.length - 1; i++) out.push(x.slice(i, i + 2));
+          return out;
+        };
+        const gA = grams(A);
+        const gB = grams(B);
+        const bag = new Map();
+        gB.forEach((g) => bag.set(g, (bag.get(g) || 0) + 1));
+        let hit = 0;
+        gA.forEach((g) => {
+          const n = bag.get(g) || 0;
+          if (n > 0) {
+            hit++;
+            bag.set(g, n - 1);
+          }
+        });
+        return (2 * hit) / (gA.length + gB.length);
+      }
+
+      // ----- data -----
+      /** @type {{id:string,name:string,contact:string,uscc:string,grade:"A"|"B"|"C"|"D",priority:string,projectName:string,projectNo:string,collector:string,source:string,industry:string,prov:string,city:string,county:string,collectedAt:string,rawUrl:string,note:string,status:"normal"|"ignored"|"merged"}[]} */
+      let leads = [
+        {
+          id: "L-0001",
+          name: "某某半导体有限公司",
+          contact: "13812340001",
+          uscc: "91310000MA1K0X0001",
+          grade: "B",
+          priority: "中",
+          projectName: "贴片机采购",
+          projectNo: "PRJ-2026-001",
+          collector: "接口采集器-A",
+          source: "招标采购",
+          industry: "半导体",
+          prov: "上海",
+          city: "上海",
+          county: "浦东",
+          collectedAt: "2026-04-13 02:08",
+          rawUrl: "https://example.com/source/1",
+          note: "",
+          status: "normal",
+        },
+        {
+          id: "L-0005",
+          name: "某某半导体（上海）有限公司",
+          contact: "13812340001",
+          uscc: "91310000MA1K0X0001",
+          grade: "B",
+          priority: "一般",
+          projectName: "贴片机采购",
+          projectNo: "PRJ-2026-001",
+          collector: "接口采集器-A",
+          source: "垂直平台数据",
+          industry: "半导体",
+          prov: "上海",
+          city: "上海",
+          county: "浦东",
+          collectedAt: "2026-04-13 02:12",
+          rawUrl: "https://example.com/source/1-dup",
+          note: "",
+          status: "normal",
+        },
+        {
+          id: "L-0002",
+          name: "某某电子制造",
+          contact: "sales@demo.com",
+          uscc: "91320000MA1K0X0002",
+          grade: "C",
+          priority: "一般",
+          projectName: "产线升级",
+          projectNo: "PRJ-2026-002",
+          collector: "爬虫采集器-B",
+          source: "行业名录",
+          industry: "SMT/电子制造",
+          prov: "江苏",
+          city: "苏州",
+          county: "吴中",
+          collectedAt: "2026-04-13 18:00",
+          rawUrl: "https://example.com/source/2",
+          note: "",
+          status: "normal",
+        },
+        {
+          id: "L-0006",
+          name: "某某电子制造有限公司",
+          contact: "sales@demo.com",
+          uscc: "",
+          grade: "D",
+          priority: "低",
+          projectName: "产线升级",
+          projectNo: "PRJ-2026-002",
+          collector: "爬虫采集器-B",
+          source: "行业名录",
+          industry: "SMT/电子制造",
+          prov: "江苏",
+          city: "苏州",
+          county: "吴中",
+          collectedAt: "2026-04-13 18:06",
+          rawUrl: "https://example.com/source/2-dup",
+          note: "",
+          status: "normal",
+        },
+        {
+          id: "L-0003",
+          name: "某某研究院",
+          contact: "微信: demo_wechat",
+          uscc: "91110000MA1K0X0003",
+          grade: "A",
+          priority: "紧急",
+          projectName: "科研项目合作",
+          projectNo: "PRJ-2026-003",
+          collector: "接口采集器-A",
+          source: "政府科研数据",
+          industry: "科研院所",
+          prov: "北京",
+          city: "北京",
+          county: "海淀",
+          collectedAt: "2026-04-13 10:12",
+          rawUrl: "https://example.com/source/3",
+          note: "",
+          status: "normal",
+        },
+        {
+          id: "L-0004",
+          name: "（未抓取）",
+          contact: "（未抓取）",
+          uscc: "",
+          grade: "D",
+          priority: "低",
+          projectName: "",
+          projectNo: "",
+          collector: "展会采集器-C",
+          source: "垂直平台数据",
+          industry: "PCB",
+          prov: "",
+          city: "",
+          county: "",
+          collectedAt: "2026-04-13 16:40",
+          rawUrl: "https://example.com/source/4",
+          note: "",
+          status: "normal",
+        },
+      ];
+
+      // ----- list view -----
+      let pageNo = 1;
+      function getSelectedIds() {
+        return Array.from(document.querySelectorAll("[data-row-chk]:checked")).map((c) => c.getAttribute("data-row-chk"));
+      }
+      function guardSelection() {
+        const ids = getSelectedIds();
+        if (!ids.length) {
+          toast("error", "未选择数据", "请先勾选至少一条线索");
+          return null;
+        }
+        return ids;
+      }
+      function passesQuery(row) {
+        const n = (document.getElementById("qName").value || "").trim();
+        const s = document.getElementById("qSource")?.value || "";
+        const ind = document.getElementById("qIndustry")?.value || "";
+        const col = (document.getElementById("qCollector")?.value || "").trim();
+        const ds = document.getElementById("qCollectedStart")?.value || "";
+        const de = document.getElementById("qCollectedEnd")?.value || "";
+        if (n && !row.name.includes(n)) return false;
+        if (s && String(row.source || "") !== s) return false;
+        if (ind && String(row.industry || "") !== ind) return false;
+        if (col && !String(row.collector || "").includes(col)) return false;
+        if (ds && String(row.collectedAt || "").slice(0, 10) < ds) return false;
+        if (de && String(row.collectedAt || "").slice(0, 10) > de) return false;
+        return true;
+      }
+      function paged(rows) {
+        const size = parseInt(document.getElementById("pageSize").value, 10);
+        const total = rows.length;
+        const pages = Math.max(1, Math.ceil(total / size));
+        pageNo = Math.min(pageNo, pages);
+        const start = (pageNo - 1) * size;
+        return { total, pages, slice: rows.slice(start, start + size) };
+      }
+      function bindRowActions() {
+        document.querySelectorAll("[data-edit]").forEach((b) => {
+          if (b.hasAttribute("disabled")) return;
+          b.addEventListener("click", () => openEdit(b.getAttribute("data-edit")));
+        });
+      }
+      function render() {
+        const filtered = leads.filter((x) => x.status !== "merged").filter(passesQuery);
+        const { total, pages, slice } = paged(filtered);
+        document.getElementById("totalCount").textContent = String(total);
+        document.getElementById("pageNoBtn").textContent = String(pageNo);
+        document.getElementById("prevPage").disabled = pageNo <= 1;
+        document.getElementById("nextPage").disabled = pageNo >= pages;
+
+        const isMissing = (v) => {
+          const s = String(v ?? "").trim();
+          return !s || s === "（未抓取）" || s === "—";
+        };
+        const needsComplete = (r) => {
+          // 列表关键字段（不含采集时间）：客户名称/联系方式/优先级/项目名称/项目编号/数据来源/行业类型/省市区
+          return (
+            isMissing(r.name) ||
+            isMissing(r.contact) ||
+            isMissing(r.priority) ||
+            isMissing(r.projectName) ||
+            isMissing(r.projectNo) ||
+            isMissing(r.source) ||
+            isMissing(r.industry) ||
+            isMissing(r.prov) ||
+            isMissing(r.city) ||
+            isMissing(r.county)
+          );
+        };
+
+        document.getElementById("tbody").innerHTML = slice
+          .map(
+            (r) => {
+              const editBtn = `<button class="text-primary font-semibold" data-edit="${r.id}">补全字段</button>`;
+              return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${r.id}" /></td>
+                <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(r.name)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.contact)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.grade || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.priority)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.projectName || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.projectNo || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.collector || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.source)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.industry)}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(`${r.prov || "—"}/${r.city || "—"}/${r.county || "—"}`)}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.collectedAt)}</td>
+                <td class="px-3 py-3 text-right whitespace-nowrap space-x-3">
+                  <a class="text-primary font-semibold" href="${r.rawUrl}" target="_blank" rel="noreferrer">查看</a>
+                  ${editBtn}
+                </td>
+              </tr>
+            `;
+            }
+          )
+          .join("");
+        document.getElementById("chkAll").checked = false;
+        bindRowActions();
+      }
+
+      // ----- edit -----
+      let editingId = null;
+      function openEdit(id) {
+        const row = leads.find((x) => x.id === id);
+        if (!row) return;
+        editingId = id;
+        document.getElementById("fName").value = row.name === "（未抓取）" ? "" : row.name;
+        document.getElementById("fContact").value = row.contact === "（未抓取）" ? "" : row.contact;
+        document.getElementById("fUscc").value = row.uscc || "";
+        const ns = document.getElementById("fNeedSummary");
+        if (ns) ns.value = String(row.needSummary || "").slice(0, 240);
+        document.getElementById("fProjectName").value = row.projectName || "";
+        document.getElementById("fProjectNo").value = row.projectNo || "";
+        document.getElementById("fSource").value = row.source;
+        document.getElementById("fIndustry").value = row.industry;
+        document.getElementById("fProv").value = row.prov || "";
+        document.getElementById("fCity").value = row.city || "";
+        document.getElementById("fCounty").value = row.county || "";
+        openModal("edit");
+      }
+
+      document.getElementById("btnSaveEdit").addEventListener("click", () => {
+        if (!editingId) return;
+        const row = leads.find((x) => x.id === editingId);
+        if (!row) return;
+        row.name = document.getElementById("fName").value.trim() || "（未抓取）";
+        row.contact = document.getElementById("fContact").value.trim() || "（未抓取）";
+        row.uscc = document.getElementById("fUscc").value.trim();
+        const ns = document.getElementById("fNeedSummary");
+        row.needSummary = (ns ? String(ns.value || "") : "").trim().slice(0, 240);
+        row.projectName = document.getElementById("fProjectName").value.trim();
+        row.projectNo = document.getElementById("fProjectNo").value.trim();
+        row.source = document.getElementById("fSource").value;
+        row.industry = document.getElementById("fIndustry").value;
+        row.prov = document.getElementById("fProv").value.trim();
+        row.city = document.getElementById("fCity").value.trim();
+        row.county = document.getElementById("fCounty").value.trim();
+        closeModal("edit");
+        toast("success", "保存成功", "字段已补全并刷新列表");
+        render();
+      });
+
+      // ----- export -----
+      function exportCsv(rows, filename) {
+        const header = ["客户名称", "联系方式", "统一社会信用代码", "客户等级", "优先级", "项目名称", "项目编号", "所属采集器", "数据来源", "行业类型", "省市区", "采集时间"];
+        const lines = [header.join(",")];
+        rows.forEach((r) => {
+          lines.push(
+            [
+              r.name,
+              r.contact,
+              r.uscc || "",
+              r.grade || "",
+              r.priority,
+              r.projectName || "",
+              r.projectNo || "",
+              r.collector || "",
+              r.source,
+              r.industry,
+              `${r.prov || "—"}/${r.city || "—"}/${r.county || "—"}`,
+              r.collectedAt,
+            ]
+              .map((x) => `"${String(x).replaceAll('"', '""')}"`)
+              .join(",")
+          );
+        });
+        const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 500);
+      }
+
+      // ----- dedupe rules (入库唯一性校验) -----
+      function normStr(s) {
+        return String(s || "").trim();
+      }
+      function sameKey(uscc, name) {
+        const u = normStr(uscc);
+        const n = normStr(name);
+        if (!u || !n) return "";
+        return `${u}||${n}`;
+      }
+      function dedupeBasisLabel(basis) {
+        if (basis === "both") return "依据统一社会信用代码 + 客户名称同时重复";
+        if (basis === "uscc") return "依据统一社会信用代码重复";
+        if (basis === "name") return "依据客户名称重复";
+        return "重复依据：未知";
+      }
+
+      function getExistingCustomers() {
+        try {
+          const Store = window.CustomerStore;
+          return Store ? Store.listCustomers() : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function ensureCustomerStore(cb) {
+        if (window.CustomerStore) return cb();
+        let done = false;
+        const on = () => {
+          if (done) return;
+          done = true;
+          window.removeEventListener("customer-store:ready", on);
+          cb();
+        };
+        window.addEventListener("customer-store:ready", on);
+        setTimeout(() => {
+          if (done) return;
+          done = true;
+          window.removeEventListener("customer-store:ready", on);
+          toast("error", "系统初始化中", "CustomerStore 尚未就绪，请稍后重试");
+        }, 2000);
+      }
+
+      // 返回：阻断入库的重复组（需处理），以及仅提示的风险项（不阻断）
+      function findDuplicateGroupsForIngest(candidates) {
+        const active = (candidates || []).filter((x) => x && x.status !== "merged");
+        const customers = getExistingCustomers();
+
+        // existing indexes
+        const byUscc = new Map(); // uscc -> [cust]
+        const byName = new Map(); // name -> [cust]
+        const byBoth = new Map(); // uscc||name -> [cust]
+        customers.forEach((c) => {
+          const u = normStr(c.uscc);
+          const n = normStr(c.name);
+          if (u) {
+            if (!byUscc.has(u)) byUscc.set(u, []);
+            byUscc.get(u).push(c);
+          }
+          if (n) {
+            if (!byName.has(n)) byName.set(n, []);
+            byName.get(n).push(c);
+          }
+          const k = sameKey(u, n);
+          if (k) {
+            if (!byBoth.has(k)) byBoth.set(k, []);
+            byBoth.get(k).push(c);
+          }
+        });
+
+        // within selection index by both
+        const inSel = new Map(); // uscc||name -> leads[]
+        active.forEach((r) => {
+          const k = sameKey(r.uscc, r.name);
+          if (!k) return;
+          if (!inSel.has(k)) inSel.set(k, []);
+          inSel.get(k).push(r);
+        });
+
+        // blocking groups: either match existing byBoth OR duplicates inside selection (byBoth count>1)
+        const groups = [];
+        let idx = 0;
+        const usedLeadIds = new Set();
+
+        // helper to append group
+        function addGroup(items, basis, meta) {
+          idx++;
+          items.forEach((it) => usedLeadIds.add(it.id));
+          groups.push({
+            id: `G-${idx}`,
+            basis,
+            reasonLabel: dedupeBasisLabel(basis),
+            meta: meta || {},
+            items: items.slice(),
+          });
+        }
+
+        // existing matches (both-hit)
+        active.forEach((r) => {
+          const k = sameKey(r.uscc, r.name);
+          if (!k) return;
+          const hit = byBoth.get(k);
+          if (!hit || !hit.length) return;
+          // group by existing customer id (first match)
+          const cust = hit[0];
+          const gid = `CUST:${cust.id}:${k}`;
+          let g = groups.find((x) => x.__gid === gid);
+          if (!g) {
+            idx++;
+            g = {
+              id: `G-${idx}`,
+              basis: "both",
+              reasonLabel: dedupeBasisLabel("both"),
+              meta: { type: "existing", customerId: cust.id, customerName: cust.name, uscc: cust.uscc },
+              items: [],
+              __gid: gid,
+            };
+            groups.push(g);
+          }
+          if (!g.items.some((x) => x.id === r.id)) g.items.push(r);
+          usedLeadIds.add(r.id);
+        });
+
+        // within selection duplicates (both-hit in selection)
+        for (const [k, arr] of inSel.entries()) {
+          if (!arr || arr.length <= 1) continue;
+          // if already fully covered by existing-match grouping, skip creating extra group
+          const uncovered = arr.filter((x) => !usedLeadIds.has(x.id));
+          if (!uncovered.length) continue;
+          const [u, n] = k.split("||");
+          addGroup(uncovered, "both", { type: "within", uscc: u, name: n });
+        }
+
+        // risk hints (non-blocking): uscc-only or name-only hits existing, but not both-hit same customer
+        const risk = [];
+        active.forEach((r) => {
+          const u = normStr(r.uscc);
+          const n = normStr(r.name);
+          const bothHit = sameKey(u, n) && byBoth.has(sameKey(u, n));
+          if (bothHit) return;
+          const usccHit = u && byUscc.has(u);
+          const nameHit = n && byName.has(n);
+          if (usccHit || nameHit) {
+            risk.push({
+              leadId: r.id,
+              usccHit,
+              nameHit,
+              uscc: u,
+              name: n,
+            });
+          }
+        });
+
+        // cleanup internal fields
+        groups.forEach((g) => {
+          if (g.__gid) delete g.__gid;
+        });
+
+        return {
+          groups,
+          groupCount: groups.length,
+          itemCount: groups.reduce((s, g) => s + g.items.length, 0),
+          risk,
+        };
+      }
+
+      // ----- dedupe view rendering -----
+      const viewLeads = document.getElementById("leadsView");
+      const viewDedupe = document.getElementById("dedupeView");
+      const dupGroupCount = document.getElementById("dupGroupCount");
+      const dupItemCount = document.getElementById("dupItemCount");
+      const dupGroups = document.getElementById("dupGroups");
+      const dupPageNo = document.getElementById("dupPageNo");
+      const dupPageTotal = document.getElementById("dupPageTotal");
+      const dupPageSize = document.getElementById("dupPageSize");
+      const dupPrevPage = document.getElementById("dupPrevPage");
+      const dupNextPage = document.getElementById("dupNextPage");
+      const dupPageBtn = document.getElementById("dupPageBtn");
+      const mergeLeadsTbody = document.getElementById("mergeLeadsTbody");
+      const btnConfirmMergeLeads = document.getElementById("btnConfirmMergeLeads");
+
+      let currentDupes = null;
+      let pendingIngestIds = null;
+      let dupPage = 1;
+      let pendingMergeGroupId = null;
+
+      function buildMockDupes() {
+        const mk = (id, name, uscc, source, contact) => ({
+          id,
+          name,
+          uscc,
+          source,
+          contact: contact || "—",
+          projectNo: "—",
+          collectedAt: "2026-04-17 10:18:00",
+        });
+        const g1 = {
+          id: "MOCK-G-1",
+          basis: "both",
+          reasonLabel: "依据统一社会信用代码 + 客户名称同时重复",
+          meta: { type: "mock" },
+          items: [
+            mk("MOCK-L-001", "上海星航智能装备有限公司", "91310115MA2XXXXXXX", "展会活动", "021-66881234 / 王经理 13900001111"),
+            mk("MOCK-L-002", "上海星航智能装备有限公司", "91310115MA2XXXXXXX", "行业名录", "021-66881234 / 王经理 13900001111"),
+          ],
+        };
+        const g2 = {
+          id: "MOCK-G-2",
+          basis: "both",
+          reasonLabel: "依据统一社会信用代码 + 客户名称同时重复",
+          meta: { type: "mock" },
+          items: [
+            mk("MOCK-L-003", "苏州锐达半导体设备有限公司", "91320506MA1XXXXXXX", "公开工商数据", "0512-68120000"),
+            mk("MOCK-L-004", "苏州锐达半导体设备有限公司", "91320506MA1XXXXXXX", "展会活动", "张工 13900002222"),
+            mk("MOCK-L-005", "苏州锐达半导体设备有限公司", "91320506MA1XXXXXXX", "招标采购", "procurement@demo-supplier.cn"),
+          ],
+        };
+        return { groups: [g1, g2], groupCount: 2, itemCount: 5, risk: [] };
+      }
+
+      function openMergeLeads(gid) {
+        const g = currentDupes?.groups?.find((x) => x.id === gid);
+        if (!g || !mergeLeadsTbody) return;
+        pendingMergeGroupId = gid;
+        mergeLeadsTbody.innerHTML = (g.items || [])
+          .map((r, idx) => {
+            return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3"><input type="radio" name="mergeMaster" class="accent-primary" value="${escapeHtml(r.id)}" ${idx === 0 ? "checked" : ""} /></td>
+                <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(r.name || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.contact || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.uscc || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.projectNo || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.collectedAt || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.source || "—")}</td>
+              </tr>
+            `;
+          })
+          .join("");
+        openModal("merge-leads");
+      }
+
+      function showView(mode) {
+        if (mode === "dedupe") {
+          viewLeads.classList.add("hidden");
+          viewDedupe.classList.remove("hidden");
+        } else {
+          viewDedupe.classList.add("hidden");
+          viewLeads.classList.remove("hidden");
+        }
+      }
+
+      // 使用事件委托（挂在 document，capture），避免重复渲染/层级导致按钮失效
+      if (!window.__leadsPoolDedupeDelegated) {
+        window.__leadsPoolDedupeDelegated = true;
+        document.addEventListener(
+          "click",
+          (e) => {
+            const t = e.target;
+            if (!(t instanceof Element)) return;
+            const inDedupe = t.closest("#dedupeView");
+            if (!inDedupe) return;
+
+            const mergeBtn = t.closest("[data-merge-group]");
+            if (mergeBtn) {
+              e.preventDefault();
+              e.stopPropagation();
+              const gid = mergeBtn.getAttribute("data-merge-group");
+              if (!gid) return toast("error", "操作失败", "未找到重复组ID");
+              if (!currentDupes) currentDupes = buildMockDupes();
+              // 当页面展示的是 mock（例如真实校验无重复时），确保 currentDupes 能命中该组
+              const hasGroup = Array.isArray(currentDupes.groups) && currentDupes.groups.some((x) => x && x.id === gid);
+              if (!hasGroup) currentDupes = buildMockDupes();
+              openMergeLeads(gid);
+              return;
+            }
+
+            const noBtn = t.closest("[data-no-merge-group]");
+            if (noBtn) {
+              e.preventDefault();
+              e.stopPropagation();
+              const gid = noBtn.getAttribute("data-no-merge-group");
+              if (!gid) return toast("error", "操作失败", "未找到重复组ID");
+              if (!currentDupes) currentDupes = buildMockDupes();
+              const hasGroup = Array.isArray(currentDupes.groups) && currentDupes.groups.some((x) => x && x.id === gid);
+              if (!hasGroup) currentDupes = buildMockDupes();
+              toast("error", "客户唯一性校验不通过", "必须手动修改客户名称/统一社会信用代码后重新提交入库");
+              // 不合并：仅提示，不从当前页移除重复组（需用户修改后再重新入库/校验）
+            }
+          },
+          true
+        );
+      }
+
+      function renderDedupeResults() {
+        if (!currentDupes) currentDupes = buildMockDupes();
+        const hasReal = !!pendingIngestIds && Array.isArray(currentDupes?.groups) && currentDupes.groupCount >= 0 && currentDupes.metaType !== "mock";
+        const showMockWhenEmpty = hasReal && currentDupes.groupCount === 0;
+        const displayDupes = showMockWhenEmpty ? buildMockDupes() : currentDupes;
+        const showAsMock = !hasReal || showMockWhenEmpty || (displayDupes?.groups && displayDupes.groups[0]?.meta?.type === "mock");
+
+        // 统计区：按下方列表数据实时统计（groups/items），避免显示为 0
+        const groupCountForStat = Array.isArray(displayDupes?.groups) ? displayDupes.groups.length : 0;
+        const itemCountForStat = Array.isArray(displayDupes?.groups)
+          ? displayDupes.groups.reduce((s, g) => s + (Array.isArray(g.items) ? g.items.length : 0), 0)
+          : 0;
+        dupGroupCount.textContent = String(groupCountForStat);
+        dupItemCount.textContent = String(itemCountForStat);
+        const size = Number(dupPageSize?.value || 5) || 5;
+        const totalPages = Math.max(1, Math.ceil(((displayDupes.groupCount || 0) * 1) / size));
+        dupPage = Math.min(totalPages, Math.max(1, dupPage));
+        if (dupPageNo) dupPageNo.textContent = String(dupPage);
+        if (dupPageTotal) dupPageTotal.textContent = String(totalPages);
+        if (dupPageBtn) dupPageBtn.textContent = String(dupPage);
+        if (dupPrevPage) dupPrevPage.disabled = dupPage <= 1;
+        if (dupNextPage) dupNextPage.disabled = dupPage >= totalPages;
+
+        if (hasReal && currentDupes.groupCount === 0) {
+          // 真实校验无重复时：不展示提示语，仅展示示例重复组（mock）
+          dupGroups.innerHTML = ``;
+          // 继续渲染 mock 列表
+        }
+
+        const start = (dupPage - 1) * size;
+        const pageGroups = (displayDupes.groups || []).slice(start, start + size);
+
+        const listHtml = pageGroups
+          .map((g, i) => {
+            const gIndex = start + i;
+            const meta =
+              g.meta && g.meta.type === "existing"
+                ? `<div class="text-[12px] text-muted mt-0.5">已存在客户：${escapeHtml(g.meta.customerName || "—")}（${escapeHtml(g.meta.customerId || "")}）</div>`
+                : g.meta && g.meta.type === "within"
+                  ? `<div class="text-[12px] text-muted mt-0.5">选中线索内重复：${escapeHtml(g.meta.uscc || "—")} / ${escapeHtml(g.meta.name || "—")}</div>`
+                  : "";
+
+            const items = (g.items || [])
+              .map((r) => {
+                const ro = showAsMock ? "readonly" : "";
+                const dis = showAsMock ? "disabled" : "";
+                return `
+                  <div class="grid grid-cols-12 gap-3 items-end p-3 rounded-xl border border-[rgba(201,205,212,.6)] bg-surface">
+                    <div class="col-span-12 lg:col-span-5">
+                      <div class="text-[12px] text-muted mb-1">客户名称</div>
+                      <input ${ro} class="h-9 w-full rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px] font-semibold" value="${escapeHtml(
+                        r.name || ""
+                      )}" data-edit-name="${escapeHtml(r.id)}" />
+                    </div>
+                    <div class="col-span-12 lg:col-span-4">
+                      <div class="text-[12px] text-muted mb-1">统一社会信用代码</div>
+                      <input ${ro} class="h-9 w-full rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[13px] text-muted" value="${escapeHtml(
+                        r.uscc || ""
+                      )}" placeholder="请输入统一社会信用代码" data-edit-uscc="${escapeHtml(r.id)}" />
+                    </div>
+                    <div class="col-span-12 lg:col-span-3">
+                      <div class="text-[12px] text-muted mb-1">数据来源</div>
+                      <div class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] flex items-center text-[14px]">${escapeHtml(
+                        r.source || "—"
+                      )}</div>
+                    </div>
+                  </div>
+                `;
+              })
+              .join("");
+
+            return `
+              <div class="rounded-xl border border-[rgba(201,205,212,.6)] overflow-hidden">
+                <div class="px-4 py-3 bg-[rgba(245,247,250,.9)] flex flex-wrap items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="font-semibold">重复组${gIndex + 1}</div>
+                    <div class="text-[12px] text-muted mt-0.5">${escapeHtml(g.reasonLabel)}</div>
+                    ${meta}
+                  </div>
+                  <div class="flex gap-2">
+                    <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-merge-group="${g.id}">合并</button>
+                    <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-no-merge-group="${g.id}">不合并</button>
+                  </div>
+                </div>
+                <div class="p-4 space-y-3">${items}</div>
+              </div>
+            `;
+          })
+          .join("");
+
+        if (hasReal && currentDupes.groupCount === 0) {
+          dupGroups.innerHTML = dupGroups.innerHTML + `<div class="mt-3 space-y-4">${listHtml}</div>`;
+        } else {
+          dupGroups.innerHTML = listHtml;
+        }
+
+        document.querySelectorAll("[data-edit-name]").forEach((el) => {
+          el.addEventListener("input", () => {
+            const id = el.getAttribute("data-edit-name");
+            const row = leads.find((x) => x.id === id);
+            if (row) row.name = String(el.value || "").trim();
+            currentDupes?.groups?.forEach((g) => g.items?.forEach((it) => (it.id === id ? (it.name = String(el.value || "").trim()) : null)));
+          });
+        });
+        document.querySelectorAll("[data-edit-uscc]").forEach((el) => {
+          el.addEventListener("input", () => {
+            const id = el.getAttribute("data-edit-uscc");
+            const row = leads.find((x) => x.id === id);
+            if (row) row.uscc = String(el.value || "").trim();
+            currentDupes?.groups?.forEach((g) => g.items?.forEach((it) => (it.id === id ? (it.uscc = String(el.value || "").trim()) : null)));
+          });
+        });
+
+        // 合并/不合并按钮由事件委托处理
+      }
+
+      const REL_KEY = "customer_360_rel_v1";
+      function loadRel() {
+        try {
+          const raw = localStorage.getItem(REL_KEY);
+          const m = raw ? JSON.parse(raw) : {};
+          return m && typeof m === "object" ? m : {};
+        } catch (_) {
+          return {};
+        }
+      }
+      function saveRel(m) {
+        try {
+          localStorage.setItem(REL_KEY, JSON.stringify(m || {}));
+        } catch (_) {}
+      }
+      function ensureRelCustomer(rel, customerId) {
+        if (!rel[customerId]) rel[customerId] = { contacts: [], follows: [], opps: [], quotes: [], contracts: [], deliveries: [], leads: [] };
+        if (!Array.isArray(rel[customerId].leads)) rel[customerId].leads = [];
+        return rel[customerId];
+      }
+      function appendLeadSources(customerId, leadRows) {
+        const rel = loadRel();
+        const bucket = ensureRelCustomer(rel, customerId);
+        const now = new Date();
+        (leadRows || []).forEach((r) => {
+          bucket.leads.push({
+            id: String(r.id || ""),
+            projectName: r.projectName || "",
+            projectNo: r.projectNo || "",
+            contact: r.contact || "",
+            source: r.source || "",
+            industry: r.industry || "",
+            prov: r.prov || "",
+            city: r.city || "",
+            county: r.county || "",
+            collectedAt: r.collectedAt || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} 10:00:00`,
+          });
+        });
+        saveRel(rel);
+      }
+
+      function createCustomerFromLead(r) {
+        const Store = window.CustomerStore;
+        if (!Store) return null;
+        const ts = Date.now();
+        const id = `C-${String(ts).slice(-6)}${String(Math.floor(Math.random() * 90) + 10)}`;
+        const cust = {
+          id,
+          name: String(r.name || "").trim() || "未命名客户",
+          grade: r.grade || "C",
+          priority: r.priority || "中",
+          statusFlow: "待跟进",
+          nextFollowAt: r.collectedAt || "",
+          prov: r.prov || "",
+          city: r.city || "",
+          dist: r.county || "",
+          source: r.source || "",
+          industry: r.industry || "",
+          createdAt: r.collectedAt || "",
+          regionOwner: "李雷",
+          finalOwnerId: null,
+          contactPhone: r.contact || "",
+          uscc: r.uscc || "",
+          tags: [],
+        };
+        Store.addCustomer(cust);
+        return cust;
+      }
+
+      function doMergeGroup(gid, masterLeadId) {
+        const g = currentDupes?.groups.find((x) => x.id === gid);
+        if (!g) return;
+        const Store = window.CustomerStore;
+        if (!Store) {
+          toast("error", "入库失败", "CustomerStore 未初始化");
+          return;
+        }
+
+        const master = g.items.find((x) => x.id === masterLeadId) || g.items[0];
+
+        // 目标客户：若命中已存在客户 => 合并到该客户；否则以主数据创建新客户
+        let targetCustomerId = null;
+        if (g.meta && g.meta.type === "existing" && g.meta.customerId) {
+          targetCustomerId = g.meta.customerId;
+        } else {
+          const created = createCustomerFromLead(master);
+          if (!created) return;
+          targetCustomerId = created.id;
+        }
+
+        // 记录全部线索源（可追溯）
+        appendLeadSources(targetCustomerId, g.items);
+
+        // 从线索池移除这些线索
+        const mergedIds = g.items.map((x) => x.id);
+        leads = leads.filter((x) => !mergedIds.includes(x.id));
+
+        // 从重复组里移除
+        currentDupes.groups = currentDupes.groups.filter((x) => x.id !== gid);
+        currentDupes.groupCount = currentDupes.groups.length;
+        currentDupes.itemCount = currentDupes.groups.reduce((s, gg) => s + gg.items.length, 0);
+
+        toast("success", "已合并", `已合并 ${mergedIds.length} 条线索源，并保留可追溯记录`);
+        render();
+        renderDedupeResults();
+
+        // 若全部重复组处理完毕，继续执行剩余入库
+        if (!currentDupes.groupCount) {
+          // 处理完所有重复组后，由用户点击「重新入库」触发再次校验与入库
+        }
+
+        try {
+          const url = `../crm/customer-360.html?customerId=${encodeURIComponent(targetCustomerId)}`;
+          window.open(url, "_blank", "noopener,noreferrer");
+        } catch (_) {}
+      }
+
+      function finalizeIngestAfterDedupe(opts) {
+        const ids = pendingIngestIds || [];
+        pendingIngestIds = null;
+        if (!ids.length) {
+          return;
+        }
+        // 对于未命中重复组的剩余线索：逐条新建客户 + 写入线索源记录
+        const selected = leads.filter((x) => ids.includes(x.id));
+        const Store = window.CustomerStore;
+        if (!Store) {
+          toast("error", "入库失败", "CustomerStore 未初始化");
+          showView("list");
+          return;
+        }
+        selected.forEach((r) => {
+          const created = createCustomerFromLead(r);
+          if (created) appendLeadSources(created.id, [r]);
+        });
+        leads = leads.filter((x) => !ids.includes(x.id));
+        toast("success", "入库成功", `已入库 ${ids.length} 条，线索池已同步更新`);
+        render();
+      }
+
+      // ----- events -----
+      document.getElementById("btnSearch").addEventListener("click", () => {
+        pageNo = 1;
+        toast("success", "已应用筛选", "列表已更新");
+        render();
+      });
+      document.getElementById("btnReset").addEventListener("click", () => {
+        document.getElementById("qName").value = "";
+        const qs = document.getElementById("qSource");
+        if (qs) qs.value = "";
+        const qi = document.getElementById("qIndustry");
+        if (qi) qi.value = "";
+        const qc = document.getElementById("qCollector");
+        if (qc) qc.value = "";
+        const qds = document.getElementById("qCollectedStart");
+        if (qds) qds.value = "";
+        const qde = document.getElementById("qCollectedEnd");
+        if (qde) qde.value = "";
+        pageNo = 1;
+        toast("success", "已重置", "已恢复默认筛选条件");
+        render();
+      });
+
+      document.getElementById("chkAll").addEventListener("change", () => {
+        const v = document.getElementById("chkAll").checked;
+        document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = v));
+      });
+
+      document.getElementById("pageSize").addEventListener("change", () => {
+        pageNo = 1;
+        render();
+      });
+      document.getElementById("prevPage").addEventListener("click", () => {
+        pageNo = Math.max(1, pageNo - 1);
+        render();
+      });
+      document.getElementById("nextPage").addEventListener("click", () => {
+        pageNo = pageNo + 1;
+        render();
+      });
+
+      document.getElementById("btnBulkIn").addEventListener("click", () => {
+        const ids = guardSelection();
+        if (!ids) return;
+        ensureCustomerStore(() => {
+          const Store = window.CustomerStore;
+          if (!Store) {
+            toast("error", "入库失败", "CustomerStore 未初始化");
+            return;
+          }
+
+          // 合并流程：查重逻辑已整合到批量入库中
+          const selectedAll = leads.filter((x) => ids.includes(x.id));
+          const missingKey = selectedAll.filter((r) => !(String(r.uscc || "").trim() && String(r.name || "").trim())).length;
+
+          const btn = document.getElementById("btnBulkIn");
+          const old = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>校验中...';
+
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = old;
+            closeModal("bulk-in");
+
+            if (missingKey) {
+              toast("success", "已执行唯一性校验", `有 ${missingKey} 条缺少“客户名称/统一社会信用代码”，将跳过双重唯一校验`);
+            }
+
+            currentDupes = findDuplicateGroupsForIngest(selectedAll);
+            pendingIngestIds = ids.slice();
+            dupPage = 1;
+            showView("dedupe");
+            renderDedupeResults();
+            toast(
+              currentDupes.groupCount ? "error" : "success",
+              currentDupes.groupCount ? "发现重复客户" : "查重完成",
+              currentDupes.groupCount
+                ? `发现 ${currentDupes.groupCount} 组重复（共 ${currentDupes.itemCount} 条），请先处理后再入库`
+                : "未发现重复客户，请点击右上角「重新入库」完成入库"
+            );
+          }, 650);
+        });
+      });
+
+      document.getElementById("btnBulkDel").addEventListener("click", () => {
+        const ids = guardSelection();
+        if (!ids) return;
+        const btn = document.getElementById("btnBulkDel");
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>删除中...';
+        setTimeout(() => {
+          leads = leads.filter((x) => !ids.includes(x.id));
+          btn.disabled = false;
+          btn.innerHTML = old;
+          closeModal("bulk-del");
+          toast("success", "删除成功", `已删除 ${ids.length} 条`);
+          render();
+        }, 700);
+      });
+
+      document.getElementById("btnSetPrio").addEventListener("click", () => {
+        const ids = guardSelection();
+        if (!ids) return;
+        const v = document.querySelector('input[name="prio"]:checked')?.value || "低";
+        leads.forEach((x) => {
+          if (ids.includes(x.id)) x.priority = v;
+        });
+        closeModal("bulk-priority");
+        toast("success", "已设置优先级", `已将 ${ids.length} 条设置为「${v}」`);
+        render();
+      });
+
+      document.getElementById("btnBulkGradeDo").addEventListener("click", () => {
+        const ids = guardSelection();
+        if (!ids) return;
+        const v = document.getElementById("bulkGrade")?.value || "C";
+        leads.forEach((x) => {
+          if (ids.includes(x.id)) x.grade = v;
+        });
+        closeModal("bulk-grade");
+        toast("success", "已修改客户等级", `已将 ${ids.length} 条设置为「${v}」`);
+        render();
+      });
+
+      document.getElementById("btnExportSelected").addEventListener("click", () => {
+        const ids = guardSelection();
+        if (!ids) return;
+        exportCsv(leads.filter((x) => ids.includes(x.id)), "线索池-选中.csv");
+        closeModal("bulk-export-selected");
+        toast("success", "导出成功", "已下载 CSV（选中）");
+      });
+      document.getElementById("btnExportAll").addEventListener("click", () => {
+        exportCsv(leads, "线索池-全部.csv");
+        closeModal("bulk-export-all");
+        toast("success", "导出成功", "已下载 CSV（全部）");
+      });
+
+      document.getElementById("btnBackToList").addEventListener("click", () => {
+        showView("list");
+        currentDupes = null;
+        pendingIngestIds = null;
+        toast("success", "已返回", "你可以继续补全/设置优先级/入库");
+      });
+      document.getElementById("btnReRunDedupe").addEventListener("click", () => {
+        if (!pendingIngestIds || !pendingIngestIds.length) {
+          toast("error", "无法校验", "未找到本次待入库的线索选择");
+          return;
+        }
+        const selected = leads.filter((x) => pendingIngestIds.includes(x.id));
+        currentDupes = findDuplicateGroupsForIngest(selected);
+        dupPage = 1;
+        renderDedupeResults();
+        toast("success", "已重新校验", currentDupes.groupCount ? `发现 ${currentDupes.groupCount} 组重复` : "未发现重复客户");
+      });
+
+      document.getElementById("btnRetryIngest").addEventListener("click", () => {
+        if (!pendingIngestIds || !pendingIngestIds.length) {
+          toast("error", "无法入库", "未找到本次待入库的线索选择");
+          return;
+        }
+        ensureCustomerStore(() => {
+          const selected = leads.filter((x) => pendingIngestIds.includes(x.id));
+          currentDupes = findDuplicateGroupsForIngest(selected);
+          dupPage = 1;
+          renderDedupeResults();
+          if (currentDupes.groupCount) {
+            toast("error", "客户唯一性校验不通过", `仍有 ${currentDupes.groupCount} 组重复，请先处理后再入库`);
+            return;
+          }
+          finalizeIngestAfterDedupe();
+          // 入库完成后保留在查重结果页，方便用户查看“已完成”状态
+          currentDupes = { groups: [], groupCount: 0, itemCount: 0, risk: [] };
+          renderDedupeResults();
+          toast("success", "入库完成", "批量入库已完成，你可以返回线索列表继续操作");
+        });
+      });
+
+      dupPageSize?.addEventListener("change", () => {
+        dupPage = 1;
+        renderDedupeResults();
+      });
+      dupPrevPage?.addEventListener("click", () => {
+        dupPage = Math.max(1, dupPage - 1);
+        renderDedupeResults();
+      });
+      dupNextPage?.addEventListener("click", () => {
+        dupPage = dupPage + 1;
+        renderDedupeResults();
+      });
+
+      btnConfirmMergeLeads?.addEventListener("click", () => {
+        const gid = pendingMergeGroupId;
+        if (!gid || !currentDupes) return;
+        const g = currentDupes.groups.find((x) => x.id === gid);
+        if (!g) return;
+        const masterId = document.querySelector('input[name="mergeMaster"]:checked')?.value || (g.items && g.items[0] && g.items[0].id);
+        closeModal("merge-leads");
+
+        const isMockGroup = g.meta && g.meta.type === "mock";
+        if (isMockGroup) {
+          currentDupes.groups = currentDupes.groups.filter((x) => x.id !== gid);
+          currentDupes.groupCount = currentDupes.groups.length;
+          currentDupes.itemCount = currentDupes.groups.reduce((s, gg) => s + (gg.items?.length || 0), 0);
+          toast("success", "已合并", "该重复组已从当前页移除");
+          renderDedupeResults();
+          pendingMergeGroupId = null;
+          return;
+        }
+
+        doMergeGroup(gid, masterId);
+        pendingMergeGroupId = null;
+      });
+
+      // 旧「查重-合并」弹窗流程保留为历史代码；当前流程已合并入批量入库并在校验页逐组合并
+
+      // overlay click close
+      document.querySelectorAll("[data-overlay]").forEach((ov) => {
+        ov.addEventListener("click", () => closeModal(ov.getAttribute("data-overlay")));
+      });
+
+      // guard: open bulk modals should warn if none selected
+      ["bulk-in", "bulk-grade", "bulk-del", "bulk-priority", "bulk-export-selected"].forEach((id) => {
+        document.querySelectorAll(`[data-open-modal="${id}"]`).forEach((btn) => {
+          btn.addEventListener(
+            "click",
+            (e) => {
+              if (!getSelectedIds().length) {
+                e.preventDefault();
+                e.stopPropagation();
+                toast("error", "未选择数据", "请先勾选至少一条线索");
+              }
+            },
+            { capture: true }
+          );
+        });
+      });
+
+      // init
+      render();
+    </script>
+  </body>
+</html>

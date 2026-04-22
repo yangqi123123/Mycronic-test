@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 合同详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">合同详情</div>
+              <div class="text-[12px] text-muted">全维度信息展示 · 附件下载（示例）</div>
+            </div>
+          </div>
+          <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./contracts.html">
+            <i class="fa-solid fa-arrow-left text-muted mr-2"></i>返回合同列表
+          </a>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-5">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div class="text-[18px] font-semibold" id="hNo">合同编号：—</div>
+                <div class="text-[12px] text-muted mt-2" id="hMeta">客户：— · 区域：— · 创建人：— · 创建时间：—</div>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-simulate-loading>
+                  <i class="fa-solid fa-file-arrow-down text-muted mr-2"></i>下载合同附件
+                </button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-simulate-loading>
+                  <i class="fa-solid fa-file-arrow-down text-muted mr-2"></i>下载纸质附件
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-5">
+            <div class="text-[16px] font-semibold">合同信息</div>
+            <div class="mt-3 grid grid-cols-12 gap-3 text-[14px]">
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">商机描述</div>
+                <div class="font-semibold mt-1" id="dNeed">—</div>
+              </div>
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">合同名称</div>
+                <div class="font-semibold mt-1" id="dContractName">—</div>
+              </div>
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">合同金额</div>
+                <div class="font-semibold mt-1" id="dAmount">—</div>
+              </div>
+              <div class="col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">合同类型</div>
+                <div class="font-semibold mt-1">采购合同（示例）</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">签署时间</div>
+                <div class="font-semibold mt-1" id="dSignedAt">—</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">到期时间</div>
+                <div class="font-semibold mt-1" id="dExpireAt">—</div>
+              </div>
+              <div class="col-span-12 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">备注</div>
+                <div class="text-muted mt-1">（原型）可展示合同备注、条款摘要、风险提示、履约节点等扩展信息。</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        const id = new URLSearchParams(location.search).get("id") || "";
+        // 原型：用静态内容填充（如需可与列表页通过 localStorage 传递）
+        const map = {
+          "HT-1": {
+            no: "HT-2026-0001",
+            contractName: "苏州XX贴片机采购合同",
+            customer: "苏州XX半导体设备有限公司",
+            region: "苏州片区",
+            need: "贴片机采购",
+            amount: "980,000",
+            signedAt: "2026-04-01",
+            expireAt: "2027-04-01",
+            createdBy: "李雷",
+            createdAt: "2026-04-10 10:22",
+          },
+          "HT-2": {
+            no: "HT-2026-0002",
+            contractName: "上海某某设备维保合同",
+            customer: "上海某某PCB有限公司",
+            region: "上海大区",
+            need: "设备维保",
+            amount: "120,000",
+            signedAt: "2026-03-15",
+            expireAt: "2026-12-31",
+            createdBy: "张敏",
+            createdAt: "2026-04-09 09:40",
+          },
+          "HT-3": {
+            no: "HT-2026-0003",
+            contractName: "北京某某科研项目合作合同",
+            customer: "北京某某研究院",
+            region: "北京片区",
+            need: "科研项目合作",
+            amount: "450,000",
+            signedAt: "2026-04-05",
+            expireAt: "2027-04-05",
+            createdBy: "王芳",
+            createdAt: "2026-04-12 14:20",
+          },
+        };
+        const d = map[id] || map["HT-1"];
+        document.getElementById("hNo").textContent = `合同编号：${d.no}`;
+        document.getElementById("hMeta").textContent = `客户：${d.customer} · 区域：${d.region} · 创建人：${d.createdBy} · 创建时间：${d.createdAt}`;
+        document.getElementById("dNeed").textContent = d.need;
+        document.getElementById("dContractName").textContent = d.contractName || "—";
+        document.getElementById("dAmount").textContent = `${d.amount} 元`;
+        document.getElementById("dSignedAt").textContent = d.signedAt;
+        document.getElementById("dExpireAt").textContent = d.expireAt;
+      })();
+    </script>
+  </body>
+</html>

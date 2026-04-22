@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能触达 · 触达活动</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 筛选区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-12 gap-3 items-end">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">客户名称（模糊）</div>
+                <input id="qCustomer" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入客户名称" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">渠道</div>
+                <select id="qChannel" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option value="邮件">邮件</option>
+                  <option value="短信">短信</option>
+                </select>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">状态</div>
+                <select id="qStatus" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option value="成功">成功</option>
+                  <option value="拦截">拦截</option>
+                  <option value="失败">失败</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- 列表区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">触达活动列表</div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button type="button" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="create">
+                  <i class="fa-solid fa-plus mr-2"></i>新增触达活动
+                </button>
+                <button id="btnExport" class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">导出</button>
+              </div>
+            </div>
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1100px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">客户名称</th>
+                    <th class="text-left px-3 py-2">渠道</th>
+                    <th class="text-left px-3 py-2">模板</th>
+                    <th class="text-left px-3 py-2">状态</th>
+                    <th class="text-left px-3 py-2">行为（打开/点击）</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 创建触达活动 -->
+    <div class="overlay" data-overlay="create" data-open="false"></div>
+    <div class="modal" data-modal="create" data-open="false" style="max-width: 860px; width: min(860px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">新增触达活动</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="create"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-4">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-12 sm:col-span-6">
+            <div class="text-[12px] text-muted mb-1">触达对象</div>
+            <select id="fTarget" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="A">A级客户</option>
+              <option value="B">B级客户</option>
+              <option value="C">C级客户</option>
+              <option value="D">D级客户</option>
+              <option value="custom">自定义选择</option>
+            </select>
+            <div class="text-[12px] text-muted mt-1">选择自定义会弹出客户列表供勾选</div>
+          </div>
+          <div class="col-span-12 sm:col-span-6">
+            <div class="text-[12px] text-muted mb-1">渠道</div>
+            <select id="fChannel" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="邮件">邮件</option>
+              <option value="短信">短信</option>
+            </select>
+          </div>
+          <div class="col-span-12">
+            <div class="text-[12px] text-muted mb-1">模板</div>
+            <select id="fTemplate" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div class="text-[12px] text-muted mt-1">仅显示该渠道下“已审核”的模板</div>
+          </div>
+          <div class="col-span-12">
+            <div class="text-[12px] text-muted mb-1">已选择客户</div>
+            <div id="pickedBox" class="p-3 rounded-xl border border-[rgba(201,205,212,.6)] bg-[rgba(245,247,250,.9)] text-[13px] text-muted">将按选择范围自动匹配客户</div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="create">取消</button>
+          <button id="btnSend" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">创建并发送</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 自定义选择客户 -->
+    <div class="overlay" data-overlay="pick" data-open="false"></div>
+    <div class="modal" data-modal="pick" data-open="false" style="max-width: 980px; width: min(980px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">自定义选择客户</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="pick"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-[12px] text-muted">勾选多个客户后确认</div>
+          <div class="flex gap-2">
+            <button id="btnPickAll" class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">全选本页</button>
+            <button id="btnPickOk" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认选择</button>
+          </div>
+        </div>
+        <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+          <table class="w-full table min-w-[900px]">
+            <thead class="bg-[rgba(245,247,250,.9)]">
+              <tr>
+                <th class="text-left px-3 py-2 w-10"></th>
+                <th class="text-left px-3 py-2">客户名称</th>
+                <th class="text-left px-3 py-2">等级</th>
+                <th class="text-left px-3 py-2">负责人</th>
+              </tr>
+            </thead>
+            <tbody id="pickBody" class="bg-surface"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 详情 -->
+    <div class="overlay" data-overlay="detail" data-open="false"></div>
+    <div class="modal" data-modal="detail" data-open="false" style="max-width: 720px; width: min(720px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">触达活动详情</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="detail"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-2 text-[14px]">
+        <div class="grid grid-cols-12 gap-3">
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">客户</div>
+            <div class="font-semibold mt-1" id="dCustomer">—</div>
+          </div>
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">渠道</div>
+            <div class="font-semibold mt-1" id="dChannel">—</div>
+          </div>
+          <div class="col-span-12 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">模板</div>
+            <div class="font-semibold mt-1" id="dTpl">—</div>
+          </div>
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">状态</div>
+            <div class="font-semibold mt-1" id="dStatus">—</div>
+          </div>
+          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">行为</div>
+            <div class="font-semibold mt-1" id="dAct">—</div>
+          </div>
+          <div class="col-span-12 p-3 rounded-xl border border-[rgba(201,205,212,.6)]" id="dMsgBox">
+            <div class="text-[12px] text-muted">提示</div>
+            <div class="mt-1 text-muted" id="dMsg">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        const TODAY = new Date().toISOString().slice(0, 10);
+
+        const LS_TPL = "outreachTemplates";
+        const LS_ACT = "outreachActivities";
+        const LS_LIMITS = "dict_touch_send_limits";
+        const LS_COUNTS = "touchSendCounts";
+
+        function load(key, fallback) {
+          try {
+            const v = localStorage.getItem(key);
+            return v ? JSON.parse(v) : fallback;
+          } catch (_) {
+            return fallback;
+          }
+        }
+        function save(key, val) {
+          localStorage.setItem(key, JSON.stringify(val));
+        }
+        function esc(s) {
+          return String(s ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;");
+        }
+        function openModal(id) {
+          document.querySelector(`[data-overlay="${id}"]`).dataset.open = "true";
+          document.querySelector(`[data-modal="${id}"]`).dataset.open = "true";
+        }
+        function closeModal(id) {
+          document.querySelector(`[data-overlay="${id}"]`).dataset.open = "false";
+          document.querySelector(`[data-modal="${id}"]`).dataset.open = "false";
+        }
+        function toast(type, title, desc) {
+          const wrap = document.getElementById("toasts");
+          const el = document.createElement("div");
+          el.className = "toast bg-surface rounded-xl border shadow-card";
+          const color = type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+          const border = type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+          el.style.borderColor = border;
+          el.innerHTML = `<div class="p-3" style="background:${color}"><div class="text-[14px] font-semibold">${esc(title)}</div>${desc ? `<div class="text-[12px] text-muted mt-0.5">${esc(desc)}</div>` : ""}</div>`;
+          wrap.appendChild(el);
+          setTimeout(() => el.remove(), 2400);
+        }
+
+        // mock customers
+        const customers = [
+          { id: "C-0001", name: "苏州XX半导体设备有限公司", grade: "A", owner: "李雷" },
+          { id: "C-0004", name: "上海某某PCB有限公司", grade: "B", owner: "张敏" },
+          { id: "C-0005", name: "北京某某研究院", grade: "C", owner: "王芳" },
+          { id: "C-0008", name: "深圳电子元器件贸易", grade: "D", owner: "李雷" },
+        ];
+
+        // init dictionary limits if missing
+        const limits = load(LS_LIMITS, { 短信: 1, 邮件: 10 });
+        save(LS_LIMITS, limits);
+
+        // init templates if missing
+        const initTpl = [
+          { id: "T-1", name: "展会邀约（邮件）", channel: "邮件", unsubscribe: "自动追加退订链接", status: "已审核", content: "您好 {客户名称}，邀请您参加…" },
+          { id: "T-2", name: "新品资料（短信）", channel: "短信", unsubscribe: "回复T退订", status: "已审核", content: "{客户名称}，这里有一份新品资料…" },
+          { id: "T-3", name: "行业方案（邮件）", channel: "邮件", unsubscribe: "自动追加退订链接", status: "待审核", content: "尊敬的{联系人}…" },
+        ];
+        let templates = load(LS_TPL, initTpl);
+        save(LS_TPL, templates);
+
+        // init activities if missing
+        const initAct = [
+          { id: "A-1", customerId: "C-0001", channel: "邮件", templateId: "T-1", status: "成功", open: 1, click: 0, msg: "", createdAt: TODAY + " 09:10" },
+          { id: "A-2", customerId: "C-0004", channel: "短信", templateId: "T-2", status: "失败", open: 0, click: 0, msg: "运营商返回失败（模拟）", createdAt: TODAY + " 10:22" },
+        ];
+        let activities = load(LS_ACT, initAct);
+        save(LS_ACT, activities);
+
+        // counts per day
+        let counts = load(LS_COUNTS, {});
+        if (!counts[TODAY]) counts[TODAY] = {};
+        save(LS_COUNTS, counts);
+
+        let pickedIds = [];
+
+        function getTplName(id) {
+          return templates.find((t) => t.id === id)?.name || "—";
+        }
+        function getCustomerName(id) {
+          return customers.find((c) => c.id === id)?.name || "—";
+        }
+        function statusChip(st) {
+          if (st === "成功") return `<span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>成功</span>`;
+          if (st === "拦截") return `<span class="chip chip--warning"><i class="fa-solid fa-triangle-exclamation"></i>拦截</span>`;
+          return `<span class="chip chip--danger"><i class="fa-solid fa-circle-xmark"></i>失败</span>`;
+        }
+        function canResend(st) {
+          return st === "失败" || st === "拦截";
+        }
+
+        function passes(a) {
+          const qC = (document.getElementById("qCustomer").value || "").trim();
+          const qCh = document.getElementById("qChannel").value || "";
+          const qSt = document.getElementById("qStatus").value || "";
+          const cn = getCustomerName(a.customerId);
+          if (qC && !cn.includes(qC)) return false;
+          if (qCh && a.channel !== qCh) return false;
+          if (qSt && a.status !== qSt) return false;
+          return true;
+        }
+
+        function render() {
+          templates = load(LS_TPL, templates);
+          activities = load(LS_ACT, activities);
+          counts = load(LS_COUNTS, counts);
+          if (!counts[TODAY]) counts[TODAY] = {};
+
+          const list = activities.filter(passes);
+          const tb = document.getElementById("tbody");
+          tb.innerHTML = list
+            .map((a) => {
+              const cn = getCustomerName(a.customerId);
+              const ops = `
+                <button class="text-primary font-semibold" data-view="${a.id}">查看</button>
+                ${canResend(a.status) ? `<button class="text-primary font-semibold ml-3" data-resend="${a.id}">重发</button>` : ""}
+              `;
+              return `
+                <tr class="border-t border-[rgba(201,205,212,.6)]">
+                  <td class="px-3 py-3 font-semibold">${esc(cn)}</td>
+                  <td class="px-3 py-3">${esc(a.channel)}</td>
+                  <td class="px-3 py-3 text-muted text-[13px]">${esc(getTplName(a.templateId))}</td>
+                  <td class="px-3 py-3">${statusChip(a.status)}</td>
+                  <td class="px-3 py-3 text-muted text-[13px]">打开 ${a.open} · 点击 ${a.click}</td>
+                  <td class="px-3 py-3 text-right whitespace-nowrap">${ops}</td>
+                </tr>
+              `;
+            })
+            .join("");
+          bindRowActions();
+          fillTemplateOptions();
+          updatePickedBox();
+        }
+
+        function bindRowActions() {
+          document.querySelectorAll("[data-view]").forEach((b) => {
+            b.addEventListener("click", () => openDetail(b.getAttribute("data-view")));
+          });
+          document.querySelectorAll("[data-resend]").forEach((b) => {
+            b.addEventListener("click", () => doResend(b.getAttribute("data-resend")));
+          });
+        }
+
+        function openDetail(id) {
+          const a = activities.find((x) => x.id === id);
+          if (!a) return;
+          document.getElementById("dCustomer").textContent = getCustomerName(a.customerId);
+          document.getElementById("dChannel").textContent = a.channel;
+          document.getElementById("dTpl").textContent = getTplName(a.templateId);
+          document.getElementById("dStatus").textContent = a.status;
+          document.getElementById("dAct").textContent = `打开 ${a.open} · 点击 ${a.click}`;
+          const box = document.getElementById("dMsgBox");
+          box.style.background = a.status === "拦截" ? "rgba(255,125,0,.08)" : a.status === "失败" ? "rgba(245,63,63,.06)" : "rgba(245,247,250,.9)";
+          document.getElementById("dMsg").textContent = a.msg || "—";
+          openModal("detail");
+        }
+
+        function incCount(customerId, channel) {
+          if (!counts[TODAY][customerId]) counts[TODAY][customerId] = {};
+          counts[TODAY][customerId][channel] = (counts[TODAY][customerId][channel] || 0) + 1;
+          save(LS_COUNTS, counts);
+        }
+        function getCount(customerId, channel) {
+          return (counts?.[TODAY]?.[customerId]?.[channel] || 0);
+        }
+        function limitFor(channel) {
+          return Number(limits?.[channel] ?? 0);
+        }
+        function canSend(customerId, channel) {
+          const lim = limitFor(channel);
+          const used = getCount(customerId, channel);
+          return used < lim;
+        }
+
+        function simulateSendOne(customerId, channel, templateId, allowLimitCheck) {
+          const lim = limitFor(channel);
+          const used = getCount(customerId, channel);
+          const id = `A-${Math.floor(Math.random() * 9000) + 1000}`;
+          if (allowLimitCheck && used >= lim) {
+            return {
+              id,
+              customerId,
+              channel,
+              templateId,
+              status: "拦截",
+              open: 0,
+              click: 0,
+              msg: `该客户今日【${channel}】触达次数已达系统配置上限（配置值：${lim}条/天），请次日再试。`,
+              createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+            };
+          }
+          // success/fail simulation
+          const ok = Math.random() > 0.08;
+          const open = ok && Math.random() > 0.6 ? 1 : 0;
+          const click = open && Math.random() > 0.7 ? 1 : 0;
+          const st = ok ? "成功" : "失败";
+          const msg = ok ? "" : "发送失败（模拟）";
+          incCount(customerId, channel);
+          return { id, customerId, channel, templateId, status: st, open, click, msg, createdAt: new Date().toISOString().slice(0, 16).replace("T", " ") };
+        }
+
+        function doSend() {
+          const target = document.getElementById("fTarget").value;
+          const channel = document.getElementById("fChannel").value;
+          const templateId = document.getElementById("fTemplate").value;
+          if (!templateId) return toast("error", "无法发送", "请先选择可用模板（需已审核）");
+
+          const chosen =
+            target === "custom"
+              ? pickedIds.slice()
+              : customers.filter((c) => c.grade === target).map((c) => c.id);
+
+          if (!chosen.length) return toast("error", "未选择客户", "请选择至少一个客户");
+
+          const newActs = [];
+          let blocked = 0;
+          chosen.forEach((cid) => {
+            const a = simulateSendOne(cid, channel, templateId, true);
+            if (a.status === "拦截") blocked += 1;
+            newActs.unshift(a);
+          });
+          activities = newActs.concat(activities);
+          save(LS_ACT, activities);
+          closeModal("create");
+          toast("success", "已创建并发送", blocked ? `其中 ${blocked} 条因限流被拦截` : "全部发送完成");
+          render();
+        }
+
+        function doResend(id) {
+          const a = activities.find((x) => x.id === id);
+          if (!a) return;
+          const na = simulateSendOne(a.customerId, a.channel, a.templateId, true);
+          activities = [na].concat(activities);
+          save(LS_ACT, activities);
+          toast("success", "已重发", na.status === "拦截" ? "仍被限流拦截" : "已发起重发");
+          render();
+        }
+
+        function fillTemplateOptions() {
+          const channel = document.getElementById("fChannel").value;
+          const sel = document.getElementById("fTemplate");
+          const ok = templates.filter((t) => t.channel === channel && t.status === "已审核");
+          sel.innerHTML = ok.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join("");
+          if (!ok.length) sel.innerHTML = `<option value="">暂无可用模板（需已审核）</option>`;
+        }
+
+        function updatePickedBox() {
+          const target = document.getElementById("fTarget").value;
+          const box = document.getElementById("pickedBox");
+          if (target === "custom") {
+            const names = pickedIds.map(getCustomerName).filter((x) => x && x !== "—");
+            box.innerHTML = names.length ? names.map((n) => `<span class="chip mr-2 mb-2 inline-flex"><i class="fa-solid fa-user"></i>${esc(n)}</span>`).join("") : "未选择客户";
+          } else {
+            const n = customers.filter((c) => c.grade === target).length;
+            box.textContent = `将选择 ${target} 级客户：${n} 条`;
+          }
+        }
+
+        function openPicker() {
+          const tb = document.getElementById("pickBody");
+          tb.innerHTML = customers
+            .map(
+              (c) => `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-pick="${c.id}" ${pickedIds.includes(c.id) ? "checked" : ""} /></td>
+                <td class="px-3 py-3 font-semibold">${esc(c.name)}</td>
+                <td class="px-3 py-3">${esc(c.grade)}</td>
+                <td class="px-3 py-3 text-muted text-[13px]">${esc(c.owner)}</td>
+              </tr>
+            `,
+            )
+            .join("");
+          openModal("pick");
+        }
+
+        // events
+        document.getElementById("btnSearch").addEventListener("click", () => {
+          toast("success", "已查询", "列表已更新");
+          render();
+        });
+        document.getElementById("btnReset").addEventListener("click", () => {
+          document.getElementById("qCustomer").value = "";
+          document.getElementById("qChannel").value = "";
+          document.getElementById("qStatus").value = "";
+          toast("success", "已重置", "筛选条件已清空");
+          render();
+        });
+
+        document.getElementById("btnExport").addEventListener("click", () => {
+          const list = activities.filter(passes);
+          const header = ["客户名称", "渠道", "模板", "状态", "打开", "点击"];
+          const lines = [header.join(",")];
+          list.forEach((a) => {
+            lines.push(
+              [getCustomerName(a.customerId), a.channel, getTplName(a.templateId), a.status, a.open, a.click]
+                .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
+                .join(","),
+            );
+          });
+          const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "触达活动.csv";
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 500);
+          toast("success", "已导出", "导出文件已开始下载");
+        });
+
+        document.getElementById("fChannel").addEventListener("change", () => {
+          fillTemplateOptions();
+        });
+        document.getElementById("fTarget").addEventListener("change", () => {
+          const v = document.getElementById("fTarget").value;
+          if (v === "custom") openPicker();
+          updatePickedBox();
+        });
+
+        document.getElementById("btnSend").addEventListener("click", () => doSend());
+
+        document.getElementById("btnPickAll").addEventListener("click", () => {
+          pickedIds = customers.map((c) => c.id);
+          openPicker();
+        });
+        document.getElementById("btnPickOk").addEventListener("click", () => {
+          pickedIds = Array.from(document.querySelectorAll("[data-pick]"))
+            .filter((i) => i.checked)
+            .map((i) => i.getAttribute("data-pick"));
+          closeModal("pick");
+          updatePickedBox();
+          toast("success", "已选择客户", `已选择 ${pickedIds.length} 条`);
+        });
+
+        document.querySelectorAll("[data-overlay]").forEach((ov) => {
+          ov.addEventListener("click", () => closeModal(ov.getAttribute("data-overlay")));
+        });
+
+        // initial state
+        fillTemplateOptions();
+        updatePickedBox();
+        render();
+      })();
+    </script>
+  </body>
+</html>

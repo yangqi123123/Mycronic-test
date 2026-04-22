@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>展会活动</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
+      .toast{min-width:280px; max-width:420px;}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 搜索条件区 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-12 gap-3 items-end">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">关键词（展会名称/地区）</div>
+                <input id="qKw" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入关键词" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <div class="text-[12px] text-muted mb-1">时间</div>
+                <select id="qTime" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="m1">近1个月</option>
+                  <option value="m3" selected>近3个月</option>
+                  <option value="custom">自定义日期范围</option>
+                </select>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-2">
+                <div class="text-[12px] text-muted mb-1">行业</div>
+                <select id="qIndustry" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>电子制造</option>
+                  <option>SMT</option>
+                  <option>半导体</option>
+                </select>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <div class="text-[12px] text-muted mb-1">类型</div>
+                <select id="qType" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>展会</option>
+                  <option>研讨会</option>
+                  <option>论坛</option>
+                </select>
+              </div>
+
+              <div id="customRange" class="col-span-12 hidden">
+                <div class="grid grid-cols-12 gap-3">
+                  <div class="col-span-6">
+                    <div class="text-[12px] text-muted mb-1">开始日期</div>
+                    <input id="qStart" type="date" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+                  </div>
+                  <div class="col-span-6">
+                    <div class="text-[12px] text-muted mb-1">结束日期</div>
+                    <input id="qEnd" type="date" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 活动列表区（卡片式） -->
+          <section>
+            <div id="empty" class="hidden p-10 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] text-center">
+              <div class="text-[16px] font-semibold">暂无展会活动数据</div>
+              <div class="text-[12px] text-muted mt-1">请调整筛选条件或稍后再试</div>
+            </div>
+            <div id="grid" class="grid grid-cols-12 gap-4"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        /** 线索源详情（外部页，原型占位，可替换为真实地址） */
+        const LEAD_SOURCE_DETAIL_BASE = "https://example.com/lead-source-detail";
+
+        function toast(type, title, desc) {
+          const wrap = document.getElementById("toasts");
+          const el = document.createElement("div");
+          el.className = "toast bg-surface rounded-xl border shadow-card";
+          const color = type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+          const border = type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+          el.style.borderColor = border;
+          el.innerHTML = `<div class="p-3" style="background:${color}"><div class="text-[14px] font-semibold">${title}</div>${desc ? `<div class="text-[12px] text-muted mt-0.5">${desc}</div>` : ""}</div>`;
+          wrap.appendChild(el);
+          setTimeout(() => el.remove(), 2400);
+        }
+
+        function escapeHtml(s) {
+          return String(s ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;");
+        }
+
+        /** 展示为 YYYY-MM-DD HH:mm:ss */
+        function formatCollectedAt(raw) {
+          const s = String(raw || "").trim();
+          if (!s) return "—";
+          const parts = s.split(/\s+/);
+          const date = parts[0] || "";
+          let time = parts[1] || "";
+          if (!date) return s;
+          if (/^\d{2}:\d{2}$/.test(time)) time += ":00";
+          if (!/^\d{2}:\d{2}:\d{2}$/.test(time)) time = "00:00:00";
+          return `${date} ${time}`;
+        }
+
+        function collectedTs(e) {
+          const s = e.collectedAt || e.createdAt || "";
+          const ms = Date.parse(String(s).replace(" ", "T"));
+          return Number.isFinite(ms) ? ms : 0;
+        }
+
+        function leadSourceDetailHref(id) {
+          return `${LEAD_SOURCE_DETAIL_BASE}?eventId=${encodeURIComponent(id)}`;
+        }
+
+        /** @type {{id:string,name:string,cover:string,start:string,end:string,place:string,city:string,industry:string,type:string,collectedAt:string}[]} */
+        const events = [
+          {
+            id: "EV-1",
+            name: "SMT China 2026 · 华南站",
+            cover: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?auto=format&fit=crop&w=1200&q=80",
+            start: "2026-05-18",
+            end: "2026-05-20",
+            place: "深圳会展中心",
+            city: "深圳",
+            industry: "SMT",
+            type: "展会",
+            collectedAt: "2026-04-10 09:15:08",
+          },
+          {
+            id: "EV-2",
+            name: "半导体设备与检测论坛",
+            cover: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
+            start: "2026-06-09",
+            end: "2026-06-09",
+            place: "上海 · 浦东新区",
+            city: "上海",
+            industry: "半导体",
+            type: "论坛",
+            collectedAt: "2026-04-11 14:25:33",
+          },
+        ];
+
+        function withinTimeRange(e) {
+          const mode = document.getElementById("qTime").value;
+          if (mode !== "custom") return true;
+          const s = document.getElementById("qStart").value;
+          const t = document.getElementById("qEnd").value;
+          if (s && e.start < s) return false;
+          if (t && e.end > t) return false;
+          return true;
+        }
+
+        function passes(e) {
+          const kw = (document.getElementById("qKw").value || "").trim();
+          const ind = document.getElementById("qIndustry").value;
+          const ty = document.getElementById("qType").value;
+          if (kw) {
+            const hay = `${e.name} ${e.city} ${e.place} ${e.industry}`;
+            if (!hay.includes(kw)) return false;
+          }
+          if (ind && e.industry !== ind) return false;
+          if (ty && e.type !== ty) return false;
+          if (!withinTimeRange(e)) return false;
+          return true;
+        }
+
+        function card(e) {
+          const collected = formatCollectedAt(e.collectedAt || e.createdAt);
+          const detailHref = leadSourceDetailHref(e.id);
+          return `
+            <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+              <div class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] overflow-hidden">
+                <div class="h-40 bg-[rgba(245,247,250,.9)]">
+                  <img class="w-full h-full object-cover" src="${escapeHtml(e.cover)}" alt="cover" />
+                </div>
+                <div class="p-4">
+                  <div class="min-w-0">
+                    <div class="text-[15px] font-semibold truncate">${escapeHtml(e.name)}</div>
+                    <div class="text-[12px] mt-1"><span class="text-muted">采集时间：</span><span class="text-text font-medium">${escapeHtml(collected)}</span></div>
+                  </div>
+                  <div class="text-[13px] mt-2"><span class="text-muted">地区：</span><span class="text-text">${escapeHtml(e.city)} · ${escapeHtml(e.place)}</span></div>
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    <span class="chip"><i class="fa-solid fa-tag"></i>${escapeHtml(e.industry)}</span>
+                    <span class="chip"><i class="fa-regular fa-calendar"></i>${escapeHtml(e.type)}</span>
+                  </div>
+                  <div class="mt-3">
+                    <a class="text-primary font-semibold" href="${escapeHtml(detailHref)}" target="_blank" rel="noopener noreferrer">查看详情</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        function render() {
+          const list = events.filter(passes).sort((a, b) => collectedTs(b) - collectedTs(a));
+          const grid = document.getElementById("grid");
+          const empty = document.getElementById("empty");
+          if (!list.length) {
+            empty.classList.remove("hidden");
+            grid.innerHTML = "";
+            return;
+          }
+          empty.classList.add("hidden");
+          grid.innerHTML = list.map(card).join("");
+        }
+
+        document.getElementById("qTime").addEventListener("change", () => {
+          const v = document.getElementById("qTime").value;
+          document.getElementById("customRange").classList.toggle("hidden", v !== "custom");
+        });
+        document.getElementById("btnSearch").addEventListener("click", () => {
+          render();
+          toast("success", "已查询", "已按条件过滤活动");
+        });
+        document.getElementById("btnReset").addEventListener("click", () => {
+          document.getElementById("qKw").value = "";
+          document.getElementById("qTime").value = "m3";
+          document.getElementById("qIndustry").value = "";
+          document.getElementById("qType").value = "";
+          document.getElementById("qStart").value = "";
+          document.getElementById("qEnd").value = "";
+          document.getElementById("customRange").classList.add("hidden");
+          render();
+          toast("success", "已重置", "筛选条件已清空");
+        });
+
+        render();
+      })();
+    </script>
+  </body>
+</html>

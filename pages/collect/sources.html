@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据采集 · 采集器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      /* 采集器「配置参数」弹窗：内容过长时仅内部滚动，不撑破视口 */
+      .modal-collector-config[data-open="true"] {
+        display: flex !important;
+        flex-direction: column;
+        max-height: min(90vh, 920px);
+        top: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .modal-collector-config__scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <!-- Topbar -->
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button
+            class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]"
+            title="折叠侧边栏"
+            data-sidebar-toggle
+          >
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- Filters -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-12 gap-3 items-end">
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">采集器名称</div>
+                <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入采集器名称" />
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">行业</div>
+                <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option>全部</option>
+                  <option>SMT/电子制造</option>
+                  <option>PCB</option>
+                  <option>半导体</option>
+                  <option>科研院所</option>
+                </select>
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">状态</div>
+                <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option>全部</option>
+                  <option>运行中</option>
+                  <option>等待</option>
+                  <option>失败</option>
+                  <option>暂停</option>
+                </select>
+              </div>
+              <div class="col-span-3 flex gap-2">
+                <button class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-simulate-loading>重置</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 图一：卡片列表（mock 数据沿用原来的 4 条） -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">任务列表</div>
+                <div class="text-[12px] text-muted mt-1">以脚本为单位管理采集器：启停、配置与查看状态</div>
+              </div>
+              <button
+                type="button"
+                class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex items-center gap-2 shrink-0"
+                data-open-modal="add-script"
+              >
+                <i class="fa-solid fa-plus"></i> 新增采集
+              </button>
+            </div>
+
+            <div class="mt-4 grid grid-cols-12 gap-4">
+              <div class="col-span-3 rounded-xl border border-[rgba(201,205,212,.6)] bg-surface shadow-card overflow-hidden">
+                <div class="p-3 flex items-center justify-between">
+                  <div class="text-[12px] text-muted">半导体</div>
+                  <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" checked />
+                    <div class="w-10 h-6 bg-[rgba(201,205,212,.9)] peer-focus:outline-none rounded-full peer peer-checked:bg-[rgba(0,180,42,.9)] relative transition">
+                      <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 peer-checked:translate-x-4 transition"></div>
+                    </div>
+                  </label>
+                </div>
+                <div class="px-3 pb-3">
+                  <img
+                    class="h-24 w-full rounded-xl object-cover border border-[rgba(201,205,212,.6)] bg-[rgba(245,247,250,.9)]"
+                    src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=480&h=192&q=80"
+                    alt="半导体产线与电子制造"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div class="mt-3 text-[14px] font-semibold line-clamp-2">公开工商数据采集（华东-半导体）</div>
+                  <button class="mt-3 w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="add-script">配置</button>
+                </div>
+              </div>
+
+              <div class="col-span-3 rounded-xl border border-[rgba(201,205,212,.6)] bg-surface shadow-card overflow-hidden">
+                <div class="p-3 flex items-center justify-between">
+                  <div class="text-[12px] text-muted">招标采购</div>
+                  <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" checked />
+                    <div class="w-10 h-6 bg-[rgba(201,205,212,.9)] peer-focus:outline-none rounded-full peer peer-checked:bg-[rgba(0,180,42,.9)] relative transition">
+                      <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 peer-checked:translate-x-4 transition"></div>
+                    </div>
+                  </label>
+                </div>
+                <div class="px-3 pb-3">
+                  <img
+                    class="h-24 w-full rounded-xl object-cover border border-[rgba(201,205,212,.6)] bg-[rgba(245,247,250,.9)]"
+                    src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=480&h=192&q=80"
+                    alt="招投标与商务文档"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div class="mt-3 text-[14px] font-semibold line-clamp-2">招标采购监控（“贴片机采购”）</div>
+                  <button class="mt-3 w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="add-script">配置</button>
+                </div>
+              </div>
+
+              <div class="col-span-3 rounded-xl border border-[rgba(201,205,212,.6)] bg-surface shadow-card overflow-hidden">
+                <div class="p-3 flex items-center justify-between">
+                  <div class="text-[12px] text-muted">垂直平台数据</div>
+                  <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" checked />
+                    <div class="w-10 h-6 bg-[rgba(201,205,212,.9)] peer-focus:outline-none rounded-full peer peer-checked:bg-[rgba(0,180,42,.9)] relative transition">
+                      <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 peer-checked:translate-x-4 transition"></div>
+                    </div>
+                  </label>
+                </div>
+                <div class="px-3 pb-3">
+                  <img
+                    class="h-24 w-full rounded-xl object-cover border border-[rgba(201,205,212,.6)] bg-[rgba(245,247,250,.9)]"
+                    src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=480&h=192&q=80"
+                    alt="数据中心与平台接口"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div class="mt-3 text-[14px] font-semibold line-clamp-2">垂直平台抽取（SMT China 需求帖）</div>
+                  <button class="mt-3 w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="add-script">配置</button>
+                </div>
+              </div>
+
+              <div class="col-span-3 rounded-xl border border-[rgba(201,205,212,.6)] bg-surface shadow-card overflow-hidden">
+                <div class="p-3 flex items-center justify-between">
+                  <div class="text-[12px] text-muted">行业名录</div>
+                  <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" />
+                    <div class="w-10 h-6 bg-[rgba(201,205,212,.9)] peer-focus:outline-none rounded-full peer peer-checked:bg-[rgba(0,180,42,.9)] relative transition">
+                      <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 peer-checked:translate-x-4 transition"></div>
+                    </div>
+                  </label>
+                </div>
+                <div class="px-3 pb-3">
+                  <img
+                    class="h-24 w-full rounded-xl object-cover border border-[rgba(201,205,212,.6)] bg-[rgba(245,247,250,.9)]"
+                    src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=480&h=192&q=80"
+                    alt="行业名录与协作办公"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div class="mt-3 text-[14px] font-semibold line-clamp-2">自定义采集（用户提交网址）</div>
+                  <button class="mt-3 w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="add-script">配置</button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal: 配置参数（脚本来自脚本管理，仅可选已启用） -->
+    <div class="overlay" data-overlay="add-script" data-open="false"></div>
+    <div
+      class="modal modal-collector-config"
+      data-modal="add-script"
+      data-open="false"
+      style="max-width: 860px; width: min(860px, 96vw)"
+    >
+      <div class="shrink-0 p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">配置参数</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="add-script" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="modal-collector-config__scroll p-6 space-y-4">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-8">
+            <div class="text-[12px] text-muted mb-1"><span class="text-[#F53F3F]">*</span> 采集器名称</div>
+            <input class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入采集器名称" />
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">行业类型</div>
+            <select class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>SMT/电子制造</option>
+              <option>PCB</option>
+              <option>半导体</option>
+              <option>科研院所</option>
+            </select>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">数据来源</div>
+            <select class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>公开工商数据</option>
+              <option>行业名录</option>
+              <option>政府科研数据</option>
+              <option>招标采购</option>
+              <option>垂直平台数据</option>
+              <option>企业自媒体数据</option>
+              <option>展会活动</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-4 items-start">
+          <div class="col-span-3">
+            <div class="text-[12px] text-muted mb-1"><span class="text-[#F53F3F]">*</span> 采集器图标</div>
+            <label class="flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-dashed border-[rgba(201,205,212,.9)] bg-[rgba(245,247,250,.6)] cursor-pointer">
+              <i class="fa-solid fa-plus text-muted"></i>
+              <input type="file" class="sr-only" accept="image/*" />
+            </label>
+          </div>
+          <div class="col-span-9">
+            <div class="text-[12px] text-muted mb-1"><span class="text-[#F53F3F]">*</span> 选择脚本</div>
+            <select
+              id="cfgScriptSelect"
+              class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"
+            ></select>
+            <div class="text-[12px] text-muted mt-1">仅展示「脚本管理」中状态为<strong class="font-semibold text-text">启用</strong>的脚本；无可用项时请先到脚本管理启用脚本。</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-[12px] text-muted mb-1"><span class="text-[#F53F3F]">*</span> 采集目标网址</div>
+          <input class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入采集目标网址" />
+        </div>
+
+        <div class="grid grid-cols-12 gap-4 items-end">
+          <div class="col-span-4">
+            <div class="text-[12px] text-muted mb-1"><span class="text-[#F53F3F]">*</span> 运行时段</div>
+            <input class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="运行时段" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">采集关键词</div>
+            <input
+              id="kwInput"
+              type="text"
+              class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]"
+              placeholder="请输入关键词"
+              autocomplete="off"
+            />
+          </div>
+          <div class="col-span-2">
+            <button id="btnKwAdd" type="button" class="w-full h-10 rounded-lg bg-primary text-white text-[14px] font-semibold">添加</button>
+          </div>
+        </div>
+        <div id="kwTags" class="mt-2 flex flex-wrap gap-2" aria-label="已添加的采集关键词"></div>
+
+        <div>
+          <div class="text-[12px] text-muted mb-2">采集周期</div>
+          <div class="flex flex-wrap gap-4 text-[14px]">
+            <label class="flex items-center gap-2"><input type="checkbox" class="accent-primary" /> 周日</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="accent-primary" /> 周一</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="accent-primary" /> 周二</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="accent-primary" /> 周三</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="accent-primary" /> 周四</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="accent-primary" /> 周五</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="accent-primary" /> 周六</label>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-[12px] text-muted mb-1">最大采集数量</div>
+          <input type="number" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="0" />
+          <div class="text-[12px] text-muted mt-1">默认为0,为不限制,请输入正整数,当输入了数值,采集器采集了数据达到最大采集数量后会自动停止采集</div>
+        </div>
+
+        <div>
+          <div class="text-[12px] text-muted mb-2">是否匹配日期</div>
+          <label class="inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" />
+            <div class="w-12 h-7 bg-[rgba(201,205,212,.9)] rounded-full peer peer-checked:bg-primary relative transition">
+              <div class="w-6 h-6 bg-white rounded-full absolute top-0.5 left-0.5 peer-checked:translate-x-5 transition"></div>
+            </div>
+          </label>
+          <div class="text-[12px] text-muted mt-2">如果为否,采集时不匹配日期,如果为是,采集时会匹配发布时间是否和当前日期一致,一致采集成功,不一致采集失败</div>
+        </div>
+      </div>
+      <div class="shrink-0 p-4 border-t border-[rgba(201,205,212,.7)] flex justify-center bg-surface">
+        <button class="h-10 px-10 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="add-script" data-simulate-loading>确认</button>
+      </div>
+    </div>
+
+    <!-- task detail & compliance tip removed -->
+
+    <!-- Modal: retrain -->
+    <div class="overlay" data-overlay="retrain" data-open="false"></div>
+    <div class="modal" data-modal="retrain" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">提交抽取调优（原型）</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="retrain" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <div class="text-[14px] font-semibold">问题描述</div>
+        <textarea class="mt-2 w-full h-28 rounded-xl border border-[rgba(201,205,212,.7)] p-3 text-[14px]" placeholder="如：联系人字段缺失较多、需求抽取偏泛…"></textarea>
+        <div class="mt-3 flex items-center justify-between">
+          <div class="text-[12px] text-muted">
+            规则：准确率≥85% 才可自动入库，低于阈值将标记并通知算法人员。
+          </div>
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="retrain" data-simulate-loading>
+            提交
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        const LS_SCRIPTS = "collect_scripts_v1";
+        /** @type {string[]} */
+        const kwList = [];
+
+        function resetKwTags() {
+          kwList.length = 0;
+          const inp = document.getElementById("kwInput");
+          if (inp) inp.value = "";
+          renderKwTags();
+        }
+
+        function renderKwTags() {
+          const wrap = document.getElementById("kwTags");
+          if (!wrap) return;
+          wrap.innerHTML = "";
+          kwList.forEach((text, idx) => {
+            const span = document.createElement("span");
+            span.className =
+              "inline-flex items-center gap-1 max-w-full rounded-lg border border-[rgba(201,205,212,.65)] bg-[rgba(245,247,250,.95)] pl-2.5 pr-1 py-1 text-[13px] text-text";
+            const label = document.createElement("span");
+            label.className = "truncate max-w-[220px]";
+            label.textContent = text;
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className =
+              "shrink-0 w-7 h-7 rounded-md hover:bg-[rgba(201,205,212,.4)] flex items-center justify-center text-muted";
+            btn.setAttribute("data-kw-remove", String(idx));
+            btn.setAttribute("aria-label", "移除关键词「" + text + "」");
+            btn.title = "移除";
+            btn.innerHTML = '<i class="fa-solid fa-xmark text-[11px]"></i>';
+            span.appendChild(label);
+            span.appendChild(btn);
+            wrap.appendChild(span);
+          });
+        }
+
+        function fillScriptSelect() {
+          const sel = document.getElementById("cfgScriptSelect");
+          if (!sel) return;
+          let rows = [];
+          try {
+            rows = JSON.parse(localStorage.getItem(LS_SCRIPTS) || "[]");
+          } catch (_) {
+            rows = [];
+          }
+          if (!Array.isArray(rows)) rows = [];
+          const enabled = rows.filter((r) => r && r.status === "enabled");
+          sel.innerHTML = "";
+          const o0 = document.createElement("option");
+          o0.value = "";
+          o0.textContent = enabled.length ? "请选择脚本" : "暂无已启用脚本（请至脚本管理启用）";
+          sel.appendChild(o0);
+          enabled.forEach((r) => {
+            const o = document.createElement("option");
+            o.value = r.id;
+            const fn = r.fileName ? "（" + r.fileName + "）" : "";
+            o.textContent = (r.name || "未命名") + fn;
+            sel.appendChild(o);
+          });
+        }
+
+        fillScriptSelect();
+        renderKwTags();
+
+        document.getElementById("btnKwAdd")?.addEventListener("click", () => {
+          const inp = document.getElementById("kwInput");
+          if (!inp) return;
+          const v = inp.value.trim();
+          if (!v) return;
+          if (kwList.some((k) => k === v)) {
+            inp.value = "";
+            return;
+          }
+          kwList.push(v);
+          inp.value = "";
+          renderKwTags();
+        });
+
+        document.getElementById("kwInput")?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("btnKwAdd")?.click();
+          }
+        });
+
+        document.getElementById("kwTags")?.addEventListener("click", (e) => {
+          const btn = e.target && e.target.closest && e.target.closest("[data-kw-remove]");
+          if (!btn) return;
+          const i = parseInt(btn.getAttribute("data-kw-remove") || "", 10);
+          if (Number.isNaN(i) || i < 0 || i >= kwList.length) return;
+          kwList.splice(i, 1);
+          renderKwTags();
+        });
+
+        document.addEventListener(
+          "click",
+          (e) => {
+            if (e.target.closest('[data-open-modal="add-script"]')) {
+              fillScriptSelect();
+              resetKwTags();
+            }
+          },
+          true
+        );
+      })();
+    </script>
+  </body>
+</html>
+
