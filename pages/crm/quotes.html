@@ -141,7 +141,7 @@
             <div id="errCustomer" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择客户</div>
           </div>
           <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">商机编号 <span class="text-[#F53F3F]">*</span></div>
+            <div class="text-[12px] text-muted mb-1">商机编号</div>
             <select id="fNeedNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
             <div id="errNeedNo" class="hidden text-[12px] text-[#F53F3F] mt-1">请选择商机编号</div>
           </div>
@@ -379,7 +379,7 @@
         fNeedNo.innerHTML = "";
         const ph = document.createElement("option");
         ph.value = "";
-        ph.textContent = "请选择商机编号";
+        ph.textContent = "商机编号（可选）";
         fNeedNo.appendChild(ph);
         needs.filter((n) => n.customerId === customerId).forEach((n) => {
           const o = document.createElement("option");
@@ -492,7 +492,7 @@
               <tr class="border-t border-[rgba(201,205,212,.6)]">
                 <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${r.id}" /></td>
                 <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(cust?.name || "—")}</td>
-                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.needNo)}</td>
+                <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.needNo || "—")}</td>
                 <td class="px-3 py-3 whitespace-nowrap font-semibold">¥ ${escapeHtml(money(r.amount))}</td>
                 <td class="px-3 py-3 whitespace-nowrap">${file}</td>
                 <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(getCreatorName(r.createdById))}</td>
@@ -681,10 +681,10 @@
         const file = fFile.files?.[0] || null;
 
         const badCustomer = !customerId;
-        const badNeed = !needNo;
+        const badNeed = false; // 商机编号为非必填
         const badAmount = !/^\d+(\.\d{1,2})?$/.test(amountStr) || Number(amountStr) <= 0;
         setFieldError(fCustomerId, errCustomer, badCustomer);
-        setFieldError(fNeedNo, errNeedNo, badNeed);
+        setFieldError(fNeedNo, errNeedNo, false);
         setFieldError(fAmount, errAmount, badAmount);
 
         const vf = validateFile(file);
@@ -695,7 +695,7 @@
           errFile.classList.add("hidden");
         }
 
-        if (badCustomer || badNeed || badAmount || !vf.ok) {
+        if (badCustomer || badAmount || !vf.ok) {
           toast("error", "保存失败", "请先修正必填项/附件校验错误");
           return;
         }

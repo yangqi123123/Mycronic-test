@@ -97,34 +97,45 @@
           <!-- Content -->
           <div id="c360Content" class="hidden h-full flex flex-col gap-4 min-h-0">
             <!-- 顶部客户概览区 -->
-            <section id="c360OverviewWrap" class="rounded-xl border border-[rgba(201,205,212,.6)] shadow-card bg-[rgba(245,247,250,.9)]">
+            <section id="c360OverviewWrap" class="rounded-xl border border-[rgba(201,205,212,.6)] shadow-card bg-surface">
               <div class="p-4">
                 <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between xl:gap-4">
                   <div class="min-w-0 flex-1">
-                    <div class="grid grid-cols-12 gap-3 items-center">
-                      <div class="col-span-12 xl:col-span-3">
+                    <!-- 顶部信息条：单行多列（与截图一致） -->
+                    <div class="flex items-center gap-6 overflow-x-auto pr-2" style="scrollbar-width: thin">
+                      <div class="min-w-0 pr-6">
                         <div class="text-[12px] text-muted">客户名称</div>
-                        <div class="mt-1 text-[16px] font-semibold text-text" id="ovName">—</div>
+                        <div class="mt-1 text-[14px] font-semibold text-text truncate max-w-[280px]" id="ovName">—</div>
                       </div>
-                      <div class="col-span-6 md:col-span-4 xl:col-span-2">
+                      <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
+                      <div class="pr-6">
                         <div class="text-[12px] text-muted">客户等级</div>
                         <div class="mt-1" id="ovGrade">—</div>
                       </div>
-                      <div class="col-span-6 md:col-span-4 xl:col-span-2">
+                      <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
+                      <div class="pr-6">
+                        <div class="text-[12px] text-muted">联系人</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovContactName">—</div>
+                      </div>
+                      <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
+                      <div class="pr-6">
                         <div class="text-[12px] text-muted">联系方式</div>
                         <div class="mt-1 text-[14px] font-semibold" id="ovPhone">—</div>
                       </div>
-                      <div class="col-span-12 md:col-span-4 xl:col-span-2">
+                      <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
+                      <div class="min-w-0 pr-6">
                         <div class="text-[12px] text-muted">省市区</div>
-                        <div class="mt-1 text-[14px] font-semibold" id="ovRegion">—</div>
+                        <div class="mt-1 text-[14px] font-semibold truncate max-w-[220px]" id="ovRegion">—</div>
                       </div>
-                      <div class="col-span-6 md:col-span-6 xl:col-span-1">
+                      <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
+                      <div class="min-w-0 pr-6">
                         <div class="text-[12px] text-muted">客户来源</div>
-                        <div class="mt-1 text-[14px] font-semibold" id="ovSource">—</div>
+                        <div class="mt-1 text-[14px] font-semibold truncate max-w-[180px]" id="ovSource">—</div>
                       </div>
-                      <div class="col-span-6 md:col-span-6 xl:col-span-2">
+                      <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
+                      <div class="min-w-0">
                         <div class="text-[12px] text-muted">行业</div>
-                        <div class="mt-1 text-[14px] font-semibold" id="ovIndustry">—</div>
+                        <div class="mt-1 text-[14px] font-semibold truncate max-w-[180px]" id="ovIndustry">—</div>
                       </div>
                     </div>
                   </div>
@@ -414,6 +425,7 @@
         function renderOverview(cust) {
           document.getElementById("ovName").textContent = cust ? cust.name || "—" : "—";
           document.getElementById("ovGrade").innerHTML = getGradeTag(cust && cust.grade);
+          document.getElementById("ovContactName").textContent = (cust && cust.contactName) || "—";
           document.getElementById("ovPhone").textContent = (cust && cust.contactPhone) || "—";
           document.getElementById("ovRegion").textContent = cust ? [cust.prov, cust.city, cust.dist].filter(Boolean).join(" / ") || "—" : "—";
           document.getElementById("ovSource").textContent = (cust && cust.source) || "—";
@@ -481,7 +493,6 @@
 
           const left = [
             { key: "name", label: "客户名称", required: true, type: "text", value: cust.name || "" },
-            { key: "grade", label: "客户等级", required: false, type: "select-grade", value: cust.grade || "D" },
             { key: "source", label: "客户来源", required: false, type: "text", value: cust.source || "" },
             { key: "legalPerson", label: "法定代表人", required: false, type: "text", value: d.legalPerson || "" },
             { key: "region", label: "省市区", required: false, type: "region", value: [cust.prov, cust.city, cust.dist].filter(Boolean).join("/") },
@@ -496,7 +507,9 @@
 
           const right = [
             { key: "uscc", label: "统一社会信用代码", required: false, type: "text", value: cust.uscc || "" },
+            { key: "contactName", label: "联系人", required: true, type: "text", value: cust.contactName || "" },
             { key: "contactPhone", label: "联系方式", required: true, type: "text", value: cust.contactPhone || "" },
+            { key: "grade", label: "客户等级", required: false, type: "select-grade", value: cust.grade || "D" },
             { key: "industry", label: "行业", required: false, type: "text", value: cust.industry || "" },
             { key: "establishedAt", label: "成立日期", required: false, type: "date", value: d.establishedAt || "" },
             { key: "registeredCapital", label: "注册资本", required: false, type: "text", value: d.registeredCapital || "" },
@@ -605,7 +618,7 @@
                 </tbody>
               </table>
               <div class="mt-3 text-[12px] text-muted">
-                <span class="c360-required">必填项</span>：客户名称、联系方式
+                <span class="c360-required">必填项</span>：客户名称、联系人、联系方式
               </div>
             </div>
           `;
@@ -1391,6 +1404,8 @@
               const name = get("name");
               const contactPhone = get("contactPhone");
               if (!name) return openModal("校验失败", "客户名称不能为空。", "必填项校验");
+              const contactName = get("contactName");
+              if (!contactName) return openModal("校验失败", "联系人不能为空。", "必填项校验");
               if (!contactPhone) return openModal("校验失败", "联系方式不能为空。", "必填项校验");
 
               const grade = get("grade") || "D";
@@ -1409,6 +1424,7 @@
                   source,
                   industry,
                   uscc,
+                  contactName,
                   contactPhone,
                   prov,
                   city,

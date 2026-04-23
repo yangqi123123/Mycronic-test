@@ -27,7 +27,7 @@
             <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="apm-assign"><i class="fa-solid fa-xmark text-muted"></i></button>
           </div>
           <div class="p-4 space-y-3">
-            <div class="flex items-center justify-center gap-2">
+            <div id="apm-tabs" class="flex items-center justify-center gap-2">
               <button type="button" class="apm-tab h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold text-muted" data-apm-tab="region">
                 分配给区域
               </button>
@@ -108,6 +108,7 @@
   let selectedRegionId = null;
   let activeTab = "person"; // person | region
   let onDone = null;
+  let forcePersonOnly = false;
 
   function showTip(msg) {
     const tip = document.getElementById("apm-tip");
@@ -237,6 +238,7 @@
   }
 
   function setTab(next) {
+    if (forcePersonOnly) next = "person";
     activeTab = next === "region" ? "region" : "person";
     const tabBtns = Array.from(document.querySelectorAll(".apm-tab"));
     tabBtns.forEach((b) => b.removeAttribute("aria-current"));
@@ -338,12 +340,15 @@
     currentCustomerId = customerId;
     selectedEmpId = null;
     selectedRegionId = null;
+    forcePersonOnly = !!(opts && opts.personOnly);
+    const tabs = document.getElementById("apm-tabs");
+    if (tabs) tabs.classList.toggle("hidden", forcePersonOnly);
     setTab("person");
     onDone = opts && typeof opts.onDone === "function" ? opts.onDone : null;
     const q = document.getElementById("apm-q");
     if (q) q.value = "";
     renderList();
-    renderRegions();
+    if (!forcePersonOnly) renderRegions();
     setOpen(true);
   }
 

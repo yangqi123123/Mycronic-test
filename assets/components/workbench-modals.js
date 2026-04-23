@@ -136,9 +136,9 @@
               <input id="wbmQuoteCustomer" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-[rgba(245,247,250,.7)]" readonly />
             </div>
             <div class="col-span-12 md:col-span-6">
-              <div class="text-[12px] text-muted mb-1">商机编号 <span class="text-[#F53F3F]">*</span></div>
+              <div class="text-[12px] text-muted mb-1">商机编号</div>
               <select id="wbmQuoteOppNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-                <option value="">请选择商机编号</option>
+                <option value="">商机编号（可选）</option>
               </select>
               <div id="wbmQuoteErrOpp" class="hidden text-[12px] text-[#F53F3F] mt-1">必填</div>
             </div>
@@ -278,7 +278,7 @@
             </div>
             <div class="col-span-12">
               <div class="text-[12px] text-muted mb-1">备注</div>
-              <textarea id="wbmDelNote" rows="3" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px]" placeholder="可选"></textarea>
+              <textarea id="wbmDelNote" rows="3" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px]" placeholder="请输入，最多输入240个字符"></textarea>
             </div>
           </div>
           <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
@@ -379,7 +379,7 @@
   }
 
   function fillOppOptions(sel) {
-    sel.innerHTML = `<option value="">请选择商机编号</option>`;
+    sel.innerHTML = `<option value="">商机编号（可选）</option>`;
     const y = new Date().getFullYear();
     // prototype: offer 3 mock opp numbers
     [`NX-${y}-7001`, `NX-${y}-7002`, `NX-${y}-7003`].forEach((v) => {
@@ -411,11 +411,11 @@
       const opp = sel.value;
       const amt = (document.getElementById("wbmQuoteAmt").value || "").trim();
       const okAmt = /^\d+(\.\d{1,2})?$/.test(amt) && Number(amt) > 0;
-      setErr("wbmQuoteErrOpp", !opp);
+      setErr("wbmQuoteErrOpp", false);
       setErr("wbmQuoteErrAmt", !okAmt);
-      if (!opp || !okAmt) return;
+      if (!okAmt) return;
       setOpen("wbm-quote", false);
-      if (typeof onDone === "function") onDone({ opp, amt: Number(amt) });
+      if (typeof onDone === "function") onDone({ opp: opp || "", amt: Number(amt) });
     };
 
     setOpen("wbm-quote", true);

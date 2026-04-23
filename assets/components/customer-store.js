@@ -7,7 +7,7 @@
   const K = "ai_customer_store_v1";
 
   /** @typedef {{id:string,name:string,phone:string,avatar:string,role:string,region:string,hasSalesWorkbench:boolean,managerName?:string}} Employee */
-  /** @typedef {{id:string,name:string,grade:"A"|"B"|"C"|"D",priority:"非常紧急"|"紧急"|"中",statusFlow:"待跟进"|"跟进中"|"商机"|"报价"|"合同"|"交付"|"放弃",nextFollowAt:string,prov:string,city:string,dist:string,source:string,industry:string,createdAt:string,regionOwner:string,finalOwnerId:string|null,contactPhone?:string,uscc?:string,tags?:string[],legalRep?:string,establishedAt?:string,regCapital?:string,paidCapital?:string,regNo?:string,orgCode?:string,taxId?:string,bizTerm?:string,regAuthority?:string,insuredCount?:number,formerName?:string,approveAt?:string,regAddr?:string,bizScope?:string,needSummary?:string}} Customer */
+  /** @typedef {{id:string,name:string,grade:"A"|"B"|"C"|"D",priority:"非常紧急"|"紧急"|"中",statusFlow:"待跟进"|"跟进中"|"商机"|"报价"|"合同"|"交付"|"放弃",nextFollowAt:string,prov:string,city:string,dist:string,source:string,industry:string,createdAt:string,regionOwner:string,finalOwnerId:string|null,contactName?:string,contactPhone?:string,uscc?:string,tags?:string[],legalRep?:string,establishedAt?:string,regCapital?:string,paidCapital?:string,regNo?:string,orgCode?:string,taxId?:string,bizTerm?:string,regAuthority?:string,insuredCount?:number,formerName?:string,approveAt?:string,regAddr?:string,bizScope?:string,needSummary?:string}} Customer */
 
   const listeners = new Set();
   function emit() {
@@ -87,6 +87,7 @@
         createdAt: "2026-04-10",
         regionOwner: "李雷",
         finalOwnerId: "E-001",
+        contactName: "周伟",
         contactPhone: "13800002222",
         uscc: "91320506MA1XXXXXXX",
         tags: ["重点跟进", "招投标"],
@@ -106,6 +107,7 @@
         createdAt: "2026-04-12",
         regionOwner: "李雷",
         finalOwnerId: "E-002",
+        contactName: "刘敏",
         contactPhone: "13800001111",
         uscc: "91310115MA2XXXXXXX",
         tags: ["展会线索"],
@@ -125,6 +127,7 @@
         createdAt: "2026-04-13",
         regionOwner: "李雷",
         finalOwnerId: "E-003",
+        contactName: "王强",
         contactPhone: "13800003333",
         uscc: "91110108MA3XXXXXXX",
         tags: [],
@@ -144,6 +147,7 @@
         createdAt: "2026-04-09",
         regionOwner: "李雷",
         finalOwnerId: "E-001",
+        contactName: "赵磊",
         contactPhone: "13700008888",
         uscc: "91330110MA4XXXXXXX",
       },
@@ -162,6 +166,7 @@
         createdAt: "2026-04-11",
         regionOwner: "李雷",
         finalOwnerId: "E-001",
+        contactName: "陈晨",
         contactPhone: "13600006666",
         uscc: "91440300MA5XXXXXXX",
       },
@@ -180,6 +185,7 @@
         createdAt: "2026-04-08",
         regionOwner: "李雷",
         finalOwnerId: "E-002",
+        contactName: "孙浩",
         contactPhone: "13500005555",
         uscc: "91510100MA6XXXXXXX",
       },

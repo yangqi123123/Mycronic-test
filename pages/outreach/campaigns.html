@@ -83,7 +83,7 @@
                     <th class="text-left px-3 py-2">渠道</th>
                     <th class="text-left px-3 py-2">模板</th>
                     <th class="text-left px-3 py-2">状态</th>
-                    <th class="text-left px-3 py-2">行为（打开/点击）</th>
+                    <th class="text-left px-3 py-2">行为（打开 / 点击 / 回复）</th>
                     <th class="text-right px-3 py-2">操作</th>
                   </tr>
                 </thead>
@@ -282,8 +282,8 @@
 
         // init activities if missing
         const initAct = [
-          { id: "A-1", customerId: "C-0001", channel: "邮件", templateId: "T-1", status: "成功", open: 1, click: 0, msg: "", createdAt: TODAY + " 09:10" },
-          { id: "A-2", customerId: "C-0004", channel: "短信", templateId: "T-2", status: "失败", open: 0, click: 0, msg: "运营商返回失败（模拟）", createdAt: TODAY + " 10:22" },
+          { id: "A-1", customerId: "C-0001", channel: "邮件", templateId: "T-1", status: "成功", open: 1, click: 0, reply: 0, msg: "", createdAt: TODAY + " 09:10" },
+          { id: "A-2", customerId: "C-0004", channel: "短信", templateId: "T-2", status: "失败", open: 0, click: 0, reply: 0, msg: "运营商返回失败（模拟）", createdAt: TODAY + " 10:22" },
         ];
         let activities = load(LS_ACT, initAct);
         save(LS_ACT, activities);
@@ -332,6 +332,9 @@
           tb.innerHTML = list
             .map((a) => {
               const cn = getCustomerName(a.customerId);
+              const openN = Number(a.open || 0);
+              const clickN = Number(a.click || 0);
+              const replyN = Number(a.reply || 0);
               const ops = `
                 <button class="text-primary font-semibold" data-view="${a.id}">查看</button>
                 ${canResend(a.status) ? `<button class="text-primary font-semibold ml-3" data-resend="${a.id}">重发</button>` : ""}
@@ -342,7 +345,7 @@
                   <td class="px-3 py-3">${esc(a.channel)}</td>
                   <td class="px-3 py-3 text-muted text-[13px]">${esc(getTplName(a.templateId))}</td>
                   <td class="px-3 py-3">${statusChip(a.status)}</td>
-                  <td class="px-3 py-3 text-muted text-[13px]">打开 ${a.open} · 点击 ${a.click}</td>
+                  <td class="px-3 py-3 text-muted text-[13px]">打开 ${openN} · 点击 ${clickN} · 回复 ${replyN}</td>
                   <td class="px-3 py-3 text-right whitespace-nowrap">${ops}</td>
                 </tr>
               `;
@@ -369,7 +372,7 @@
           document.getElementById("dChannel").textContent = a.channel;
           document.getElementById("dTpl").textContent = getTplName(a.templateId);
           document.getElementById("dStatus").textContent = a.status;
-          document.getElementById("dAct").textContent = `打开 ${a.open} · 点击 ${a.click}`;
+          document.getElementById("dAct").textContent = `打开 ${Number(a.open || 0)} · 点击 ${Number(a.click || 0)} · 回复 ${Number(a.reply || 0)}`;
           const box = document.getElementById("dMsgBox");
           box.style.background = a.status === "拦截" ? "rgba(255,125,0,.08)" : a.status === "失败" ? "rgba(245,63,63,.06)" : "rgba(245,247,250,.9)";
           document.getElementById("dMsg").textContent = a.msg || "—";
@@ -406,6 +409,7 @@
               status: "拦截",
               open: 0,
               click: 0,
+              reply: 0,
               msg: `该客户今日【${channel}】触达次数已达系统配置上限（配置值：${lim}条/天），请次日再试。`,
               createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
             };
@@ -414,10 +418,11 @@
           const ok = Math.random() > 0.08;
           const open = ok && Math.random() > 0.6 ? 1 : 0;
           const click = open && Math.random() > 0.7 ? 1 : 0;
+          const reply = channel === "短信" && ok && Math.random() > 0.78 ? 1 : 0;
           const st = ok ? "成功" : "失败";
           const msg = ok ? "" : "发送失败（模拟）";
           incCount(customerId, channel);
-          return { id, customerId, channel, templateId, status: st, open, click, msg, createdAt: new Date().toISOString().slice(0, 16).replace("T", " ") };
+          return { id, customerId, channel, templateId, status: st, open, click, reply, msg, createdAt: new Date().toISOString().slice(0, 16).replace("T", " ") };
         }
 
         function doSend() {
@@ -509,11 +514,11 @@
 
         document.getElementById("btnExport").addEventListener("click", () => {
           const list = activities.filter(passes);
-          const header = ["客户名称", "渠道", "模板", "状态", "打开", "点击"];
+          const header = ["客户名称", "渠道", "模板", "状态", "打开", "点击", "回复"];
           const lines = [header.join(",")];
           list.forEach((a) => {
             lines.push(
-              [getCustomerName(a.customerId), a.channel, getTplName(a.templateId), a.status, a.open, a.click]
+              [getCustomerName(a.customerId), a.channel, getTplName(a.templateId), a.status, Number(a.open || 0), Number(a.click || 0), Number(a.reply || 0)]
                 .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
                 .join(","),
             );
