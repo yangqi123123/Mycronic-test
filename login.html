@@ -142,6 +142,7 @@
       (function () {
         const DEMO_USER = "lilei@mycronic.demo";
         const DEMO_PWD = "Demo123456";
+        const AUTH_KEY = "ai_auth_v1";
 
         const form = document.getElementById("loginForm");
         const userEl = document.getElementById("username");
@@ -174,6 +175,9 @@
             alert("请填写账号和密码");
             return;
           }
+          try {
+            localStorage.setItem(AUTH_KEY, "1");
+          } catch (_) {}
           enterApp();
         }
 

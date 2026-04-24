@@ -3,6 +3,32 @@
   const qs = (s, root = document) => root.querySelector(s);
   const qsa = (s, root = document) => Array.from(root.querySelectorAll(s));
 
+  // ===== auth (prototype) =====
+  // Default start page is login.html. Any app page without auth redirects to login.
+  const AUTH_KEY = "ai_auth_v1";
+  function isAuthed() {
+    try {
+      return localStorage.getItem(AUTH_KEY) === "1";
+    } catch (_) {
+      return false;
+    }
+  }
+  function buildHref(file) {
+    const base = (window.__APP_BASE || "./").replace(/\\/g, "/");
+    try {
+      return new URL(file, new URL(base, window.location.href)).href;
+    } catch (_) {
+      return base.replace(/\/?$/, "/") + file;
+    }
+  }
+  function ensureAuthedOrRedirect() {
+    const path = String(window.location.pathname || "").replace(/\\/g, "/");
+    if (path.endsWith("/login.html") || path.endsWith("login.html")) return;
+    if (isAuthed()) return;
+    window.location.replace(buildHref("login.html"));
+  }
+  ensureAuthedOrRedirect();
+
   function setOpen(el, open) {
     if (!el) return;
     el.dataset.open = open ? "true" : "false";
@@ -174,14 +200,10 @@
     const logoutBtn = userWrap.querySelector("[data-app-logout]");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", () => {
-        const base = (window.__APP_BASE || "./").replace(/\\/g, "/");
-        let href = "";
         try {
-          href = new URL("login.html", new URL(base, window.location.href)).href;
-        } catch {
-          href = base.replace(/\/?$/, "/") + "login.html";
-        }
-        window.location.assign(href);
+          localStorage.removeItem(AUTH_KEY);
+        } catch (_) {}
+        window.location.assign(buildHref("login.html"));
       });
     }
 
