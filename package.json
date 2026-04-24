@@ -1,0 +1,11 @@
+{
+  "name": "web-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ./tools/dev-server.mjs",
+    "dev:proxy": "set PROXY_TARGET=http://127.0.0.1:8080&& node ./tools/dev-server.mjs",
+    "start": "node ./tools/dev-server.mjs"
+  }
+}
+

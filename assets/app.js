@@ -174,7 +174,14 @@
     const logoutBtn = userWrap.querySelector("[data-app-logout]");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", () => {
-        window.alert("已退出登录（原型占位）");
+        const base = (window.__APP_BASE || "./").replace(/\\/g, "/");
+        let href = "";
+        try {
+          href = new URL("login.html", new URL(base, window.location.href)).href;
+        } catch {
+          href = base.replace(/\/?$/, "/") + "login.html";
+        }
+        window.location.assign(href);
       });
     }
 

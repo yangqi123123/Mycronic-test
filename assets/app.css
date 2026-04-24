@@ -13,9 +13,29 @@
 
 html,body{height:100%;}
 body{background:var(--bg); color:var(--text);}
+/* 仅应用壳布局页禁用整页滚动；独立页（如登录）仍可 body 滚动 */
+body:has(.app-shell){overflow:hidden;}
 
 /* Better desktop feel at 1366x768+ */
-.app-shell{min-width:1280px;}
+.app-shell{min-width:1280px; height:100vh;}
+
+/* ===== Layout: fixed sidebar, scroll only main content ===== */
+.app-shell > main{
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.app-shell > main > header{
+  flex: 0 0 auto;
+}
+.app-shell > main > .p-4{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
 
 /* Sidebar selected state: orange bar + subtle background */
 .nav-item[aria-current="page"]{

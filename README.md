@@ -2,6 +2,9 @@
 
 ### 打开方式
 - 直接双击打开 `index.html`（建议用 Chrome / Edge）。
+- 或启动本地服务（推荐，避免某些浏览器对 `file://` 的限制）：
+  - `npm run dev` 然后访问 `http://127.0.0.1:4173/index.html`
+  - 可选代理（把 `/api/*` 转发到后端）：`npm run dev:proxy`（默认代理到 `http://127.0.0.1:8080`，可用 `PROXY_TARGET`/`PROXY_PREFIX` 环境变量覆盖）
 - 分辨率按需求文档：PC 端（≥1366×768），页面采用固定后台壳（Sidebar 200px + Topbar）。
 
 ### 技术栈

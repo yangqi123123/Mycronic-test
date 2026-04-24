@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录 · AI获客管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      window.__APP_BASE = "./";
+    </script>
+    <script src="./assets/tailwind-config.js"></script>
+    <link rel="stylesheet" href="./assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .login-bg {
+        background: radial-gradient(1200px 600px at 10% -10%, rgba(255, 138, 0, 0.14), transparent 55%),
+          radial-gradient(900px 500px at 100% 20%, rgba(59, 130, 246, 0.08), transparent 50%), var(--bg);
+      }
+      .login-card {
+        box-shadow: 0 1px 2px rgba(29, 33, 41, 0.06), 0 24px 48px rgba(29, 33, 41, 0.08);
+      }
+    </style>
+  </head>
+  <body class="login-bg min-h-screen text-text antialiased">
+    <div class="min-h-screen flex items-center justify-center p-6 lg:p-10">
+      <div
+        class="login-card w-full max-w-[960px] bg-surface rounded-2xl border border-[rgba(201,205,212,.65)] overflow-hidden flex flex-col lg:flex-row"
+        role="main"
+      >
+        <!-- 插画区 -->
+        <div
+          class="relative lg:w-[46%] min-h-[220px] lg:min-h-[520px] bg-gradient-to-br from-[rgba(255,138,0,.12)] via-[rgba(245,247,250,.95)] to-[rgba(59,130,246,.08)] flex items-center justify-center p-8 lg:p-10"
+          aria-hidden="true"
+        >
+          <div class="absolute inset-0 opacity-[0.35] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23C9CDD4\' fill-opacity=\'0.35\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+          <svg class="relative z-[1] w-full max-w-[340px] h-auto drop-shadow-sm" viewBox="0 0 400 360" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="200" cy="310" rx="160" ry="28" fill="rgba(29,33,41,.06)" />
+            <rect x="72" y="88" width="256" height="176" rx="16" fill="#FFFFFF" stroke="rgba(201,205,212,.85)" stroke-width="2" />
+            <rect x="88" y="108" width="88" height="10" rx="5" fill="rgba(255,138,0,.35)" />
+            <rect x="88" y="128" width="140" height="8" rx="4" fill="rgba(134,144,156,.45)" />
+            <path d="M88 168 L120 142 L152 158 L184 118 L216 138 L248 108 L280 128 L312 98" stroke="#FF8A00" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="120" cy="142" r="6" fill="#FF8A00" />
+            <circle cx="184" cy="118" r="6" fill="#FF8A00" />
+            <circle cx="248" cy="108" r="6" fill="#FF8A00" />
+            <rect x="88" y="200" width="72" height="44" rx="8" fill="rgba(245,247,250,.95)" stroke="rgba(201,205,212,.7)" />
+            <rect x="172" y="200" width="72" height="44" rx="8" fill="rgba(245,247,250,.95)" stroke="rgba(201,205,212,.7)" />
+            <rect x="256" y="200" width="56" height="44" rx="8" fill="rgba(255,138,0,.14)" stroke="rgba(255,138,0,.45)" />
+            <path d="M118 296 C118 256 142 232 200 232 C258 232 282 256 282 296" stroke="rgba(201,205,212,.75)" stroke-width="2" stroke-linecap="round" />
+            <circle cx="200" cy="208" r="44" fill="#FFFFFF" stroke="rgba(201,205,212,.85)" stroke-width="2" />
+            <circle cx="200" cy="198" r="18" fill="rgba(255,138,0,.18)" />
+            <path d="M168 232 C168 214 182 200 200 200 C218 200 232 214 232 232" stroke="#1D2129" stroke-width="2" stroke-linecap="round" opacity="0.55" />
+            <rect x="176" y="236" width="48" height="28" rx="6" fill="rgba(245,247,250,.98)" stroke="rgba(201,205,212,.75)" />
+            <path d="M320 64 L332 52 L344 64" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.55" />
+            <circle cx="56" cy="72" r="6" fill="#FF8A00" opacity="0.35" />
+            <circle cx="340" cy="200" r="8" fill="#22C55E" opacity="0.25" />
+          </svg>
+          <div class="absolute bottom-6 left-0 right-0 text-center px-6 z-[1] hidden lg:block">
+            <p class="text-[15px] font-semibold text-text">AI获客 · 智能触达</p>
+            <p class="text-[13px] text-muted mt-1">线索、客户、评级与跟进一站式闭环</p>
+          </div>
+        </div>
+
+        <!-- 表单区 -->
+        <div class="flex-1 flex flex-col justify-center p-8 lg:p-12 lg:pl-10 lg:pr-14">
+          <div class="mb-8">
+            <h1 class="text-[24px] lg:text-[26px] font-semibold text-text tracking-tight">欢迎回来</h1>
+            <p class="text-[14px] text-muted mt-2">请使用您的账号与密码登录系统</p>
+          </div>
+
+          <form id="loginForm" class="space-y-5" novalidate>
+            <div>
+              <label for="username" class="block text-[13px] font-medium text-text mb-1.5">账号</label>
+              <div class="relative">
+                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true">
+                  <i class="fa-regular fa-user text-[14px]"></i>
+                </span>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  autocomplete="username"
+                  required
+                  value="lilei@mycronic.demo"
+                  class="w-full h-11 rounded-lg border border-[rgba(201,205,212,.75)] bg-surface pl-10 pr-3 text-[14px] outline-none focus:border-primary focus:ring-2 focus:ring-[rgba(255,138,0,.22)]"
+                  placeholder="工号 / 邮箱 / 手机号"
+                />
+              </div>
+            </div>
+            <div>
+              <label for="password" class="block text-[13px] font-medium text-text mb-1.5">密码</label>
+              <div class="relative">
+                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true">
+                  <i class="fa-solid fa-lock text-[13px]"></i>
+                </span>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                  value="Demo123456"
+                  class="w-full h-11 rounded-lg border border-[rgba(201,205,212,.75)] bg-surface pl-10 pr-11 text-[14px] outline-none focus:border-primary focus:ring-2 focus:ring-[rgba(255,138,0,.22)]"
+                  placeholder="请输入密码"
+                />
+                <button
+                  type="button"
+                  id="togglePwd"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.95)] flex items-center justify-center text-muted border border-transparent hover:border-[rgba(201,205,212,.55)]"
+                  aria-label="显示或隐藏密码"
+                  title="显示/隐藏密码"
+                >
+                  <i class="fa-regular fa-eye text-[14px]" id="togglePwdIcon"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 text-[13px]">
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none text-muted">
+                <input type="checkbox" name="remember" class="accent-primary w-4 h-4 rounded border-[rgba(201,205,212,.75)]" checked />
+                记住我（本机）
+              </label>
+              <a href="#" class="text-primary font-semibold hover:underline">忘记密码？</a>
+            </div>
+
+            <button
+              type="submit"
+              id="btnQuickLogin"
+              class="w-full h-11 rounded-lg bg-primary text-white text-[15px] font-semibold shadow-sm hover:opacity-[0.96] active:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[rgba(255,138,0,.45)] focus:ring-offset-2"
+            >
+              一键登录
+            </button>
+          </form>
+
+          <p class="mt-8 text-center text-[12px] text-muted">
+            已预填演示账号；点击「一键登录」进入系统（账号密码可改）
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const DEMO_USER = "lilei@mycronic.demo";
+        const DEMO_PWD = "Demo123456";
+
+        const form = document.getElementById("loginForm");
+        const userEl = document.getElementById("username");
+        const pwd = document.getElementById("password");
+        const toggle = document.getElementById("togglePwd");
+        const icon = document.getElementById("togglePwdIcon");
+        const quick = document.getElementById("btnQuickLogin");
+
+        function enterApp() {
+          const base = (window.__APP_BASE || "./").replace(/\\/g, "/");
+          let href = "";
+          try {
+            href = new URL("index.html", new URL(base, window.location.href)).href;
+          } catch {
+            href = base.replace(/\/?$/, "/") + "index.html";
+          }
+          window.location.assign(href);
+        }
+
+        function ensureDemoFilled() {
+          if (!(userEl.value || "").trim()) userEl.value = DEMO_USER;
+          if (!(pwd.value || "").trim()) pwd.value = DEMO_PWD;
+        }
+
+        function tryLogin() {
+          ensureDemoFilled();
+          const u = (userEl.value || "").trim();
+          const p = (pwd.value || "").trim();
+          if (!u || !p) {
+            alert("请填写账号和密码");
+            return;
+          }
+          enterApp();
+        }
+
+        let visible = false;
+        toggle.addEventListener("click", function () {
+          visible = !visible;
+          pwd.type = visible ? "text" : "password";
+          icon.className = visible ? "fa-regular fa-eye-slash text-[14px]" : "fa-regular fa-eye text-[14px]";
+        });
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          tryLogin();
+        });
+      })();
+    </script>
+  </body>
+</html>
