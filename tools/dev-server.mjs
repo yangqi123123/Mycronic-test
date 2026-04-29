@@ -114,7 +114,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
+    const pathname = url.pathname === "/" ? "/login.html" : url.pathname;
     const filePath = toLocalPath(pathname);
     if (!filePath) {
       send(res, 400, "Bad Request");
@@ -134,7 +134,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
   // Keep output minimal & copyable on Windows terminals.
-  console.log(`Serving: http://${HOST}:${PORT}/index.html`);
+  console.log(`Serving: http://${HOST}:${PORT}/login.html`);
   if (PROXY_TARGET) {
     console.log(`Proxy:   ${PROXY_PREFIX} -> ${PROXY_TARGET}`);
   }

@@ -11,6 +11,25 @@
     </script>
     <link rel="stylesheet" href="../../assets/app.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .scope-cascade-panel {
+        max-height: 220px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+      .scope-cascade-panel label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .scope-cascade-panel label:hover {
+        background: rgba(245, 247, 250, 0.95);
+      }
+    </style>
   </head>
   <body>
     <div class="app-shell min-h-screen flex">
@@ -248,7 +267,7 @@
 
     <!-- Modal: 区域管理（范围明细维护） -->
     <div class="overlay" data-overlay="region-scope" data-open="false"></div>
-    <div class="modal" data-modal="region-scope" data-open="false">
+    <div class="modal" data-modal="region-scope" data-open="false" style="max-width: min(960px, 96vw); width: min(960px, 96vw)">
       <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
         <div class="text-[16px] font-semibold">区域管理</div>
         <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="region-scope"><i class="fa-solid fa-xmark text-muted"></i></button>
@@ -256,13 +275,54 @@
       <div class="p-4 space-y-3">
         <div>
           <div class="text-[12px] text-muted mb-1">区域范围</div>
-          <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-            <option value="" selected disabled>请选择</option>
-            <option>河南省 / 郑州市 / 金水区</option>
-            <option>河南省 / 郑州市 / 中原区</option>
-            <option>河南省 / 郑州市 / 二七区</option>
-            <option>上海市 / 上海市 / 黄浦区</option>
-          </select>
+          <div class="relative" id="scopeCascaderWrap">
+            <button
+              type="button"
+              id="scopeCascaderInput"
+              class="w-full min-h-[44px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 py-2 text-left flex items-center gap-2 flex-wrap"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+            >
+              <span id="scopeCascaderChips" class="flex items-center gap-2 flex-wrap"></span>
+              <span id="scopeCascaderPlaceholder" class="text-[13px] text-muted">请选择省 / 市 / 区（可多选）</span>
+              <span class="ml-auto text-muted"><i class="fa-solid fa-angle-down"></i></span>
+            </button>
+
+            <div
+              id="scopeCascaderDropdown"
+              class="hidden absolute left-0 right-0 mt-2 bg-surface rounded-xl border border-[rgba(201,205,212,.7)] shadow-card overflow-hidden z-[80]"
+              role="listbox"
+              aria-label="省市区级联多选"
+            >
+              <div class="grid grid-cols-12">
+                <div class="col-span-4 border-r border-[rgba(201,205,212,.6)]">
+                  <div class="px-3 py-2 text-[12px] font-semibold text-text bg-[rgba(245,247,250,.9)] flex items-center justify-between">
+                    <span>省份</span>
+                    <button type="button" id="scopeProvAll" class="text-primary text-[12px] font-semibold">全选</button>
+                  </div>
+                  <div id="scopeProvPanel" class="scope-cascade-panel p-1"></div>
+                </div>
+                <div class="col-span-4 border-r border-[rgba(201,205,212,.6)]">
+                  <div class="px-3 py-2 text-[12px] font-semibold text-text bg-[rgba(245,247,250,.9)] flex items-center justify-between">
+                    <span>城市</span>
+                    <button type="button" id="scopeCityAll" class="text-primary text-[12px] font-semibold">全选可见</button>
+                  </div>
+                  <div id="scopeCityPanel" class="scope-cascade-panel p-1"></div>
+                </div>
+                <div class="col-span-4">
+                  <div class="px-3 py-2 text-[12px] font-semibold text-text bg-[rgba(245,247,250,.9)] flex items-center justify-between">
+                    <span>区县</span>
+                    <button type="button" id="scopeDistAll" class="text-primary text-[12px] font-semibold">全选可见</button>
+                  </div>
+                  <div id="scopeDistPanel" class="scope-cascade-panel p-1"></div>
+                </div>
+              </div>
+              <div class="px-3 py-2 border-t border-[rgba(201,205,212,.6)] flex items-center justify-between gap-3">
+                <div class="text-[12px] text-muted">已选 <span id="scopePickedCount" class="text-text font-semibold">0</span> 项</div>
+                <button type="button" id="scopeClearChecks" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] font-semibold">清空</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
@@ -274,21 +334,21 @@
                 <th class="text-right px-3 py-2">操作</th>
               </tr>
             </thead>
-            <tbody class="bg-surface">
+            <tbody id="scopeTbody" class="bg-surface">
               <tr class="border-t border-[rgba(201,205,212,.6)]">
                 <td class="px-3 py-3 text-muted">410101000000</td>
                 <td class="px-3 py-3">河南,郑州</td>
-                <td class="px-3 py-3 text-right"><button class="text-[#F53F3F] font-semibold" data-simulate-loading>删除</button></td>
+                <td class="px-3 py-3 text-right"><button type="button" class="text-[#F53F3F] font-semibold scope-row-del" data-code="410101000000" data-simulate-loading>删除</button></td>
               </tr>
               <tr class="border-t border-[rgba(201,205,212,.6)]">
                 <td class="px-3 py-3 text-muted">410102000000</td>
                 <td class="px-3 py-3">河南,郑州,中原</td>
-                <td class="px-3 py-3 text-right"><button class="text-[#F53F3F] font-semibold" data-simulate-loading>删除</button></td>
+                <td class="px-3 py-3 text-right"><button type="button" class="text-[#F53F3F] font-semibold scope-row-del" data-code="410102000000" data-simulate-loading>删除</button></td>
               </tr>
               <tr class="border-t border-[rgba(201,205,212,.6)]">
                 <td class="px-3 py-3 text-muted">410103000000</td>
                 <td class="px-3 py-3">河南,郑州,二七</td>
-                <td class="px-3 py-3 text-right"><button class="text-[#F53F3F] font-semibold" data-simulate-loading>删除</button></td>
+                <td class="px-3 py-3 text-right"><button type="button" class="text-[#F53F3F] font-semibold scope-row-del" data-code="410103000000" data-simulate-loading>删除</button></td>
               </tr>
             </tbody>
           </table>
@@ -317,5 +377,341 @@
 
     <script src="../../assets/sidebar.js"></script>
     <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        /** @type {{id:string,name:string,cities:{id:string,name:string,districts:{id:string,name:string,code:string}[]}[]}[]} */
+        const REGION_TREE = [
+          {
+            id: "henan",
+            name: "河南省",
+            cities: [
+              {
+                id: "zhengzhou",
+                name: "郑州市",
+                districts: [
+                  { id: "jinshui", name: "金水区", code: "410105000000" },
+                  { id: "zhongyuan", name: "中原区", code: "410102000000" },
+                  { id: "erqi", name: "二七区", code: "410103000000" },
+                ],
+              },
+            ],
+          },
+          {
+            id: "shanghai",
+            name: "上海市",
+            cities: [
+              {
+                id: "shcity",
+                name: "上海市",
+                districts: [
+                  { id: "huangpu", name: "黄浦区", code: "310101000000" },
+                  { id: "pudong", name: "浦东新区", code: "310115000000" },
+                ],
+              },
+            ],
+          },
+          {
+            id: "jiangsu",
+            name: "江苏省",
+            cities: [
+              {
+                id: "suzhou",
+                name: "苏州市",
+                districts: [
+                  { id: "sip", name: "工业园区", code: "320571000000" },
+                  { id: "huqiu", name: "虎丘区", code: "320505000000" },
+                ],
+              },
+              {
+                id: "nanjing",
+                name: "南京市",
+                districts: [
+                  { id: "gulou", name: "鼓楼区", code: "320106000000" },
+                  { id: "qinhuai", name: "秦淮区", code: "320104000000" },
+                ],
+              },
+            ],
+          },
+          {
+            id: "anhui",
+            name: "安徽省",
+            cities: [
+              {
+                id: "hefei",
+                name: "合肥市",
+                districts: [
+                  { id: "shushan", name: "蜀山区", code: "340104000000" },
+                  { id: "baohe", name: "包河区", code: "340111000000" },
+                ],
+              },
+            ],
+          },
+        ];
+
+        const wrap = document.getElementById("scopeCascaderWrap");
+        const inputBtn = document.getElementById("scopeCascaderInput");
+        const dd = document.getElementById("scopeCascaderDropdown");
+        const chips = document.getElementById("scopeCascaderChips");
+        const ph = document.getElementById("scopeCascaderPlaceholder");
+        const pickedCount = document.getElementById("scopePickedCount");
+        const provPanel = document.getElementById("scopeProvPanel");
+        const cityPanel = document.getElementById("scopeCityPanel");
+        const distPanel = document.getElementById("scopeDistPanel");
+        const tbody = document.getElementById("scopeTbody");
+        if (!wrap || !inputBtn || !dd || !chips || !ph || !pickedCount || !provPanel || !cityPanel || !distPanel || !tbody) return;
+
+        /** @type {Set<string>} dist codes */
+        let picked = new Set();
+        let activeProvId = REGION_TREE[0]?.id || "";
+        let activeCityId = REGION_TREE[0]?.cities?.[0]?.id || "";
+
+        function esc(s) {
+          return String(s ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;");
+        }
+
+        function toggleDropdown(open) {
+          const next = typeof open === "boolean" ? open : dd.classList.contains("hidden");
+          dd.classList.toggle("hidden", !next);
+          inputBtn.setAttribute("aria-expanded", next ? "true" : "false");
+        }
+
+        function labelByCode(code) {
+          for (const p of REGION_TREE) {
+            for (const c of p.cities) {
+              for (const d of c.districts) {
+                if (d.code === code) return `${p.name} / ${c.name} / ${d.name}`;
+              }
+            }
+          }
+          return code;
+        }
+
+        function syncPickedUI() {
+          const arr = Array.from(picked);
+          pickedCount.textContent = String(arr.length);
+          ph.classList.toggle("hidden", arr.length > 0);
+          // show first chip + +N like screenshot
+          chips.innerHTML = "";
+          if (!arr.length) return;
+          const first = arr[0];
+          const chip = document.createElement("span");
+          chip.className = "chip bg-surface border border-[rgba(201,205,212,.7)] text-text";
+          chip.innerHTML = `<span class="truncate max-w-[360px]">${esc(labelByCode(first))}</span>\n            <button type="button" class="w-5 h-5 rounded-md hover:bg-[rgba(245,247,250,.95)] ml-1" data-chip-del="${esc(first)}" aria-label="移除"><i class="fa-solid fa-xmark text-muted text-[12px]"></i></button>`;
+          chips.appendChild(chip);
+          if (arr.length > 1) {
+            const more = document.createElement("span");
+            more.className = "chip bg-surface border border-[rgba(201,205,212,.7)] text-muted";
+            more.textContent = `+ ${arr.length - 1}`;
+            chips.appendChild(more);
+          }
+        }
+
+        function syncTbody() {
+          // keep existing rows that are not from picker? For prototype, fully sync.
+          const rows = Array.from(picked).map((code) => {
+            // find names
+            for (const p of REGION_TREE) {
+              for (const c of p.cities) {
+                for (const d of c.districts) {
+                  if (d.code !== code) continue;
+                  return { code, name: `${p.name},${c.name},${d.name}` };
+                }
+              }
+            }
+            return { code, name: code };
+          });
+          tbody.innerHTML = rows
+            .map(
+              (r) => `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3 text-muted">${esc(r.code)}</td>
+                <td class="px-3 py-3">${esc(r.name)}</td>
+                <td class="px-3 py-3 text-right"><button type="button" class="text-[#F53F3F] font-semibold scope-row-del" data-code="${esc(
+                  r.code,
+                )}" data-simulate-loading>删除</button></td>
+              </tr>
+            `,
+            )
+            .join("");
+        }
+
+        function isCityFullyPicked(prov, city) {
+          return city.districts.every((d) => picked.has(d.code));
+        }
+        function isProvFullyPicked(prov) {
+          return prov.cities.every((c) => isCityFullyPicked(prov, c));
+        }
+
+        function renderProvinces() {
+          provPanel.innerHTML = REGION_TREE.map((p) => {
+            const active = p.id === activeProvId;
+            const checked = isProvFullyPicked(p);
+            return `
+              <label data-prov-row="${esc(p.id)}" class="${active ? "bg-[rgba(245,247,250,.95)]" : ""}">
+                <input type="checkbox" class="accent-primary scope-prov" data-prov="${esc(p.id)}" ${checked ? "checked" : ""}/>
+                <span class="flex-1 min-w-0 truncate">${esc(p.name)}</span>
+                <i class="fa-solid fa-angle-right text-muted text-[12px]"></i>
+              </label>
+            `;
+          }).join("");
+        }
+
+        function renderCities() {
+          const prov = REGION_TREE.find((p) => p.id === activeProvId) || REGION_TREE[0];
+          if (!prov) return;
+          if (!prov.cities.some((c) => c.id === activeCityId)) activeCityId = prov.cities[0]?.id || "";
+          cityPanel.innerHTML = prov.cities
+            .map((c) => {
+              const active = c.id === activeCityId;
+              const checked = isCityFullyPicked(prov, c);
+              return `
+                <label data-city-row="${esc(c.id)}" class="${active ? "bg-[rgba(245,247,250,.95)]" : ""}">
+                  <input type="checkbox" class="accent-primary scope-city" data-city="${esc(c.id)}" ${checked ? "checked" : ""}/>
+                  <span class="flex-1 min-w-0 truncate">${esc(c.name)}</span>
+                  <i class="fa-solid fa-angle-right text-muted text-[12px]"></i>
+                </label>
+              `;
+            })
+            .join("");
+        }
+
+        function renderDistricts() {
+          const prov = REGION_TREE.find((p) => p.id === activeProvId) || REGION_TREE[0];
+          const city = prov?.cities.find((c) => c.id === activeCityId) || prov?.cities?.[0];
+          if (!prov || !city) return;
+          distPanel.innerHTML = city.districts
+            .map((d) => {
+              const checked = picked.has(d.code);
+              return `
+                <label>
+                  <input type="checkbox" class="accent-primary scope-dist" data-code="${esc(d.code)}" ${checked ? "checked" : ""}/>
+                  <span class="flex-1 min-w-0 truncate">${esc(d.name)}</span>
+                </label>
+              `;
+            })
+            .join("");
+        }
+
+        function rerenderAll() {
+          renderProvinces();
+          renderCities();
+          renderDistricts();
+          syncPickedUI();
+          syncTbody();
+        }
+
+        function setPickedFromExistingRows() {
+          const codes = Array.from(tbody.querySelectorAll("tr td:first-child")).map((td) => (td.textContent || "").trim()).filter(Boolean);
+          picked = new Set(codes);
+        }
+
+        setPickedFromExistingRows();
+        rerenderAll();
+
+        inputBtn.addEventListener("click", () => toggleDropdown());
+        document.addEventListener("click", (e) => {
+          if (!dd || dd.classList.contains("hidden")) return;
+          const t = e.target;
+          if (wrap.contains(t)) return;
+          toggleDropdown(false);
+        });
+
+        chips.addEventListener("click", (e) => {
+          const btn = e.target?.closest?.("[data-chip-del]");
+          if (!btn) return;
+          const code = btn.getAttribute("data-chip-del") || "";
+          picked.delete(code);
+          rerenderAll();
+        });
+
+        provPanel.addEventListener("click", (e) => {
+          const row = e.target?.closest?.("[data-prov-row]");
+          if (row) {
+            activeProvId = row.getAttribute("data-prov-row") || activeProvId;
+            renderProvinces();
+            renderCities();
+            renderDistricts();
+          }
+        });
+        provPanel.addEventListener("change", (e) => {
+          const box = e.target;
+          if (!box || !box.classList?.contains("scope-prov")) return;
+          const pid = box.getAttribute("data-prov");
+          const prov = REGION_TREE.find((p) => p.id === pid);
+          if (!prov) return;
+          const on = box.checked;
+          for (const c of prov.cities) for (const d of c.districts) (on ? picked.add(d.code) : picked.delete(d.code));
+          rerenderAll();
+        });
+
+        cityPanel.addEventListener("click", (e) => {
+          const row = e.target?.closest?.("[data-city-row]");
+          if (row) {
+            activeCityId = row.getAttribute("data-city-row") || activeCityId;
+            renderCities();
+            renderDistricts();
+          }
+        });
+        cityPanel.addEventListener("change", (e) => {
+          const box = e.target;
+          if (!box || !box.classList?.contains("scope-city")) return;
+          const cid = box.getAttribute("data-city");
+          const prov = REGION_TREE.find((p) => p.id === activeProvId) || null;
+          const city = prov?.cities.find((c) => c.id === cid);
+          if (!prov || !city) return;
+          const on = box.checked;
+          for (const d of city.districts) (on ? picked.add(d.code) : picked.delete(d.code));
+          rerenderAll();
+        });
+
+        distPanel.addEventListener("change", (e) => {
+          const box = e.target;
+          if (!box || !box.classList?.contains("scope-dist")) return;
+          const code = box.getAttribute("data-code") || "";
+          if (!code) return;
+          if (box.checked) picked.add(code);
+          else picked.delete(code);
+          rerenderAll();
+        });
+
+        document.getElementById("scopeProvAll")?.addEventListener("click", () => {
+          const all = REGION_TREE.every((p) => isProvFullyPicked(p));
+          for (const p of REGION_TREE) for (const c of p.cities) for (const d of c.districts) (all ? picked.delete(d.code) : picked.add(d.code));
+          rerenderAll();
+        });
+        document.getElementById("scopeCityAll")?.addEventListener("click", () => {
+          const prov = REGION_TREE.find((p) => p.id === activeProvId) || null;
+          if (!prov) return;
+          const all = prov.cities.every((c) => isCityFullyPicked(prov, c));
+          for (const c of prov.cities) for (const d of c.districts) (all ? picked.delete(d.code) : picked.add(d.code));
+          rerenderAll();
+        });
+        document.getElementById("scopeDistAll")?.addEventListener("click", () => {
+          const prov = REGION_TREE.find((p) => p.id === activeProvId) || null;
+          const city = prov?.cities.find((c) => c.id === activeCityId) || prov?.cities?.[0] || null;
+          if (!prov || !city) return;
+          const all = city.districts.every((d) => picked.has(d.code));
+          for (const d of city.districts) (all ? picked.delete(d.code) : picked.add(d.code));
+          rerenderAll();
+        });
+
+        document.getElementById("scopeClearChecks")?.addEventListener("click", () => {
+          picked = new Set();
+          rerenderAll();
+        });
+
+        tbody.addEventListener("click", (e) => {
+          const btn = e.target?.closest?.(".scope-row-del");
+          if (!btn) return;
+          const code = btn.getAttribute("data-code") || "";
+          if (code) picked.delete(code);
+          rerenderAll();
+        });
+      })();
+    </script>
   </body>
 </html>

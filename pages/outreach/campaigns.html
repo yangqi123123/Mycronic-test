@@ -41,8 +41,8 @@
             </div>
             <div class="mt-3 grid grid-cols-12 gap-3 items-end">
               <div class="col-span-12 sm:col-span-6 lg:col-span-4">
-                <div class="text-[12px] text-muted mb-1">客户名称（模糊）</div>
-                <input id="qCustomer" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入客户名称" />
+                <div class="text-[12px] text-muted mb-1">活动名称（模糊）</div>
+                <input id="qCustomer" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入活动名称" />
               </div>
               <div class="col-span-12 sm:col-span-6 lg:col-span-4">
                 <div class="text-[12px] text-muted mb-1">渠道</div>
@@ -60,6 +60,13 @@
                   <option value="拦截">拦截</option>
                   <option value="失败">失败</option>
                 </select>
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <div class="text-[12px] text-muted mb-1">创建时间（日期范围）</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="qCreatedStart" type="datetime-local" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                  <input id="qCreatedEnd" type="datetime-local" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                </div>
               </div>
             </div>
           </section>
@@ -79,10 +86,11 @@
               <table class="w-full table min-w-[1100px]">
                 <thead class="bg-[rgba(245,247,250,.9)]">
                   <tr>
-                    <th class="text-left px-3 py-2">客户名称</th>
+                    <th class="text-left px-3 py-2">活动名称</th>
                     <th class="text-left px-3 py-2">渠道</th>
                     <th class="text-left px-3 py-2">模板</th>
                     <th class="text-left px-3 py-2">状态</th>
+                    <th class="text-left px-3 py-2">创建时间</th>
                     <th class="text-left px-3 py-2">行为（打开 / 点击 / 回复）</th>
                     <th class="text-right px-3 py-2">操作</th>
                   </tr>
@@ -104,9 +112,18 @@
       </div>
       <div class="p-4 space-y-4">
         <div class="grid grid-cols-12 gap-4">
-          <div class="col-span-12 sm:col-span-6">
-            <div class="text-[12px] text-muted mb-1">触达对象</div>
-            <select id="fTarget" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+          <div class="col-span-12 sm:col-span-4">
+            <div class="text-[12px] text-muted mb-1">触达活动 <span class="text-[#F53F3F]">*</span></div>
+            <input
+              id="fActName"
+              class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]"
+              placeholder="例如 展会邀约（邮件）"
+              required
+            />
+          </div>
+          <div class="col-span-12 sm:col-span-4">
+            <div class="text-[12px] text-muted mb-1">触达对象 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fTarget" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" required>
               <option value="A">A级客户</option>
               <option value="B">B级客户</option>
               <option value="C">C级客户</option>
@@ -115,16 +132,16 @@
             </select>
             <div class="text-[12px] text-muted mt-1">选择自定义会弹出客户列表供勾选</div>
           </div>
-          <div class="col-span-12 sm:col-span-6">
-            <div class="text-[12px] text-muted mb-1">渠道</div>
-            <select id="fChannel" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+          <div class="col-span-12 sm:col-span-4">
+            <div class="text-[12px] text-muted mb-1">渠道 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fChannel" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" required>
               <option value="邮件">邮件</option>
               <option value="短信">短信</option>
             </select>
           </div>
           <div class="col-span-12">
-            <div class="text-[12px] text-muted mb-1">模板</div>
-            <select id="fTemplate" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
+            <div class="text-[12px] text-muted mb-1">模板 <span class="text-[#F53F3F]">*</span></div>
+            <select id="fTemplate" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" required></select>
             <div class="text-[12px] text-muted mt-1">仅显示该渠道下“已审核”的模板</div>
           </div>
           <div class="col-span-12">
@@ -180,11 +197,15 @@
       </div>
       <div class="p-4 space-y-2 text-[14px]">
         <div class="grid grid-cols-12 gap-3">
-          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+          <div class="col-span-12 sm:col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+            <div class="text-[12px] text-muted">触达活动</div>
+            <div class="font-semibold mt-1" id="dActName">—</div>
+          </div>
+          <div class="col-span-12 sm:col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
             <div class="text-[12px] text-muted">客户</div>
             <div class="font-semibold mt-1" id="dCustomer">—</div>
           </div>
-          <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+          <div class="col-span-12 sm:col-span-4 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
             <div class="text-[12px] text-muted">渠道</div>
             <div class="font-semibold mt-1" id="dChannel">—</div>
           </div>
@@ -301,6 +322,9 @@
         function getCustomerName(id) {
           return customers.find((c) => c.id === id)?.name || "—";
         }
+        function getActivityName(a) {
+          return a?.actName || getTplName(a.templateId) || "—";
+        }
         function statusChip(st) {
           if (st === "成功") return `<span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>成功</span>`;
           if (st === "拦截") return `<span class="chip chip--warning"><i class="fa-solid fa-triangle-exclamation"></i>拦截</span>`;
@@ -310,14 +334,28 @@
           return st === "失败" || st === "拦截";
         }
 
+        function parseDt(s) {
+          return new Date(String(s).replace(" ", "T"));
+        }
+
         function passes(a) {
           const qC = (document.getElementById("qCustomer").value || "").trim();
           const qCh = document.getElementById("qChannel").value || "";
           const qSt = document.getElementById("qStatus").value || "";
-          const cn = getCustomerName(a.customerId);
-          if (qC && !cn.includes(qC)) return false;
+          const qCs = (document.getElementById("qCreatedStart").value || "").trim();
+          const qCe = (document.getElementById("qCreatedEnd").value || "").trim();
+          const actName = getActivityName(a);
+          if (qC && !actName.includes(qC)) return false;
           if (qCh && a.channel !== qCh) return false;
           if (qSt && a.status !== qSt) return false;
+          if (qCs) {
+            const t = parseDt(a.createdAt || "");
+            if (t && String(t) !== "Invalid Date" && t < new Date(qCs)) return false;
+          }
+          if (qCe) {
+            const t = parseDt(a.createdAt || "");
+            if (t && String(t) !== "Invalid Date" && t > new Date(qCe)) return false;
+          }
           return true;
         }
 
@@ -331,7 +369,6 @@
           const tb = document.getElementById("tbody");
           tb.innerHTML = list
             .map((a) => {
-              const cn = getCustomerName(a.customerId);
               const openN = Number(a.open || 0);
               const clickN = Number(a.click || 0);
               const replyN = Number(a.reply || 0);
@@ -341,10 +378,11 @@
               `;
               return `
                 <tr class="border-t border-[rgba(201,205,212,.6)]">
-                  <td class="px-3 py-3 font-semibold">${esc(cn)}</td>
+                  <td class="px-3 py-3 font-semibold whitespace-nowrap">${esc(getActivityName(a))}</td>
                   <td class="px-3 py-3">${esc(a.channel)}</td>
                   <td class="px-3 py-3 text-muted text-[13px]">${esc(getTplName(a.templateId))}</td>
                   <td class="px-3 py-3">${statusChip(a.status)}</td>
+                  <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${esc(a.createdAt || "—")}</td>
                   <td class="px-3 py-3 text-muted text-[13px]">打开 ${openN} · 点击 ${clickN} · 回复 ${replyN}</td>
                   <td class="px-3 py-3 text-right whitespace-nowrap">${ops}</td>
                 </tr>
@@ -368,6 +406,7 @@
         function openDetail(id) {
           const a = activities.find((x) => x.id === id);
           if (!a) return;
+          document.getElementById("dActName").textContent = getActivityName(a);
           document.getElementById("dCustomer").textContent = getCustomerName(a.customerId);
           document.getElementById("dChannel").textContent = a.channel;
           document.getElementById("dTpl").textContent = getTplName(a.templateId);
@@ -396,7 +435,7 @@
           return used < lim;
         }
 
-        function simulateSendOne(customerId, channel, templateId, allowLimitCheck) {
+        function simulateSendOne(customerId, channel, templateId, allowLimitCheck, actName) {
           const lim = limitFor(channel);
           const used = getCount(customerId, channel);
           const id = `A-${Math.floor(Math.random() * 9000) + 1000}`;
@@ -411,6 +450,7 @@
               click: 0,
               reply: 0,
               msg: `该客户今日【${channel}】触达次数已达系统配置上限（配置值：${lim}条/天），请次日再试。`,
+              actName: actName || getTplName(templateId) || "—",
               createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
             };
           }
@@ -422,14 +462,30 @@
           const st = ok ? "成功" : "失败";
           const msg = ok ? "" : "发送失败（模拟）";
           incCount(customerId, channel);
-          return { id, customerId, channel, templateId, status: st, open, click, reply, msg, createdAt: new Date().toISOString().slice(0, 16).replace("T", " ") };
+          return {
+            id,
+            customerId,
+            channel,
+            templateId,
+            status: st,
+            open,
+            click,
+            reply,
+            msg,
+            actName: actName || getTplName(templateId) || "—",
+            createdAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+          };
         }
 
         function doSend() {
           const target = document.getElementById("fTarget").value;
           const channel = document.getElementById("fChannel").value;
           const templateId = document.getElementById("fTemplate").value;
+          const actName = (document.getElementById("fActName").value || "").trim();
+          if (!target) return toast("error", "无法发送", "请先选择触达对象");
+          if (!channel) return toast("error", "无法发送", "请先选择渠道");
           if (!templateId) return toast("error", "无法发送", "请先选择可用模板（需已审核）");
+          if (!actName) return toast("error", "无法发送", "请填写触达活动名称");
 
           const chosen =
             target === "custom"
@@ -441,7 +497,7 @@
           const newActs = [];
           let blocked = 0;
           chosen.forEach((cid) => {
-            const a = simulateSendOne(cid, channel, templateId, true);
+            const a = simulateSendOne(cid, channel, templateId, true, actName);
             if (a.status === "拦截") blocked += 1;
             newActs.unshift(a);
           });
@@ -455,7 +511,7 @@
         function doResend(id) {
           const a = activities.find((x) => x.id === id);
           if (!a) return;
-          const na = simulateSendOne(a.customerId, a.channel, a.templateId, true);
+          const na = simulateSendOne(a.customerId, a.channel, a.templateId, true, getActivityName(a));
           activities = [na].concat(activities);
           save(LS_ACT, activities);
           toast("success", "已重发", na.status === "拦截" ? "仍被限流拦截" : "已发起重发");
@@ -508,17 +564,28 @@
           document.getElementById("qCustomer").value = "";
           document.getElementById("qChannel").value = "";
           document.getElementById("qStatus").value = "";
+          document.getElementById("qCreatedStart").value = "";
+          document.getElementById("qCreatedEnd").value = "";
           toast("success", "已重置", "筛选条件已清空");
           render();
         });
 
         document.getElementById("btnExport").addEventListener("click", () => {
           const list = activities.filter(passes);
-          const header = ["客户名称", "渠道", "模板", "状态", "打开", "点击", "回复"];
+          const header = ["活动名称", "渠道", "模板", "状态", "创建时间", "打开", "点击", "回复"];
           const lines = [header.join(",")];
           list.forEach((a) => {
             lines.push(
-              [getCustomerName(a.customerId), a.channel, getTplName(a.templateId), a.status, Number(a.open || 0), Number(a.click || 0), Number(a.reply || 0)]
+              [
+                getActivityName(a),
+                a.channel,
+                getTplName(a.templateId),
+                a.status,
+                a.createdAt || "",
+                Number(a.open || 0),
+                Number(a.click || 0),
+                Number(a.reply || 0),
+              ]
                 .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
                 .join(","),
             );
@@ -535,6 +602,11 @@
 
         document.getElementById("fChannel").addEventListener("change", () => {
           fillTemplateOptions();
+        });
+        document.getElementById("fTemplate").addEventListener("change", () => {
+          const tplName = getTplName(document.getElementById("fTemplate").value);
+          const actEl = document.getElementById("fActName");
+          if (actEl && !String(actEl.value || "").trim()) actEl.value = tplName;
         });
         document.getElementById("fTarget").addEventListener("change", () => {
           const v = document.getElementById("fTarget").value;

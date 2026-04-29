@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="../../assets/app.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
     <style>
+      .tab-btn[aria-current="page"]{background:rgba(255,138,0,.10); border-color: rgba(255,138,0,.55); color: var(--text);}
       .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:10px;}
       .toast{min-width:280px; max-width:420px;}
       .row-overdue{background:rgba(255,247,237,.95);}
@@ -125,6 +126,14 @@
             </div>
           </section>
 
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-todo-tab="mine" aria-current="page">我负责的</button>
+              <button type="button" class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-todo-tab="subs">我下属负责的</button>
+              <button type="button" class="tab-btn h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-todo-tab="toAssign">待我分配</button>
+            </div>
+          </section>
+
           <!-- 3 今日待办 + 4 分页 -->
           <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -132,16 +141,16 @@
                 <div class="text-[16px] font-semibold">今日待办</div>
                 <div class="text-[12px] text-muted mt-1">含「今日及以前需跟进」项；逾期标红/严重逾期深红底</div>
               </div>
-              <div class="flex items-center gap-2">
-                <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold bg-primary text-white border-[rgba(255,138,0,.35)]" data-todo-tab="mine" aria-selected="true">我负责的</button>
-                <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold bg-surface" data-todo-tab="subs" aria-selected="false">我下属负责的</button>
-                <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold bg-surface" data-todo-tab="toAssign" aria-selected="false">待我分配</button>
+              <div class="flex flex-wrap items-center justify-end gap-2">
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-selected">导出选中</button>
+                <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-perm="customer:manage" data-open-modal="export-all">导出全部</button>
               </div>
             </div>
             <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
-              <table class="w-full table min-w-[1860px]">
+              <table class="w-full table min-w-[1920px]">
                 <thead class="bg-[rgba(245,247,250,.9)]">
                   <tr>
+                    <th class="text-left px-3 py-2 w-10"><input id="chkAll" type="checkbox" class="accent-primary" /></th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">联系人</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">联系方式</th>
@@ -197,6 +206,54 @@
       </div>
     </div>
 
+    <!-- 导出 -->
+    <div class="overlay" data-overlay="export-selected" data-open="false"></div>
+    <div class="modal" data-modal="export-selected" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出选中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-selected"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出勾选的客户数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-selected">取消</button>
+          <button id="btnExportSelected" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="export-all" data-open="false"></div>
+    <div class="modal" data-modal="export-all" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出全部</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="export-all"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将导出当前筛选条件下的所有客户数据（CSV）。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="export-all">取消</button>
+          <button id="btnExportAll" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">开始导出</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出进度 -->
+    <div class="overlay" data-overlay="exporting" data-open="false"></div>
+    <div class="modal" data-modal="exporting" data-open="false" style="max-width: 560px; width: min(560px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">导出中</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="exporting"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px] text-muted">
+          <i class="fa-solid fa-spinner fa-spin mr-2"></i>正在生成导出文件，请稍候…
+        </div>
+        <div class="mt-3 hidden" id="exportDoneBox">
+          <a id="exportDownloadLink" class="text-primary font-semibold" href="#" download>点击下载导出文件</a>
+        </div>
+      </div>
+    </div>
+
     <div class="toast-wrap" id="toasts"></div>
 
     <script src="../../assets/sidebar.js"></script>
@@ -210,7 +267,7 @@
             return null;
           }
         }
-        function toast(msg) {
+        function toastHint(msg) {
           const t = document.createElement("div");
           t.className =
             "toast bg-surface border border-[rgba(201,205,212,.7)] rounded-xl shadow-card px-4 py-3 text-[14px]";
@@ -221,15 +278,24 @@
         const cid = qp("customerId");
         if (cid) {
           if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", () => toast("工作台已接收客户参数 customerId=" + cid + "（原型占位）"));
-          } else toast("工作台已接收客户参数 customerId=" + cid + "（原型占位）");
+            document.addEventListener("DOMContentLoaded", () => toastHint("工作台已接收客户参数 customerId=" + cid + "（原型占位）"));
+          } else toastHint("工作台已接收客户参数 customerId=" + cid + "（原型占位）");
         }
       })();
     </script>
     <script>
       (function () {
         const STATUSES = ["待跟进", "跟进中", "商机", "报价", "合同", "交付", "放弃"];
-        const currentUser = { name: "李雷", subordinateNames: ["张敏", "王芳"] };
+        const currentUser = {
+          name: "李雷",
+          subordinateNames: ["张敏", "王芳"],
+          permissions: ["customer:manage"],
+        };
+        const hasPerm = (p) => currentUser.permissions.includes(p);
+        document.querySelectorAll("[data-perm]").forEach((el) => {
+          const p = el.getAttribute("data-perm");
+          if (!hasPerm(p)) el.classList.add("hidden");
+        });
         let activeTodoTab = "mine"; // mine / subs / toAssign
 
         function ensureReady(cb) {
@@ -256,6 +322,7 @@
         let page = 1;
         const pageSize = 10;
         let modalTargetId = null;
+        const chkAll = document.getElementById("chkAll");
 
         function parseDt(s) {
           return new Date(String(s).replace(" ", "T"));
@@ -279,13 +346,27 @@
           return "overdue";
         }
 
-        function toast(title, desc) {
+        function toast(type, title, desc) {
+          const color = type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+          const border = type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+          const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-triangle-exclamation";
           const wrap = document.getElementById("toasts");
           const el = document.createElement("div");
-          el.className = "toast bg-surface rounded-xl border border-[rgba(0,180,42,.25)] shadow-card p-3 text-[14px]";
-          el.innerHTML = `<div class="font-semibold">${title}</div>${desc ? `<div class="text-[12px] text-muted mt-1">${desc}</div>` : ""}`;
+          el.className = "toast bg-surface rounded-xl border shadow-card";
+          el.style.borderColor = border;
+          el.innerHTML = `
+          <div class="p-3 flex gap-3" style="background:${color}">
+            <i class="fa-solid ${icon} text-muted mt-0.5"></i>
+            <div class="min-w-0">
+              <div class="text-[14px] font-semibold">${escapeHtml(title)}</div>
+              ${desc ? `<div class="text-[12px] text-muted mt-0.5">${escapeHtml(desc)}</div>` : ""}
+            </div>
+            <button class="ml-auto w-8 h-8 rounded-lg hover:bg-[rgba(245,247,250,.9)]" title="关闭"><i class="fa-solid fa-xmark text-muted"></i></button>
+          </div>
+        `;
+          el.querySelector("button").addEventListener("click", () => el.remove());
           wrap.appendChild(el);
-          setTimeout(() => el.remove(), 2400);
+          setTimeout(() => el.remove(), 2600);
         }
 
         function openModal(id) {
@@ -357,6 +438,18 @@
             .replaceAll("'", "&#39;");
         }
 
+        function getSelectedIds() {
+          return Array.from(document.querySelectorAll("[data-row-chk]:checked")).map((c) => c.getAttribute("data-row-chk"));
+        }
+        function guardSelection() {
+          const ids = getSelectedIds();
+          if (!ids.length) {
+            toast("error", "未选择客户", "请先勾选至少一条客户数据");
+            return null;
+          }
+          return ids;
+        }
+
         function formatCustTagsCell(r) {
           const tags = Array.isArray(r.tags) ? r.tags : [];
           if (!tags.length) return '<span class="text-muted text-[12px]">—</span>';
@@ -410,7 +503,7 @@
                   personOnly: true,
                   onDone: () => {
                     render();
-                    toast("分配成功", "客户已从「待我分配」移除并同步到目标员工待办");
+                    toast("success", "分配成功", "客户已从「待我分配」移除并同步到目标员工待办");
                   },
                 });
               }),
@@ -547,6 +640,7 @@
                     od === "severe" ? "bg-[#b91c1c]" : "bg-[#ea580c]"
                   }">${od === "severe" ? "严重逾期" : "已逾期"}</span>`;
             tr.innerHTML = `
+              <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${escapeHtml(r.id)}" /></td>
               <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(r.name)}</td>
               <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.contactName || "—")}</td>
               <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.contactPhone || "—")}</td>
@@ -566,12 +660,13 @@
             const w = tr.querySelector("[data-act]");
             renderActions(w, r);
           });
+          chkAll.checked = false;
         }
 
         document.getElementById("btnSearch").addEventListener("click", () => {
           page = 1;
           render();
-          toast("已查询", "列表已按条件筛选");
+          toast("success", "已查询", "列表已按条件筛选");
         });
         document.getElementById("btnReset").addEventListener("click", () => {
           document.getElementById("qName").value = "";
@@ -583,7 +678,7 @@
           document.getElementById("qEnd").value = "";
           page = 1;
           render();
-          toast("已重置", "筛选条件已清空");
+          toast("success", "已重置", "筛选条件已清空");
         });
         document.getElementById("prevPage").addEventListener("click", () => {
           page = Math.max(1, page - 1);
@@ -594,17 +689,12 @@
           render();
         });
 
-        // 今日待办标签页：全部 / 我负责的 / 我下属负责的
-        document.querySelectorAll("[data-todo-tab]").forEach((b) => {
-          b.addEventListener("click", () => {
-            activeTodoTab = b.getAttribute("data-todo-tab") || "mine";
-            document.querySelectorAll("[data-todo-tab]").forEach((x) => {
-              const on = x.getAttribute("data-todo-tab") === activeTodoTab;
-              x.setAttribute("aria-selected", on ? "true" : "false");
-              x.classList.toggle("bg-primary", on);
-              x.classList.toggle("text-white", on);
-              x.classList.toggle("border-[rgba(255,138,0,.35)]", on);
-              x.classList.toggle("bg-surface", !on);
+        // 待办范围标签：与商机页 tab-btn / aria-current 一致
+        document.querySelectorAll(".tab-btn[data-todo-tab]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            activeTodoTab = btn.getAttribute("data-todo-tab") || "mine";
+            document.querySelectorAll(".tab-btn[data-todo-tab]").forEach((b) => {
+              b.setAttribute("aria-current", b.getAttribute("data-todo-tab") === activeTodoTab ? "page" : "false");
             });
             page = 1;
             render();
@@ -618,7 +708,102 @@
           setStatus(modalTargetId, "放弃");
           closeModal("m-abandon");
           modalTargetId = null;
-          toast("已放弃", "客户已标记为放弃");
+          toast("success", "已放弃", "客户已标记为放弃");
+        });
+
+        let exportUrl = null;
+        function getCustTags(row) {
+          return Array.isArray(row.tags) ? row.tags : [];
+        }
+        function exportCsv(rows, filename) {
+          const header = [
+            "客户名称",
+            "联系人",
+            "联系方式",
+            "客户等级",
+            "优先级",
+            "省份",
+            "城市",
+            "县区",
+            "客户来源",
+            "行业类型",
+            "客户标签",
+            "员工",
+            "当前状态",
+            "下次跟进时间",
+            "是否逾期",
+          ];
+          const lines = [header.join(",")];
+          rows.forEach((r) => {
+            const Store = store();
+            const ownerName = r.finalOwnerId && Store ? Store.getEmployeeName(r.finalOwnerId) : "";
+            const od = overdueLevel(r);
+            const overdueText = od === "none" ? "—" : od === "severe" ? "严重逾期" : "已逾期";
+            const tagStr = getCustTags(r).join("；");
+            lines.push(
+              [
+                r.name,
+                r.contactName || "—",
+                r.contactPhone || "—",
+                r.grade,
+                r.priority,
+                r.prov || "—",
+                r.city || "—",
+                r.dist || "—",
+                r.source || "—",
+                r.industry || "—",
+                tagStr,
+                ownerName || "—",
+                r.statusFlow,
+                r.nextFollowAt,
+                overdueText,
+              ]
+                .map((x) => `"${String(x ?? "").replaceAll('"', '""')}"`)
+                .join(","),
+            );
+          });
+          const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          return { url, filename };
+        }
+
+        function startExport(rows, filename) {
+          if (!hasPerm("customer:manage")) {
+            toast("error", "无权限", "当前用户无客户管理权限，无法导出");
+            return;
+          }
+          document.getElementById("exportDoneBox").classList.add("hidden");
+          openModal("exporting");
+          toast("warn", "导出中", "正在生成导出文件，请稍候");
+          setTimeout(() => {
+            if (exportUrl) URL.revokeObjectURL(exportUrl);
+            const out = exportCsv(rows, filename);
+            exportUrl = out.url;
+            const a = document.getElementById("exportDownloadLink");
+            a.href = out.url;
+            a.download = out.filename;
+            document.getElementById("exportDoneBox").classList.remove("hidden");
+            toast("success", "导出完成", "文件已生成，可点击下载");
+          }, 900);
+        }
+
+        document.getElementById("btnExportSelected").addEventListener("click", () => {
+          const ids = guardSelection();
+          if (!ids) return;
+          closeModal("export-selected");
+          const idSet = new Set(ids);
+          const rows = searchFiltered(baseFiltered()).filter((r) => idSet.has(r.id));
+          startExport(rows, "销售工作台-选中.csv");
+        });
+        document.getElementById("btnExportAll").addEventListener("click", () => {
+          closeModal("export-all");
+          const rows = searchFiltered(baseFiltered());
+          startExport(rows, "销售工作台-全部.csv");
+        });
+
+        chkAll.addEventListener("change", () => {
+          const v = chkAll.checked;
+          document.querySelectorAll("[data-row-chk]").forEach((c) => (c.checked = v));
         });
 
         function refreshFromStore() {

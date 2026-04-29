@@ -4,7 +4,9 @@
   const qsa = (s, root = document) => Array.from(root.querySelectorAll(s));
 
   // ===== auth (prototype) =====
-  // Default start page is login.html. Any app page without auth redirects to login.
+  // Keep a lightweight route guard:
+  // - dev-server default opens login.html
+  // - if user visits any app page without auth, redirect to login.html
   const AUTH_KEY = "ai_auth_v1";
   function isAuthed() {
     try {
