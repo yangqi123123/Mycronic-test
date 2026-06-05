@@ -13,6 +13,7 @@
 
     "collect-sources": { label: "采集器", icon: "fa-spider", href: `${base}pages/collect/sources.html` },
     "collect-scripts": { label: "脚本管理", icon: "fa-file-code", href: `${base}pages/collect/scripts.html` },
+    "collect-tasks": { label: "采集任务", icon: "fa-list-check", href: `${base}pages/collect/tasks.html` },
     "collect-leads": { label: "线索池", icon: "fa-layer-group", href: `${base}pages/collect/leads-pool.html` },
 
     "crm-customers": { label: "客户档案", icon: "fa-address-card", href: `${base}pages/crm/customer-archive.html` },
@@ -37,7 +38,7 @@
     icon: "fa-database",
     children: [
       { key: "collect-sources", label: items["collect-sources"].label, icon: items["collect-sources"].icon, href: items["collect-sources"].href },
-      { key: "collect-scripts", label: items["collect-scripts"].label, icon: items["collect-scripts"].icon, href: items["collect-scripts"].href },
+      { key: "collect-tasks", label: items["collect-tasks"].label, icon: items["collect-tasks"].icon, href: items["collect-tasks"].href },
       { key: "collect-leads", label: items["collect-leads"].label, icon: items["collect-leads"].icon, href: items["collect-leads"].href },
     ],
   };
@@ -110,6 +111,7 @@
 
     if (p.endsWith("/pages/collect/sources.html")) return "collect-sources";
     if (p.endsWith("/pages/collect/scripts.html")) return "collect-scripts";
+    if (p.endsWith("/pages/collect/tasks.html")) return "collect-tasks";
     if (p.endsWith("/pages/collect/leads-pool.html")) return "collect-leads";
 
     if (p.endsWith("/pages/crm/customer-archive.html")) return "crm-customers";
@@ -163,6 +165,7 @@
 
     if (key === "collect-sources") return [crumb("数据采集", dataRoot), crumb("采集器", items["collect-sources"].href)];
     if (key === "collect-scripts") return [crumb("数据采集", dataRoot), crumb("脚本管理", items["collect-scripts"].href)];
+    if (key === "collect-tasks") return [crumb("数据采集", dataRoot), crumb("采集任务", items["collect-tasks"].href)];
     if (key === "collect-leads") return [crumb("数据采集", dataRoot), crumb("线索池", items["collect-leads"].href)];
 
     if (key === "crm-customers") return [crumb("客户管理", crmRoot), crumb("客户档案", items["crm-customers"].href)];

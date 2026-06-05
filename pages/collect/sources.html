@@ -124,7 +124,11 @@
                     decoding="async"
                   />
                   <div class="mt-3 text-[14px] font-semibold line-clamp-2">公开工商数据采集（华东-半导体）</div>
-                  <button class="mt-3 w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="add-script">配置</button>
+                  <div class="mt-3 grid grid-cols-3 gap-1.5">
+                    <button type="button" class="h-9 rounded-lg bg-primary text-white text-[12px] font-semibold px-1" data-open-modal="add-script">配置</button>
+                    <button type="button" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold px-1 btn-manual-collect">手动采集</button>
+                    <a href="./tasks.html" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold flex items-center justify-center px-1">采集任务</a>
+                  </div>
                 </div>
               </div>
 
@@ -147,7 +151,11 @@
                     decoding="async"
                   />
                   <div class="mt-3 text-[14px] font-semibold line-clamp-2">招标采购监控（“贴片机采购”）</div>
-                  <button class="mt-3 w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="add-script">配置</button>
+                  <div class="mt-3 grid grid-cols-3 gap-1.5">
+                    <button type="button" class="h-9 rounded-lg bg-primary text-white text-[12px] font-semibold px-1" data-open-modal="add-script">配置</button>
+                    <button type="button" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold px-1 btn-manual-collect">手动采集</button>
+                    <a href="./tasks.html" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold flex items-center justify-center px-1">采集任务</a>
+                  </div>
                 </div>
               </div>
 
@@ -170,7 +178,11 @@
                     decoding="async"
                   />
                   <div class="mt-3 text-[14px] font-semibold line-clamp-2">垂直平台抽取（SMT China 需求帖）</div>
-                  <button class="mt-3 w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="add-script">配置</button>
+                  <div class="mt-3 grid grid-cols-3 gap-1.5">
+                    <button type="button" class="h-9 rounded-lg bg-primary text-white text-[12px] font-semibold px-1" data-open-modal="add-script">配置</button>
+                    <button type="button" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold px-1 btn-manual-collect">手动采集</button>
+                    <a href="./tasks.html" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold flex items-center justify-center px-1">采集任务</a>
+                  </div>
                 </div>
               </div>
 
@@ -193,7 +205,11 @@
                     decoding="async"
                   />
                   <div class="mt-3 text-[14px] font-semibold line-clamp-2">自定义采集（用户提交网址）</div>
-                  <button class="mt-3 w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="add-script">配置</button>
+                  <div class="mt-3 grid grid-cols-3 gap-1.5">
+                    <button type="button" class="h-9 rounded-lg bg-primary text-white text-[12px] font-semibold px-1" data-open-modal="add-script">配置</button>
+                    <button type="button" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold px-1 btn-manual-collect">手动采集</button>
+                    <a href="./tasks.html" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[12px] font-semibold flex items-center justify-center px-1">采集任务</a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -202,7 +218,7 @@
       </main>
     </div>
 
-    <!-- Modal: 配置参数（脚本来自脚本管理，仅可选已启用） -->
+    <!-- Modal: 配置参数 -->
     <div class="overlay" data-overlay="add-script" data-open="false"></div>
     <div
       class="modal modal-collector-config"
@@ -249,6 +265,14 @@
           </div>
         </div>
 
+        <div>
+          <div class="text-[12px] text-muted mb-2">是否为展会活动</div>
+          <div class="flex flex-wrap gap-4 text-[14px]">
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="cfgExhibition" value="yes" class="accent-primary" /> 是</label>
+            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="cfgExhibition" value="no" class="accent-primary" checked /> 否</label>
+          </div>
+        </div>
+
         <div class="grid grid-cols-12 gap-4 items-start">
           <div class="col-span-3">
             <div class="text-[12px] text-muted mb-1"><span class="text-[#F53F3F]">*</span> 采集器图标</div>
@@ -256,14 +280,6 @@
               <i class="fa-solid fa-plus text-muted"></i>
               <input type="file" class="sr-only" accept="image/*" />
             </label>
-          </div>
-          <div class="col-span-9">
-            <div class="text-[12px] text-muted mb-1"><span class="text-[#F53F3F]">*</span> 选择脚本</div>
-            <select
-              id="cfgScriptSelect"
-              class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"
-            ></select>
-            <div class="text-[12px] text-muted mt-1">仅展示「脚本管理」中状态为<strong class="font-semibold text-text">启用</strong>的脚本；无可用项时请先到脚本管理启用脚本。</div>
           </div>
         </div>
 
@@ -290,6 +306,15 @@
           <div class="col-span-2">
             <button id="btnKwAdd" type="button" class="w-full h-10 rounded-lg bg-primary text-white text-[14px] font-semibold">添加</button>
           </div>
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">AI提示词</div>
+          <textarea
+            id="cfgAiPrompt"
+            rows="4"
+            class="w-full rounded-xl border border-[rgba(201,205,212,.7)] p-3 text-[14px]"
+            placeholder="请输入 AI 提示词，用于指导采集与字段抽取"
+          ></textarea>
         </div>
         <div id="kwTags" class="mt-2 flex flex-wrap gap-2" aria-label="已添加的采集关键词"></div>
 
@@ -328,6 +353,24 @@
       </div>
     </div>
 
+    <!-- Modal: 手动采集确认 -->
+    <div class="overlay" data-overlay="manual-collect" data-open="false"></div>
+    <div class="modal" data-modal="manual-collect" data-open="false" style="max-width: 480px; width: min(480px, 96vw)">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">手动采集</div>
+        <button type="button" class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="manual-collect" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">确认立即执行当前配置规则进行数据采集？</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="manual-collect">取消</button>
+          <button id="btnConfirmManualCollect" type="button" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认</button>
+        </div>
+      </div>
+    </div>
+
     <!-- task detail & compliance tip removed -->
 
     <!-- Modal: retrain -->
@@ -357,7 +400,19 @@
     <script src="../../assets/app.js"></script>
     <script>
       (function () {
-        const LS_SCRIPTS = "collect_scripts_v1";
+        function openModal(id) {
+          const ov = document.querySelector(`[data-overlay="${id}"]`);
+          const m = document.querySelector(`[data-modal="${id}"]`);
+          if (ov) ov.dataset.open = "true";
+          if (m) m.dataset.open = "true";
+        }
+        function closeModal(id) {
+          const ov = document.querySelector(`[data-overlay="${id}"]`);
+          const m = document.querySelector(`[data-modal="${id}"]`);
+          if (ov) ov.dataset.open = "false";
+          if (m) m.dataset.open = "false";
+        }
+
         /** @type {string[]} */
         const kwList = [];
 
@@ -393,32 +448,6 @@
           });
         }
 
-        function fillScriptSelect() {
-          const sel = document.getElementById("cfgScriptSelect");
-          if (!sel) return;
-          let rows = [];
-          try {
-            rows = JSON.parse(localStorage.getItem(LS_SCRIPTS) || "[]");
-          } catch (_) {
-            rows = [];
-          }
-          if (!Array.isArray(rows)) rows = [];
-          const enabled = rows.filter((r) => r && r.status === "enabled");
-          sel.innerHTML = "";
-          const o0 = document.createElement("option");
-          o0.value = "";
-          o0.textContent = enabled.length ? "请选择脚本" : "暂无已启用脚本（请至脚本管理启用）";
-          sel.appendChild(o0);
-          enabled.forEach((r) => {
-            const o = document.createElement("option");
-            o.value = r.id;
-            const fn = r.fileName ? "（" + r.fileName + "）" : "";
-            o.textContent = (r.name || "未命名") + fn;
-            sel.appendChild(o);
-          });
-        }
-
-        fillScriptSelect();
         renderKwTags();
 
         document.getElementById("btnKwAdd")?.addEventListener("click", () => {
@@ -455,12 +484,21 @@
           "click",
           (e) => {
             if (e.target.closest('[data-open-modal="add-script"]')) {
-              fillScriptSelect();
               resetKwTags();
             }
           },
           true
         );
+
+        document.querySelectorAll(".btn-manual-collect").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            openModal("manual-collect");
+          });
+        });
+
+        document.getElementById("btnConfirmManualCollect")?.addEventListener("click", () => {
+          closeModal("manual-collect");
+        });
       })();
     </script>
   </body>
