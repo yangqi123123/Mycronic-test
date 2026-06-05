@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户评分系统（AI评价）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      .toast-wrap {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 80;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .toast {
+        min-width: 280px;
+        max-width: 420px;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.35);
+        z-index: 70;
+        display: none;
+      }
+      .modal-backdrop[data-open="true"] {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .detail-panel[data-open="false"] {
+        display: none;
+      }
+      .detail-panel[data-open="true"] {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button
+            class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]"
+            title="折叠侧边栏"
+            data-sidebar-toggle
+          >
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="text-[14px] font-semibold">维度概览</div>
+              <button
+                id="btnOpenConfig"
+                type="button"
+                class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold shrink-0 flex items-center gap-2"
+              >
+                <i class="fa-solid fa-sliders"></i> 维护评分细则
+              </button>
+            </div>
+            <div class="overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table text-[14px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">维度</th>
+                    <th class="text-left px-3 py-2">权重</th>
+                    <th class="text-left px-3 py-2">细则摘要</th>
+                  </tr>
+                </thead>
+                <tbody id="dimOverviewBody" class="bg-surface"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- 客户评级调优 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <!-- 顶部：标题 + 说明（单行小字） -->
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="text-[16px] font-semibold">客户评级调优</div>
+              <div class="text-[12px] text-muted whitespace-nowrap">
+                基于历史6个月已成交/已放弃数据统计，系统输出调优建议，由管理员手动调整权重与阈值，不改动原有评分计算逻辑。
+              </div>
+            </div>
+
+            <!-- 中部：核心数据区（左右两栏） -->
+            <div class="mt-4 grid grid-cols-12 gap-3">
+              <!-- 模块1 -->
+              <div class="col-span-12 xl:col-span-6 rounded-xl border border-[rgba(201,205,212,.6)] p-4">
+                <div class="text-[14px] font-semibold mb-3">各等级客户成交/放弃率统计</div>
+                <div class="overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+                  <table class="w-full table text-[14px] min-w-[720px]">
+                    <thead class="bg-[rgba(245,247,250,.9)]">
+                      <tr>
+                        <th class="text-left px-3 py-2">等级</th>
+                        <th class="text-left px-3 py-2">客户总数</th>
+                        <th class="text-left px-3 py-2">成交数</th>
+                        <th class="text-left px-3 py-2">放弃数</th>
+                        <th class="text-left px-3 py-2">成交率</th>
+                        <th class="text-left px-3 py-2">放弃率</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-surface">
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">A</td>
+                        <td class="px-3 py-2">126</td>
+                        <td class="px-3 py-2">51</td>
+                        <td class="px-3 py-2">75</td>
+                        <td class="px-3 py-2 text-primary font-semibold">40.4%</td>
+                        <td class="px-3 py-2 text-muted">59.6%</td>
+                      </tr>
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">B</td>
+                        <td class="px-3 py-2">283</td>
+                        <td class="px-3 py-2">85</td>
+                        <td class="px-3 py-2">198</td>
+                        <td class="px-3 py-2 text-primary font-semibold">30.0%</td>
+                        <td class="px-3 py-2 text-muted">70.0%</td>
+                      </tr>
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">C</td>
+                        <td class="px-3 py-2">528</td>
+                        <td class="px-3 py-2">79</td>
+                        <td class="px-3 py-2">449</td>
+                        <td class="px-3 py-2">15.0%</td>
+                        <td class="px-3 py-2 text-muted">85.0%</td>
+                      </tr>
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">D</td>
+                        <td class="px-3 py-2">792</td>
+                        <td class="px-3 py-2">16</td>
+                        <td class="px-3 py-2">776</td>
+                        <td class="px-3 py-2">2.0%</td>
+                        <td class="px-3 py-2 text-muted">98.0%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 模块2 -->
+              <div class="col-span-12 xl:col-span-6 rounded-xl border border-[rgba(201,205,212,.6)] p-4">
+                <div class="text-[14px] font-semibold mb-3">各评分维度成交/放弃率统计</div>
+                <div class="overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+                  <table class="w-full table text-[14px] min-w-[640px]">
+                    <thead class="bg-[rgba(245,247,250,.9)]">
+                      <tr>
+                        <th class="text-left px-3 py-2">评分维度</th>
+                        <th class="text-left px-3 py-2">成交数</th>
+                        <th class="text-left px-3 py-2">放弃数</th>
+                        <th class="text-left px-3 py-2">成交率</th>
+                        <th class="text-left px-3 py-2">放弃率</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-surface">
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">需求匹配度</td>
+                        <td class="px-3 py-2">324</td>
+                        <td class="px-3 py-2">124</td>
+                        <td class="px-3 py-2 text-primary font-semibold">72.3%</td>
+                        <td class="px-3 py-2 text-muted">27.7%</td>
+                      </tr>
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">企业价值</td>
+                        <td class="px-3 py-2">306</td>
+                        <td class="px-3 py-2">140</td>
+                        <td class="px-3 py-2 text-primary font-semibold">68.5%</td>
+                        <td class="px-3 py-2 text-muted">31.5%</td>
+                      </tr>
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">采购潜力</td>
+                        <td class="px-3 py-2">188</td>
+                        <td class="px-3 py-2">258</td>
+                        <td class="px-3 py-2">42.1%</td>
+                        <td class="px-3 py-2 text-muted">57.9%</td>
+                      </tr>
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">技术敏感度</td>
+                        <td class="px-3 py-2">131</td>
+                        <td class="px-3 py-2">315</td>
+                        <td class="px-3 py-2">29.3%</td>
+                        <td class="px-3 py-2 text-muted">70.7%</td>
+                      </tr>
+                      <tr class="border-t border-[rgba(201,205,212,.6)]">
+                        <td class="px-3 py-2 font-semibold">触达有效性</td>
+                        <td class="px-3 py-2">119</td>
+                        <td class="px-3 py-2">327</td>
+                        <td class="px-3 py-2">26.7%</td>
+                        <td class="px-3 py-2 text-muted">73.3%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 底部：调优建议区 -->
+            <div class="mt-4 rounded-xl border border-[rgba(201,205,212,.6)] bg-[rgba(245,247,250,.5)] p-4">
+              <div class="text-[14px] font-semibold">调优建议</div>
+              <div class="mt-2 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px] text-muted leading-relaxed">
+                A级、B级成交率偏低、放弃率偏高，建议调整权重与阈值提升精准度。
+              </div>
+
+              <div class="mt-3 text-[13px] text-muted font-semibold">建议权重（原权重±3%~5%，总和100%）</div>
+              <div class="mt-2 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+                <table class="w-full table text-[14px] min-w-[540px]">
+                  <thead class="bg-[rgba(245,247,250,.9)]">
+                    <tr>
+                      <th class="text-left px-3 py-2">评分维度</th>
+                      <th class="text-left px-3 py-2">权重调整</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-surface">
+                    <tr class="border-t border-[rgba(201,205,212,.6)]">
+                      <td class="px-3 py-2 font-semibold">需求匹配度</td>
+                      <td class="px-3 py-2"><span class="text-muted">原25%</span> <span class="text-muted mx-1">→</span> <span class="text-primary font-semibold">建议29%</span></td>
+                    </tr>
+                    <tr class="border-t border-[rgba(201,205,212,.6)]">
+                      <td class="px-3 py-2 font-semibold">企业价值</td>
+                      <td class="px-3 py-2"><span class="text-muted">原25%</span> <span class="text-muted mx-1">→</span> <span class="text-primary font-semibold">建议28%</span></td>
+                    </tr>
+                    <tr class="border-t border-[rgba(201,205,212,.6)]">
+                      <td class="px-3 py-2 font-semibold">采购潜力</td>
+                      <td class="px-3 py-2"><span class="text-muted">原20%</span> <span class="text-muted mx-1">→</span> <span class="text-primary font-semibold">建议20%</span></td>
+                    </tr>
+                    <tr class="border-t border-[rgba(201,205,212,.6)]">
+                      <td class="px-3 py-2 font-semibold">技术敏感度</td>
+                      <td class="px-3 py-2"><span class="text-muted">原15%</span> <span class="text-muted mx-1">→</span> <span class="text-primary font-semibold">建议12%</span></td>
+                    </tr>
+                    <tr class="border-t border-[rgba(201,205,212,.6)]">
+                      <td class="px-3 py-2 font-semibold">触达有效性</td>
+                      <td class="px-3 py-2"><span class="text-muted">原15%</span> <span class="text-muted mx-1">→</span> <span class="text-primary font-semibold">建议11%</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 已按需求移除：筛选 + 客户评分列表 -->
+        </div>
+      </main>
+    </div>
+
+    <!-- 配置弹窗 -->
+    <div id="configBackdrop" class="modal-backdrop" data-open="false" aria-hidden="true">
+      <div
+        class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] w-full max-w-[920px] max-h-[90vh] overflow-hidden flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cfgTitle"
+      >
+        <div class="px-4 py-3 border-b border-[rgba(201,205,212,.6)] flex items-center justify-between gap-3">
+          <div>
+            <div id="cfgTitle" class="text-[16px] font-semibold">配置评分权重与阈值</div>
+            <div id="cfgErr" class="text-[12px] text-red-600 mt-1 hidden"></div>
+          </div>
+          <button type="button" id="btnCloseConfig" class="w-9 h-9 rounded-lg border border-[rgba(201,205,212,.6)] hover:bg-[rgba(245,247,250,.9)]" aria-label="关闭">
+            <i class="fa-solid fa-xmark text-muted"></i>
+          </button>
+        </div>
+
+        <div class="p-4 overflow-y-auto flex-1 space-y-5">
+          <!-- 1 权重 -->
+          <div class="rounded-xl border border-[rgba(201,205,212,.6)] p-4">
+            <div class="text-[14px] font-semibold mb-3">维度权重配置</div>
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <label class="text-[12px] text-muted">需求匹配度（%）</label>
+                <input id="w0" type="text" inputmode="numeric" class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <label class="text-[12px] text-muted">企业价值（%）</label>
+                <input id="w1" type="text" inputmode="numeric" class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <label class="text-[12px] text-muted">采购潜力（%）</label>
+                <input id="w2" type="text" inputmode="numeric" class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <label class="text-[12px] text-muted">技术敏感度（%）</label>
+                <input id="w3" type="text" inputmode="numeric" class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                <label class="text-[12px] text-muted">触达有效性（%）</label>
+                <input id="w4" type="text" inputmode="numeric" class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12">
+                <div class="text-[12px] text-muted">合计：<span id="wSum" class="font-semibold text-text">0</span>%</div>
+                <div id="wSumHint" class="text-[12px] text-red-600 mt-1 hidden">权重合计需等于100%</div>
+                <div class="text-[12px] text-muted mt-2 leading-relaxed">
+                  管理员可基于历史成交数据调整；系统推荐模板：40 / 25 / 20 / 10 / 5（可自行修改）
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2 细则 -->
+          <div class="rounded-xl border border-[rgba(201,205,212,.6)] p-4">
+            <div class="text-[14px] font-semibold mb-3">维度细则配置</div>
+            <div class="text-[12px] text-muted leading-relaxed -mt-2 mb-3">
+              AI评分规则：所有维度统一满分100分，按权重折算后总分不超过100分，避免单维度分数溢出
+            </div>
+            <div class="space-y-2" id="detailBlocks"></div>
+          </div>
+
+          <!-- 3 等级阈值 -->
+          <div class="rounded-xl border border-[rgba(201,205,212,.6)] p-4">
+            <div class="text-[14px] font-semibold mb-3">等级阈值配置</div>
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <label class="text-[12px] text-muted">A 等级（≥）</label>
+                <input id="thA" type="text" inputmode="decimal" class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <label class="text-[12px] text-muted">B 等级（≥）</label>
+                <input id="thB" type="text" inputmode="decimal" class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <label class="text-[12px] text-muted">C 等级（≥）</label>
+                <input id="thC" type="text" inputmode="decimal" class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <label class="text-[12px] text-muted">D 等级（&lt;，与 C 同步）</label>
+                <input id="thD" type="text" readonly class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-[rgba(245,247,250,.9)] text-muted" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-4 py-3 border-t border-[rgba(201,205,212,.6)] flex items-center justify-between gap-3 bg-[rgba(245,247,250,.5)]">
+          <button type="button" id="btnCancelConfig" class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">取消</button>
+          <button type="button" id="btnSaveConfig" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold disabled:opacity-45 disabled:pointer-events-none">
+            保存配置并生效
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        const LS_KEY = "customerScoringAiEval_v1";
+
+        const DIM_META = [
+          { key: "demand", name: "需求匹配度", summary: "关键词、行业匹配、产品线匹配" },
+          { key: "enterprise", name: "企业价值", summary: "营收、企业性质、资质" },
+          { key: "purchase", name: "采购潜力", summary: "招采信号、预算" },
+          { key: "tech", name: "技术敏感度", summary: "技术岗位、技术升级" },
+          { key: "reach", name: "触达有效性", summary: "邮件打开率/邮件点击率/短信回复率" },
+        ];
+
+        const DEFAULT_WEIGHTS = [22, 20, 20, 18, 20];
+
+        function emptyDetails() {
+          return {
+            demand: {
+              keywords: [],
+              industry: ["半导体", "SMT", "新能源"],
+              productLine: ["贴片机", "喷印机"],
+              kwScore: "",
+              indScore: "",
+              plScore: "",
+            },
+            enterprise: {
+              revMin: "",
+              revMax: "",
+              nature: "",
+              quals: [],
+              revScore: "",
+              natureScore: "",
+              qualScore: "",
+              ruleNote: "规则示例：营收/企业性质/资质等级各命中按对应得分计入",
+            },
+            purchase: {
+              bidKws: [],
+              budgetMin: "",
+              budgetMax: "",
+              bidScore: "",
+              budgetScore: "",
+              ruleNote: "招采信号/预算各命中按对应得分计入",
+            },
+            tech: {
+              roleKws: [],
+              upgrade: ["产品升级", "设备换代", "工艺改造"],
+              roleScore: "",
+              upgradeScore: "",
+              ruleNote: "技术岗位/技术升级各命中按对应得分计入",
+            },
+            reach: {
+              openMin: "",
+              openMax: "",
+              clickMin: "",
+              clickMax: "",
+              smsReplyMin: "",
+              smsReplyMax: "",
+              openScore: "",
+              clickScore: "",
+              smsReplyScore: "",
+              ruleNote: "邮件打开率/邮件点击率/短信回复率各命中按对应得分计入",
+            },
+          };
+        }
+
+        function defaultState() {
+          return {
+            weights: DEFAULT_WEIGHTS.slice(),
+            thresholds: { A: 80, B: 60, C: 30 },
+            details: emptyDetails(),
+            customers: [
+              {
+                name: "芯联微电子",
+                industry: "半导体",
+                collectedAt: "2026-04-10",
+                raw: [86.363636, 90, 100, 94.444444, 90],
+              },
+              {
+                name: "华创SMT",
+                industry: "SMT",
+                collectedAt: "2026-04-08",
+                raw: [63.636364, 75, 80, 88.888889, 75],
+              },
+            ],
+          };
+        }
+
+        function loadState() {
+          try {
+            const s = localStorage.getItem(LS_KEY);
+            if (!s) return defaultState();
+            const o = JSON.parse(s);
+            if (!o || !Array.isArray(o.weights) || o.weights.length !== 5) return defaultState();
+            if (!o.customers || !o.customers.length) return defaultState();
+            if (!o.thresholds) o.thresholds = { A: 80, B: 60, C: 30 };
+            const d0 = emptyDetails();
+            const incoming = o.details || {};
+            o.details = {};
+            for (const k of Object.keys(d0)) {
+              o.details[k] = { ...d0[k], ...(incoming[k] || {}) };
+            }
+            // 兼容历史版本字段（白名单/黑名单、字符串关键词等）
+            try {
+              const dmIn = incoming.demand || {};
+              const legacyKw = [];
+              const splitMulti = (v) =>
+                String(v || "")
+                  .split(/[,，;；\n]/g)
+                  .map((x) => x.trim())
+                  .filter(Boolean);
+              if (dmIn.kwWhite) legacyKw.push(...splitMulti(dmIn.kwWhite));
+              if (dmIn.kwBlack) legacyKw.push(...splitMulti(dmIn.kwBlack));
+              const currentKw = Array.isArray(o.details.demand.keywords) ? o.details.demand.keywords : [];
+              const mergedKw = Array.from(new Set([...currentKw, ...legacyKw]));
+              o.details.demand.keywords = mergedKw;
+              if (!Array.isArray(o.details.demand.industry)) o.details.demand.industry = d0.demand.industry.slice();
+              if (!Array.isArray(o.details.demand.productLine)) o.details.demand.productLine = d0.demand.productLine.slice();
+
+              const pIn = incoming.purchase || {};
+              if (!Array.isArray(o.details.purchase.bidKws)) {
+                const sKw = pIn.bidKw || "";
+                o.details.purchase.bidKws = splitMulti(sKw);
+              }
+              const tIn = incoming.tech || {};
+              if (!Array.isArray(o.details.tech.roleKws)) {
+                const sKw = tIn.roleKw || "";
+                o.details.tech.roleKws = splitMulti(sKw);
+              }
+              if (!Array.isArray(o.details.tech.upgrade)) o.details.tech.upgrade = d0.tech.upgrade.slice();
+            } catch (_) {}
+            return o;
+          } catch {
+            return defaultState();
+          }
+        }
+
+        function saveState(st) {
+          localStorage.setItem(LS_KEY, JSON.stringify(st));
+        }
+
+        function round1(x) {
+          return Math.round(x * 10) / 10;
+        }
+
+        function contrib(raw, w, i) {
+          return round1((raw[i] * w[i]) / 100);
+        }
+
+        function totalScore(raw, w) {
+          let s = 0;
+          for (let i = 0; i < 5; i++) s += (raw[i] * w[i]) / 100;
+          return round1(s);
+        }
+
+        function gradeFrom(total, th) {
+          const t = total + 1e-9;
+          if (t >= th.A) return "A";
+          if (t >= th.B) return "B";
+          if (t >= th.C) return "C";
+          return "D";
+        }
+
+        let state = loadState();
+        let sortKey = "total";
+        let sortDir = "desc";
+
+        const elDimBody = document.getElementById("dimOverviewBody");
+        const elListBody = document.getElementById("customerListBody");
+        const elBackdrop = document.getElementById("configBackdrop");
+        const elErr = document.getElementById("cfgErr");
+        const elWSum = document.getElementById("wSum");
+        const elWSumHint = document.getElementById("wSumHint");
+        const elBtnSave = document.getElementById("btnSaveConfig");
+
+        function toast(msg) {
+          const wrap = document.getElementById("toastWrap");
+          const t = document.createElement("div");
+          t.className = "toast bg-surface border border-[rgba(201,205,212,.7)] rounded-xl shadow-card px-4 py-3 text-[14px]";
+          t.textContent = msg;
+          wrap.appendChild(t);
+          setTimeout(() => t.remove(), 2600);
+        }
+
+        function setCfgErr(msg) {
+          if (!msg) {
+            elErr.textContent = "";
+            elErr.classList.add("hidden");
+          } else {
+            elErr.textContent = msg;
+            elErr.classList.remove("hidden");
+          }
+        }
+
+        function renderDimOverview() {
+          const w = state.weights;
+          elDimBody.innerHTML = DIM_META.map(
+            (d, i) => `
+            <tr class="border-t border-[rgba(201,205,212,.6)]">
+              <td class="px-3 py-2 font-semibold">${d.name}</td>
+              <td class="px-3 py-2">${w[i]}%</td>
+              <td class="px-3 py-2 text-muted">${d.summary}</td>
+            </tr>`
+          ).join("");
+        }
+
+        function filteredCustomers() {
+          // 「筛选」区已移除，保留函数以兼容旧逻辑
+          const start = document.getElementById("fStart")?.value || "";
+          const end = document.getElementById("fEnd")?.value || "";
+          const g = document.getElementById("fGrade")?.value || "";
+          const ind = document.getElementById("fIndustry")?.value || "";
+          const kw = (document.getElementById("fKw")?.value || "").trim().toLowerCase();
+          const th = state.thresholds;
+          const w = state.weights;
+
+          return state.customers.filter((c) => {
+            if (kw && !c.name.toLowerCase().includes(kw)) return false;
+            if (ind && c.industry !== ind) return false;
+            if (g) {
+              const gr = gradeFrom(totalScore(c.raw, w), th);
+              if (gr !== g) return false;
+            }
+            if (start && c.collectedAt < start) return false;
+            if (end && c.collectedAt > end) return false;
+            return true;
+          });
+        }
+
+        function cmp(a, b) {
+          if (a === b) return 0;
+          return a < b ? -1 : 1;
+        }
+
+        function renderList() {
+          // 「客户评分列表」已移除
+          if (!elListBody) return;
+          const w = state.weights;
+          const th = state.thresholds;
+          let rows = filteredCustomers().map((c) => {
+            const dims = [0, 1, 2, 3, 4].map((i) => contrib(c.raw, w, i));
+            const tot = totalScore(c.raw, w);
+            return { c, dims, tot, g: gradeFrom(tot, th) };
+          });
+
+          rows.sort((x, y) => {
+            let ax;
+            let ay;
+            if (sortKey === "total") {
+              ax = x.tot;
+              ay = y.tot;
+            } else {
+              const i = Number(sortKey);
+              ax = x.dims[i];
+              ay = y.dims[i];
+            }
+            const d = cmp(ax, ay);
+            return sortDir === "asc" ? d : -d;
+          });
+
+          elListBody.innerHTML = rows
+            .map(({ c, dims, tot, g }) => {
+              const link = `<a href="javascript:void(0)" class="text-primary font-semibold hover:underline" data-name="${c.name.replace(/"/g, "&quot;")}">${c.name}</a>`;
+              return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-2">${link}</td>
+                ${dims.map((d) => `<td class="px-3 py-2">${d}</td>`).join("")}
+                <td class="px-3 py-2 font-semibold">${tot.toFixed(1)}</td>
+                <td class="px-3 py-2"><span class="chip chip--primary">${g}</span></td>
+              </tr>`;
+            })
+            .join("");
+
+          elListBody.querySelectorAll("a[data-name]").forEach((a) => {
+            a.addEventListener("click", () => toast("客户详情页占位 · " + a.getAttribute("data-name")));
+          });
+        }
+
+        function sumWeightsFromInputs() {
+          const nums = [0, 1, 2, 3, 4].map((i) => {
+            const v = document.getElementById("w" + i).value.trim();
+            if (!v) return NaN;
+            const n = parseInt(v, 10);
+            return Number.isFinite(n) ? n : NaN;
+          });
+          if (nums.some((n) => !Number.isFinite(n) || n <= 0)) return NaN;
+          return nums.reduce((a, b) => a + b, 0);
+        }
+
+        function bindIntOnly(el) {
+          el.addEventListener("input", () => {
+            el.value = el.value.replace(/[^\d]/g, "");
+            syncSaveEnabled();
+          });
+        }
+
+        function bindNumOnly(el) {
+          if (!el) return;
+          el.addEventListener("input", () => {
+            // 细则得分仅允许数字（原型：按整数处理）
+            el.value = String(el.value || "").replace(/[^\d]/g, "");
+          });
+        }
+
+        function readThreshold(id) {
+          const v = document.getElementById(id).value.trim();
+          if (v === "") return NaN;
+          const n = Number(v);
+          if (!Number.isFinite(n) || n < 0) return NaN;
+          return n;
+        }
+
+        function bindThSync() {
+          const thC = document.getElementById("thC");
+          const thD = document.getElementById("thD");
+          thC.addEventListener("input", () => {
+            thD.value = thC.value;
+            syncSaveEnabled();
+          });
+        }
+
+        function validateThresholds() {
+          const A = readThreshold("thA");
+          const B = readThreshold("thB");
+          const C = readThreshold("thC");
+          if ([A, B, C].some((x) => !Number.isFinite(x))) return "等级阈值需为有效数字";
+          if (!(A > B && B > C)) return "需满足 A > B > C（D 与 C 同步）";
+          return "";
+        }
+
+        function syncSaveEnabled() {
+          const sum = sumWeightsFromInputs();
+          const wOk = Number.isFinite(sum) && sum === 100;
+          elWSum.textContent = Number.isFinite(sum) ? String(sum) : "—";
+          elWSumHint.classList.toggle("hidden", wOk);
+          const thMsg = validateThresholds();
+          if (!wOk) setCfgErr("权重合计需等于100%");
+          else if (thMsg) setCfgErr(thMsg);
+          else setCfgErr("");
+          const ok = wOk && !thMsg;
+          elBtnSave.disabled = !ok;
+        }
+
+        function openConfig() {
+          setCfgErr("");
+          for (let i = 0; i < 5; i++) document.getElementById("w" + i).value = String(state.weights[i]);
+          document.getElementById("thA").value = String(state.thresholds.A);
+          document.getElementById("thB").value = String(state.thresholds.B);
+          document.getElementById("thC").value = String(state.thresholds.C);
+          document.getElementById("thD").value = String(state.thresholds.C);
+          fillDetailForm(state.details);
+          elBackdrop.setAttribute("data-open", "true");
+          syncSaveEnabled();
+        }
+
+        function closeConfig() {
+          elBackdrop.setAttribute("data-open", "false");
+        }
+
+        function collectDetailsFromForm() {
+          const d = emptyDetails();
+          const readChips = (id) =>
+            Array.from(document.querySelectorAll(`#${CSS.escape(id)} [data-chip]`))
+              .map((x) => (x.getAttribute("data-chip") || "").trim())
+              .filter(Boolean);
+          d.demand.keywords = readChips("d_kwList");
+          d.demand.industry = readChips("d_indList");
+          d.demand.productLine = readChips("d_plList");
+          d.demand.kwScore = document.getElementById("d_kwSc").value;
+          d.demand.indScore = document.getElementById("d_indSc").value;
+          d.demand.plScore = document.getElementById("d_plSc").value;
+
+          d.enterprise.revMin = document.getElementById("e_revMin").value;
+          d.enterprise.revMax = document.getElementById("e_revMax").value;
+          d.enterprise.nature = document.getElementById("e_nat").value;
+          d.enterprise.quals = Array.from(document.querySelectorAll('input[name="e_q"]:checked')).map((x) => x.value);
+          d.enterprise.revScore = document.getElementById("e_revSc").value;
+          d.enterprise.natureScore = document.getElementById("e_natSc").value;
+          d.enterprise.qualScore = document.getElementById("e_qSc").value;
+
+          d.purchase.bidKws = readChips("p_bidList");
+          d.purchase.budgetMin = document.getElementById("p_bmin").value;
+          d.purchase.budgetMax = document.getElementById("p_bmax").value;
+          d.purchase.bidScore = document.getElementById("p_bidSc").value;
+          d.purchase.budgetScore = document.getElementById("p_budSc").value;
+
+          d.tech.roleKws = readChips("t_roleList");
+          d.tech.upgrade = readChips("t_upList");
+          d.tech.roleScore = document.getElementById("t_roleSc").value;
+          d.tech.upgradeScore = document.getElementById("t_upSc").value;
+
+          d.reach.openMin = document.getElementById("r_omin").value;
+          d.reach.openMax = document.getElementById("r_omax").value;
+          d.reach.clickMin = document.getElementById("r_cmin").value;
+          d.reach.clickMax = document.getElementById("r_cmax").value;
+          d.reach.smsReplyMin = document.getElementById("r_smin").value;
+          d.reach.smsReplyMax = document.getElementById("r_smax").value;
+          d.reach.openScore = document.getElementById("r_openSc").value;
+          d.reach.clickScore = document.getElementById("r_clickSc").value;
+          d.reach.smsReplyScore = document.getElementById("r_smsSc").value;
+          return d;
+        }
+
+        function fillDetailForm(d) {
+          const set = (id, v) => {
+            const el = document.getElementById(id);
+            if (el) el.value = v || "";
+          };
+          set("d_kwSc", d.demand.kwScore);
+          set("d_indSc", d.demand.indScore);
+          set("d_plSc", d.demand.plScore);
+          const renderChips = (id, arr) => {
+            const host = document.getElementById(id);
+            if (!host) return;
+            const uniq = Array.from(new Set((Array.isArray(arr) ? arr : []).map((x) => String(x || "").trim()).filter(Boolean)));
+            host.innerHTML = uniq
+              .map(
+                (v) => `
+                <span class="inline-flex items-center h-7 px-2 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] text-[12px] font-semibold">
+                  <span data-chip="${v.replace(/"/g, "&quot;")}">${v}</span>
+                  <button type="button" class="ml-2 text-muted hover:text-text" data-chip-rm="${v.replace(/"/g, "&quot;")}" aria-label="移除">
+                    <i class="fa-solid fa-xmark text-[11px]"></i>
+                  </button>
+                </span>
+              `
+              )
+              .join("");
+
+            host.querySelectorAll("[data-chip-rm]").forEach((btn) => {
+              btn.addEventListener("click", () => {
+                const val = btn.getAttribute("data-chip-rm");
+                const next = uniq.filter((x) => x !== val);
+                renderChips(id, next);
+              });
+            });
+          };
+          renderChips("d_kwList", d.demand.keywords);
+          renderChips("d_indList", d.demand.industry);
+          renderChips("d_plList", d.demand.productLine);
+
+          set("e_revMin", d.enterprise.revMin);
+          set("e_revMax", d.enterprise.revMax);
+          document.getElementById("e_nat").value = d.enterprise.nature || "";
+          document.querySelectorAll('input[name="e_q"]').forEach((x) => {
+            x.checked = d.enterprise.quals.includes(x.value);
+          });
+          set("e_revSc", d.enterprise.revScore);
+          set("e_natSc", d.enterprise.natureScore);
+          set("e_qSc", d.enterprise.qualScore);
+
+          set("p_bmin", d.purchase.budgetMin);
+          set("p_bmax", d.purchase.budgetMax);
+          set("p_bidSc", d.purchase.bidScore);
+          set("p_budSc", d.purchase.budgetScore);
+          renderChips("p_bidList", d.purchase.bidKws);
+
+          set("t_roleSc", d.tech.roleScore);
+          set("t_upSc", d.tech.upgradeScore);
+          renderChips("t_roleList", d.tech.roleKws);
+          renderChips("t_upList", d.tech.upgrade);
+
+          set("r_omin", d.reach.openMin);
+          set("r_omax", d.reach.openMax);
+          set("r_cmin", d.reach.clickMin);
+          set("r_cmax", d.reach.clickMax);
+          set("r_smin", d.reach.smsReplyMin);
+          set("r_smax", d.reach.smsReplyMax);
+          set("r_openSc", d.reach.openScore);
+          set("r_clickSc", d.reach.clickScore);
+          set("r_smsSc", d.reach.smsReplyScore);
+        }
+
+        function buildDetailBlocks() {
+          const host = document.getElementById("detailBlocks");
+          host.innerHTML = `
+            <div class="border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+              <div class="flex items-center justify-between px-3 py-2 bg-[rgba(245,247,250,.9)]">
+                <div class="font-semibold text-[14px]">需求匹配度</div>
+                <button type="button" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[13px] font-semibold" data-toggle="d_panel">配置细则</button>
+              </div>
+              <div id="d_panel" class="detail-panel px-3 py-3 space-y-2 border-t border-[rgba(201,205,212,.6)]" data-open="false">
+                <div class="text-[12px] text-muted mb-1">关键词（支持添加多个）</div>
+                <div class="flex gap-2">
+                  <input id="d_kwAdd" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="输入后点击添加" />
+                  <button type="button" id="d_kwAddBtn" class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[13px] font-semibold hover:bg-[rgba(245,247,250,.9)]">添加</button>
+                </div>
+                <div id="d_kwList" class="flex flex-wrap gap-2"></div>
+
+                <div class="text-[12px] text-muted mb-1">行业匹配（默认：半导体、SMT、新能源；支持自定义添加）</div>
+                <div class="flex gap-2">
+                  <input id="d_indAdd" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如：电子制造" />
+                  <button type="button" id="d_indAddBtn" class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[13px] font-semibold hover:bg-[rgba(245,247,250,.9)]">添加</button>
+                </div>
+                <div id="d_indList" class="flex flex-wrap gap-2"></div>
+
+                <div class="text-[12px] text-muted mb-1">产品线匹配（默认：贴片机、喷印机；支持自定义添加）</div>
+                <div class="flex gap-2">
+                  <input id="d_plAdd" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如：回流焊" />
+                  <button type="button" id="d_plAddBtn" class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[13px] font-semibold hover:bg-[rgba(245,247,250,.9)]">添加</button>
+                </div>
+                <div id="d_plList" class="flex flex-wrap gap-2"></div>
+
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">关键词匹配得分</div>
+                    <input id="d_kwSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 8" />
+                  </div>
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">行业匹配得分</div>
+                    <input id="d_indSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 6" />
+                  </div>
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">产品线匹配得分</div>
+                    <input id="d_plSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 5" />
+                  </div>
+                </div>
+                <div class="text-[12px] text-muted">规则示例：关键词/行业/产品线各命中时按对应得分计入</div>
+              </div>
+            </div>
+
+            <div class="border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+              <div class="flex items-center justify-between px-3 py-2 bg-[rgba(245,247,250,.9)]">
+                <div class="font-semibold text-[14px]">企业价值</div>
+                <button type="button" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[13px] font-semibold" data-toggle="e_panel">配置细则</button>
+              </div>
+              <div id="e_panel" class="detail-panel px-3 py-3 space-y-2 border-t border-[rgba(201,205,212,.6)]" data-open="false">
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12 sm:col-span-6">
+                    <div class="text-[12px] text-muted mb-1">营收阈值区间（亿）</div>
+                    <div class="flex gap-2">
+                      <input id="e_revMin" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="下限" />
+                      <input id="e_revMax" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="上限" />
+                    </div>
+                  </div>
+                  <div class="col-span-12 sm:col-span-6">
+                    <div class="text-[12px] text-muted mb-1">企业性质</div>
+                    <select id="e_nat" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px] bg-surface">
+                      <option value="">全部</option>
+                      <option>国企</option>
+                      <option>上市</option>
+                      <option>民企</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="text-[12px] text-muted">资质等级（多选）</div>
+                <div class="flex flex-wrap gap-3 text-[13px]">
+                  <label><input type="checkbox" name="e_q" value="专精特新" class="mr-1" />专精特新</label>
+                  <label><input type="checkbox" name="e_q" value="高新企业" class="mr-1" />高新企业</label>
+                  <label><input type="checkbox" name="e_q" value="ISO体系" class="mr-1" />ISO体系</label>
+                </div>
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">营收预算金额区间匹配得分</div>
+                    <input id="e_revSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 8" />
+                  </div>
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">企业性质匹配得分</div>
+                    <input id="e_natSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 6" />
+                  </div>
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">资质等级匹配得分</div>
+                    <input id="e_qSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 5" />
+                  </div>
+                </div>
+                <div class="text-[12px] text-muted">${emptyDetails().enterprise.ruleNote}</div>
+              </div>
+            </div>
+
+            <div class="border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+              <div class="flex items-center justify-between px-3 py-2 bg-[rgba(245,247,250,.9)]">
+                <div class="font-semibold text-[14px]">采购潜力</div>
+                <button type="button" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[13px] font-semibold" data-toggle="p_panel">配置细则</button>
+              </div>
+              <div id="p_panel" class="detail-panel px-3 py-3 space-y-2 border-t border-[rgba(201,205,212,.6)]" data-open="false">
+                <div class="text-[12px] text-muted mb-1">招采信号关键词（支持自定义添加多个）</div>
+                <div class="flex gap-2">
+                  <input id="p_bidAdd" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如：招标公告" />
+                  <button type="button" id="p_bidAddBtn" class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[13px] font-semibold hover:bg-[rgba(245,247,250,.9)]">添加</button>
+                </div>
+                <div id="p_bidList" class="flex flex-wrap gap-2"></div>
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12 sm:col-span-6">
+                    <div class="text-[12px] text-muted mb-1">预算金额区间（万）</div>
+                    <div class="flex gap-2">
+                      <input id="p_bmin" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                      <input id="p_bmax" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                    </div>
+                  </div>
+                  <div class="col-span-12 sm:col-span-3">
+                    <div class="text-[12px] text-muted mb-1">招采信号关键词匹配得分</div>
+                    <input id="p_bidSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 10" />
+                  </div>
+                  <div class="col-span-12 sm:col-span-3">
+                    <div class="text-[12px] text-muted mb-1">预算金额区间匹配得分</div>
+                    <input id="p_budSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 10" />
+                  </div>
+                </div>
+                <div class="text-[12px] text-muted">${emptyDetails().purchase.ruleNote}</div>
+              </div>
+            </div>
+
+            <div class="border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+              <div class="flex items-center justify-between px-3 py-2 bg-[rgba(245,247,250,.9)]">
+                <div class="font-semibold text-[14px]">技术敏感度</div>
+                <button type="button" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[13px] font-semibold" data-toggle="t_panel">配置细则</button>
+              </div>
+              <div id="t_panel" class="detail-panel px-3 py-3 space-y-2 border-t border-[rgba(201,205,212,.6)]" data-open="false">
+                <div class="text-[12px] text-muted mb-1">技术岗位关键词（支持自定义添加多个）</div>
+                <div class="flex gap-2">
+                  <input id="t_roleAdd" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如：设备工程师" />
+                  <button type="button" id="t_roleAddBtn" class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[13px] font-semibold hover:bg-[rgba(245,247,250,.9)]">添加</button>
+                </div>
+                <div id="t_roleList" class="flex flex-wrap gap-2"></div>
+
+                <div class="text-[12px] text-muted mb-1">技术升级计划（默认：产品升级、设备换代、工艺改造；支持自定义添加）</div>
+                <div class="flex gap-2">
+                  <input id="t_upAdd" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如：产线扩建" />
+                  <button type="button" id="t_upAddBtn" class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[13px] font-semibold hover:bg-[rgba(245,247,250,.9)]">添加</button>
+                </div>
+                <div id="t_upList" class="flex flex-wrap gap-2"></div>
+
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12 sm:col-span-6">
+                    <div class="text-[12px] text-muted mb-1">技术岗位关键词匹配得分</div>
+                    <input id="t_roleSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 3" />
+                  </div>
+                  <div class="col-span-12 sm:col-span-6">
+                    <div class="text-[12px] text-muted mb-1">技术升级计划匹配得分</div>
+                    <input id="t_upSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 8" />
+                  </div>
+                </div>
+                <div class="text-[12px] text-muted">${emptyDetails().tech.ruleNote}</div>
+              </div>
+            </div>
+
+            <div class="border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+              <div class="flex items-center justify-between px-3 py-2 bg-[rgba(245,247,250,.9)]">
+                <div class="font-semibold text-[14px]">触达有效性</div>
+                <button type="button" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[13px] font-semibold" data-toggle="r_panel">配置细则</button>
+              </div>
+              <div id="r_panel" class="detail-panel px-3 py-3 space-y-2 border-t border-[rgba(201,205,212,.6)]" data-open="false">
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12 sm:col-span-6">
+                    <div class="text-[12px] text-muted mb-1">邮件打开率区间（%）</div>
+                    <div class="flex gap-2">
+                      <input id="r_omin" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                      <input id="r_omax" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                    </div>
+                  </div>
+                  <div class="col-span-12 sm:col-span-6">
+                    <div class="text-[12px] text-muted mb-1">邮件点击率区间（%）</div>
+                    <div class="flex gap-2">
+                      <input id="r_cmin" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                      <input id="r_cmax" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12 sm:col-span-6">
+                    <div class="text-[12px] text-muted mb-1">短信回复率区间（%）</div>
+                    <div class="flex gap-2">
+                      <input id="r_smin" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                      <input id="r_smax" class="flex-1 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" />
+                    </div>
+                  </div>
+                  <div class="col-span-12 sm:col-span-6"></div>
+                </div>
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">邮件打开匹配得分</div>
+                    <input id="r_openSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 10" />
+                  </div>
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">邮件点击匹配得分</div>
+                    <input id="r_clickSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 8" />
+                  </div>
+                  <div class="col-span-12 sm:col-span-4">
+                    <div class="text-[12px] text-muted mb-1">短信回复匹配得分</div>
+                    <input id="r_smsSc" type="text" inputmode="numeric" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px]" placeholder="如 6" />
+                  </div>
+                </div>
+                <div class="text-[12px] text-muted">${emptyDetails().reach.ruleNote}</div>
+              </div>
+            </div>
+          `;
+
+          host.querySelectorAll("[data-toggle]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const id = btn.getAttribute("data-toggle");
+              const panel = document.getElementById(id);
+              if (!panel) return;
+              const open = panel.getAttribute("data-open") === "true";
+              panel.setAttribute("data-open", open ? "false" : "true");
+            });
+          });
+
+          const addToList = (listId, inputId, val) => {
+            const host = document.getElementById(listId);
+            const input = document.getElementById(inputId);
+            const v = String(val || (input ? input.value : "") || "").trim();
+            if (!v) return;
+            const cur = Array.from(host ? host.querySelectorAll("[data-chip]") : []).map((x) => (x.getAttribute("data-chip") || "").trim());
+            const next = Array.from(new Set([...cur, v]));
+            // 复用 fillDetailForm 内部的渲染逻辑：直接写入 state.details 后回显
+            if (listId === "d_kwList") state.details.demand.keywords = next;
+            if (listId === "d_indList") state.details.demand.industry = next;
+            if (listId === "d_plList") state.details.demand.productLine = next;
+            if (listId === "p_bidList") state.details.purchase.bidKws = next;
+            if (listId === "t_roleList") state.details.tech.roleKws = next;
+            if (listId === "t_upList") state.details.tech.upgrade = next;
+            fillDetailForm(state.details);
+            if (input) input.value = "";
+          };
+
+          const bindAdd = (btnId, listId, inputId) => {
+            const btn = document.getElementById(btnId);
+            const input = document.getElementById(inputId);
+            if (btn) btn.addEventListener("click", () => addToList(listId, inputId));
+            if (input)
+              input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addToList(listId, inputId);
+                }
+              });
+          };
+
+          bindAdd("d_kwAddBtn", "d_kwList", "d_kwAdd");
+          bindAdd("d_indAddBtn", "d_indList", "d_indAdd");
+          bindAdd("d_plAddBtn", "d_plList", "d_plAdd");
+          bindAdd("p_bidAddBtn", "p_bidList", "p_bidAdd");
+          bindAdd("t_roleAddBtn", "t_roleList", "t_roleAdd");
+          bindAdd("t_upAddBtn", "t_upList", "t_upAdd");
+        }
+
+        function snapshotConfigFromForm() {
+          const weights = [0, 1, 2, 3, 4].map((i) => parseInt(document.getElementById("w" + i).value.trim(), 10));
+          const thresholds = {
+            A: readThreshold("thA"),
+            B: readThreshold("thB"),
+            C: readThreshold("thC"),
+          };
+          const details = collectDetailsFromForm();
+          return { weights, thresholds, details };
+        }
+
+        function initFiltersDefault30d() {
+          const end = new Date();
+          const start = new Date();
+          start.setDate(end.getDate() - 30);
+          const fmt = (d) => d.toISOString().slice(0, 10);
+          document.getElementById("fEnd").value = fmt(end);
+          document.getElementById("fStart").value = fmt(start);
+        }
+
+        document.getElementById("btnOpenConfig").addEventListener("click", openConfig);
+        document.getElementById("btnCloseConfig").addEventListener("click", closeConfig);
+        document.getElementById("btnCancelConfig").addEventListener("click", closeConfig);
+        elBackdrop.addEventListener("click", (e) => {
+          if (e.target === elBackdrop) closeConfig();
+        });
+
+        for (let i = 0; i < 5; i++) bindIntOnly(document.getElementById("w" + i));
+        ["thA", "thB", "thC"].forEach((id) => {
+          document.getElementById(id).addEventListener("input", syncSaveEnabled);
+        });
+        bindThSync();
+
+        document.getElementById("btnSaveConfig").addEventListener("click", () => {
+          const snap = snapshotConfigFromForm();
+          if (snap.weights.some((n) => !Number.isFinite(n) || n <= 0)) {
+            toast("权重需为正整数");
+            return;
+          }
+          const sum = snap.weights.reduce((a, b) => a + b, 0);
+          if (sum !== 100) {
+            toast("权重合计需等于100%");
+            return;
+          }
+          const thMsg = validateThresholds();
+          if (thMsg) {
+            toast(thMsg);
+            return;
+          }
+
+          const prev = JSON.stringify({
+            weights: state.weights,
+            thresholds: state.thresholds,
+            details: state.details,
+          });
+          const nextStr = JSON.stringify({
+            weights: snap.weights,
+            thresholds: snap.thresholds,
+            details: snap.details,
+          });
+          if (prev === nextStr) {
+            toast("配置无变更");
+            return;
+          }
+
+          state.weights = snap.weights;
+          state.thresholds = snap.thresholds;
+          state.details = snap.details;
+          saveState(state);
+          closeConfig();
+          renderDimOverview();
+          renderList();
+          toast("已保存并刷新列表");
+        });
+
+        document.querySelectorAll("th[data-sort]").forEach((th) => {
+          th.addEventListener("click", () => {
+            const k = th.getAttribute("data-sort");
+            if (sortKey === k) sortDir = sortDir === "asc" ? "desc" : "asc";
+            else {
+              sortKey = k;
+              sortDir = k === "total" ? "desc" : "desc";
+            }
+            renderList();
+          });
+        });
+
+        document.getElementById("btnQuery")?.addEventListener("click", renderList);
+
+        buildDetailBlocks();
+        // 筛选区已移除：避免初始化默认筛选时报错
+        try {
+          initFiltersDefault30d();
+        } catch (_) {}
+        renderDimOverview();
+        // 列表区已移除，无需渲染 renderList()
+
+        // 细则得分输入框：只允许数字
+        [
+          "d_kwSc",
+          "d_indSc",
+          "d_plSc",
+          "e_revSc",
+          "e_natSc",
+          "e_qSc",
+          "p_bidSc",
+          "p_budSc",
+          "t_roleSc",
+          "t_upSc",
+          "r_openSc",
+          "r_clickSc",
+          "r_smsSc",
+        ].forEach((id) => bindNumOnly(document.getElementById(id)));
+
+        for (let i = 0; i < 5; i++) {
+          document.getElementById("w" + i).addEventListener("input", syncSaveEnabled);
+        }
+      })();
+    </script>
+  </body>
+</html>

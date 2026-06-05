@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI客户评级</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">AI客户等级评价</div>
+              <div class="text-[12px] text-muted">多维度加权评分 · A/B/C/D 自动评级 · A级高潜推送销售待办</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold" data-open-drawer="config">
+              <i class="fa-solid fa-sliders text-muted mr-2"></i>权重/阈值配置
+            </button>
+            <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>
+              <i class="fa-solid fa-robot mr-2"></i>立即评分（原型）
+            </button>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="grid grid-cols-12 gap-3">
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">待评分客户</div>
+              <div class="text-[22px] font-semibold mt-1">12,884</div>
+              <div class="text-[12px] text-muted mt-1">每日凌晨定时任务</div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">评级准确率（灰度）</div>
+              <div class="text-[22px] font-semibold mt-1">86%</div>
+              <div class="text-[12px] mt-1"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>≥85%达标</span></div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">A级新增（今日）</div>
+              <div class="text-[22px] font-semibold mt-1">37</div>
+              <div class="text-[12px] mt-1"><span class="chip chip--primary"><i class="fa-solid fa-star"></i>高潜</span></div>
+            </div>
+            <div class="col-span-3 bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+              <div class="text-[12px] text-muted">推送及时率</div>
+              <div class="text-[22px] font-semibold mt-1">99%</div>
+              <div class="text-[12px] text-muted mt-1">至销售工作台待办</div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">评分结果（示例）</div>
+                <div class="text-[12px] text-muted mt-1">总分=需求匹配度×40%+企业价值×25%+采购潜力×20%+技术敏感度×10%+触达有效性×5%</div>
+              </div>
+              <a class="text-primary font-semibold" href="../sales/workbench.html">查看销售待办</a>
+            </div>
+            <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">客户</th>
+                    <th class="text-left px-3 py-2">维度得分</th>
+                    <th class="text-left px-3 py-2">总分</th>
+                    <th class="text-left px-3 py-2">等级</th>
+                    <th class="text-left px-3 py-2">策略</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-surface">
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">苏州XX半导体设备有限公司</div>
+                      <div class="text-[12px] text-muted mt-1">来源：招标采购</div>
+                    </td>
+                    <td class="px-3 py-3 text-[12px] text-muted">
+                      需求 92 · 价值 80 · 采购 88 · 技术 75 · 触达 70
+                    </td>
+                    <td class="px-3 py-3"><span class="chip chip--warning"><i class="fa-solid fa-bolt"></i>84.6</span></td>
+                    <td class="px-3 py-3"><span class="chip chip--primary"><i class="fa-solid fa-star"></i>A</span></td>
+                    <td class="px-3 py-3">
+                      <span class="chip chip--warning"><i class="fa-regular fa-clock"></i>1天内人工跟进</span>
+                    </td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="./customer-360.html">查看</a>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">上海XX研究院（公开科研）</div>
+                      <div class="text-[12px] text-muted mt-1">来源：政府科研</div>
+                    </td>
+                    <td class="px-3 py-3 text-[12px] text-muted">
+                      需求 70 · 价值 78 · 采购 50 · 技术 88 · 触达 40
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-scoreboard"></i>67.3</span></td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-tag"></i>B</span></td>
+                    <td class="px-3 py-3">
+                      <span class="chip"><i class="fa-regular fa-envelope"></i>3天内智能触达</span>
+                    </td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="./customer-360.html">查看</a>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">某某电子有限公司</div>
+                      <div class="text-[12px] text-muted mt-1">数据缺失：采购潜力</div>
+                    </td>
+                    <td class="px-3 py-3 text-[12px] text-muted">
+                      需求 52 · 价值 55 · 采购 0 · 技术 45 · 触达 30
+                    </td>
+                    <td class="px-3 py-3"><span class="chip chip--danger"><i class="fa-solid fa-triangle-exclamation"></i>33.0</span></td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-tag"></i>C</span></td>
+                    <td class="px-3 py-3">
+                      <span class="chip"><i class="fa-regular fa-message"></i>7天内短信触达</span>
+                    </td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="./customer-360.html">查看</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Drawer: config -->
+    <div class="overlay" data-overlay="config" data-open="false"></div>
+    <aside class="drawer" data-drawer="config" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="font-semibold text-[16px]">权重与阈值配置</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="config" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[12px] text-muted leading-relaxed">
+          权重可由管理员根据历史成交数据调整；等级更新后可触发跟进任务；D级每季度复评，其余等级每月复评。
+        </div>
+        <div class="text-[14px] font-semibold">评分权重（%）</div>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="text-[12px] text-muted">需求匹配度<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="40" /></label>
+          <label class="text-[12px] text-muted">企业价值<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="25" /></label>
+          <label class="text-[12px] text-muted">采购潜力<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="20" /></label>
+          <label class="text-[12px] text-muted">技术敏感度<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="10" /></label>
+          <label class="text-[12px] text-muted">触达有效性<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="5" /></label>
+        </div>
+        <div class="text-[14px] font-semibold mt-2">等级阈值</div>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="text-[12px] text-muted">A：≥<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="80" /></label>
+          <label class="text-[12px] text-muted">B：<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="60-79" /></label>
+          <label class="text-[12px] text-muted">C：<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="30-59" /></label>
+          <label class="text-[12px] text-muted">D：＜<input class="mt-1 w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="30" /></label>
+        </div>
+        <div class="flex gap-2">
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1" data-close="config" data-simulate-loading>保存</button>
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="config">取消</button>
+        </div>
+      </div>
+    </aside>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>
+
