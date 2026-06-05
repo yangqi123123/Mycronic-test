@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据采集 · 清洗后数据池</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <script>
+      // Legacy page: merged into Leads Pool
+      location.replace("../collect/leads-pool.html");
+    </script>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">清洗后数据池</div>
+              <div class="text-[12px] text-muted">去重清洗 · 补全 · 脱敏加密 · 入库 CRM</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="../crm/customers.html">
+              <i class="fa-solid fa-arrow-right text-muted mr-2"></i>进入 CRM
+            </a>
+            <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-drawer="masking">
+              <i class="fa-solid fa-shield-keyhole mr-2"></i>脱敏策略
+            </button>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">清洗批次</div>
+                <div class="text-[12px] text-muted mt-1">按“USCC＞企业全称＞简称”优先级去重，手机号/邮箱格式校验后脱敏入库</div>
+              </div>
+              <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold" data-simulate-loading>
+                <i class="fa-solid fa-rotate text-muted mr-2"></i>重新计算（原型）
+              </button>
+            </div>
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">输入（原始）</div>
+                <div class="text-[22px] font-semibold mt-1">4,102</div>
+              </div>
+              <div class="col-span-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">去重合并</div>
+                <div class="text-[22px] font-semibold mt-1">238</div>
+                <div class="text-[12px] mt-1"><span class="chip"><i class="fa-solid fa-compress"></i>相似度 ≥90%</span></div>
+              </div>
+              <div class="col-span-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">剔除无效</div>
+                <div class="text-[22px] font-semibold mt-1">12</div>
+                <div class="text-[12px] text-muted mt-1">手机号错误/企业名空/注销</div>
+              </div>
+              <div class="col-span-3 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">入库 CRM</div>
+                <div class="text-[22px] font-semibold mt-1">3,852</div>
+                <div class="text-[12px] mt-1"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>已脱敏</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-[16px] font-semibold">清洗结果（示例）</div>
+                <div class="text-[12px] text-muted mt-1">敏感字段入库前掩码/加密，授权人员可解密查看（原型演示）</div>
+              </div>
+              <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>
+                <i class="fa-solid fa-database mr-2"></i>入库 CRM（原型）
+              </button>
+            </div>
+            <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">客户</th>
+                    <th class="text-left px-3 py-2">来源汇总</th>
+                    <th class="text-left px-3 py-2">联系人（脱敏）</th>
+                    <th class="text-left px-3 py-2">去重依据</th>
+                    <th class="text-left px-3 py-2">状态</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-surface">
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">苏州XX半导体设备有限公司</div>
+                      <div class="text-[12px] text-muted mt-1">行业：半导体 · 地区：江苏</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-layer-group"></i>招标 + 工商</span></td>
+                    <td class="px-3 py-3">
+                      <div class="text-[14px] font-semibold">王工 · 采购</div>
+                      <div class="text-[12px] text-muted mt-1">138****1234 · w****@****.com</div>
+                    </td>
+                    <td class="px-3 py-3">USCC</td>
+                    <td class="px-3 py-3"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>可入库</span></td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="../crm/customer-360.html">360°视图</a>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">深圳XX电子制造（SMT）</div>
+                      <div class="text-[12px] text-muted mt-1">行业：SMT/电子制造 · 地区：广东</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-layer-group"></i>名录 + 自媒体</span></td>
+                    <td class="px-3 py-3">
+                      <div class="text-[14px] font-semibold">李经理 · 技术</div>
+                      <div class="text-[12px] text-muted mt-1">186****0088 · l****@****.com</div>
+                    </td>
+                    <td class="px-3 py-3">企业全称</td>
+                    <td class="px-3 py-3"><span class="chip chip--success"><i class="fa-solid fa-circle-check"></i>可入库</span></td>
+                    <td class="px-3 py-3 text-right">
+                      <a class="text-primary font-semibold" href="../crm/customer-360.html">360°视图</a>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">
+                      <div class="font-semibold">某某科技有限公司</div>
+                      <div class="text-[12px] text-muted mt-1">行业：未知 · 地区：未知</div>
+                    </td>
+                    <td class="px-3 py-3"><span class="chip"><i class="fa-solid fa-globe"></i>自媒体</span></td>
+                    <td class="px-3 py-3">
+                      <div class="text-[14px] font-semibold">—</div>
+                      <div class="text-[12px] text-muted mt-1">敏感字段缺失</div>
+                    </td>
+                    <td class="px-3 py-3">—</td>
+                    <td class="px-3 py-3"><span class="chip chip--warning"><i class="fa-solid fa-triangle-exclamation"></i>需补全</span></td>
+                    <td class="px-3 py-3 text-right">
+                      <button class="text-primary font-semibold" data-open-drawer="fill">补全</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Drawer: masking policy -->
+    <div class="overlay" data-overlay="masking" data-open="false"></div>
+    <aside class="drawer" data-drawer="masking" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="font-semibold text-[16px]">脱敏与加密策略</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="masking" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[12px] text-muted leading-relaxed">
+          规则：手机号显示为 138****1234；邮箱仅展示前缀与域名掩码；敏感信息采用 AES 加密存储，密钥每月轮换；仅授权人员可解密查看。
+        </div>
+        <div class="p-3 rounded-xl border border-[rgba(201,205,212,.6)]">
+          <div class="text-[14px] font-semibold">最小必要原则</div>
+          <div class="text-[12px] text-muted mt-1">
+            仅采集/存储用于触达的必要字段（联系人手机号/邮箱），禁止采集身份证号、银行卡号等非必需信息。
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <a class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1 text-center leading-9" href="../compliance/overview.html">进入合规中心</a>
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="masking">关闭</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Drawer: fill missing -->
+    <div class="overlay" data-overlay="fill" data-open="false"></div>
+    <aside class="drawer" data-drawer="fill" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="font-semibold text-[16px]">字段补全</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="fill" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="text-[12px] text-muted">补全信息仅来自公开渠道，补全失败将标记“字段缺失”并保留基础数据。</div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="text-[12px] text-muted mb-1">行业</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+              <option>SMT/电子制造</option>
+              <option>PCB</option>
+              <option>半导体</option>
+              <option>科研院所</option>
+              <option>未知</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">地区</div>
+            <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="如：上海" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="text-[12px] text-muted mb-1">联系人（可选）</div>
+            <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="如：王工" />
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">手机号（将脱敏）</div>
+            <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="如：13812341234" />
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold flex-1" data-simulate-loading data-close="fill">保存</button>
+          <button class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="fill">取消</button>
+        </div>
+      </div>
+    </aside>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>
+

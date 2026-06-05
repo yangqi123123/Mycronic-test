@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>系统管理 · 员工管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+    <style>
+      [data-modal="emp-create"],
+      [data-modal="emp-edit"] {
+        max-width: 960px;
+        width: min(960px, 96vw);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 图一：搜索 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="text-[16px] font-semibold">搜索</div>
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">名称</div>
+                <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-surface" placeholder="请输入员工名称" />
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">区域</div>
+                <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">请选择</option>
+                  <option>豫西</option>
+                  <option>豫中</option>
+                  <option>华东</option>
+                </select>
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">角色</div>
+                <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">请选择</option>
+                  <option>区域总监</option>
+                  <option>销售员</option>
+                </select>
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">创建时间</div>
+                <div class="flex items-center gap-2">
+                  <input type="date" class="flex-1 min-w-0 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px] bg-surface" />
+                  <span class="text-[12px] text-muted shrink-0">至</span>
+                  <input type="date" class="flex-1 min-w-0 h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-2 text-[13px] bg-surface" />
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <button class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+              <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-simulate-loading>重置</button>
+            </div>
+          </section>
+
+          <!-- 图一：列表 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="text-[16px] font-semibold">员工列表</div>
+              <button type="button" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold shrink-0" data-open-modal="emp-create">添加员工</button>
+            </div>
+            <div class="overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[1200px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2 w-10">
+                      <input type="checkbox" class="accent-primary" title="全选（原型）" />
+                    </th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">员工账号</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">绑定手机号</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">员工姓名</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">员工头像</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">员工性别</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">员工角色</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">直属上级</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">负责区域</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">状态</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建人</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">创建时间</th>
+                    <th class="text-right px-3 py-2 whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-surface">
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3"><input type="checkbox" class="accent-primary" /></td>
+                    <td class="px-3 py-3 text-muted">19</td>
+                    <td class="px-3 py-3 whitespace-nowrap">16637558576</td>
+                    <td class="px-3 py-3 font-semibold">李静波</td>
+                    <td class="px-3 py-3">
+                      <img class="w-9 h-9 rounded-full object-cover border border-[rgba(201,205,212,.7)]" src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=96&h=96&q=80" alt="avatar" />
+                    </td>
+                    <td class="px-3 py-3">女</td>
+                    <td class="px-3 py-3">区域总监</td>
+                    <td class="px-3 py-3 text-muted">—</td>
+                    <td class="px-3 py-3">豫西</td>
+                    <td class="px-3 py-3"><span class="chip chip--success">启用</span></td>
+                    <td class="px-3 py-3 whitespace-nowrap">超级管理员1</td>
+                    <td class="px-3 py-3 text-[13px] text-muted whitespace-nowrap">2022-10-06 08:17:50</td>
+                    <td class="px-3 py-3 text-right whitespace-nowrap space-x-2">
+                      <button class="text-primary font-semibold" data-open-modal="emp-edit">编辑</button>
+                      <button class="text-[#F53F3F] font-semibold" data-open-modal="emp-del">删除</button>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3"><input type="checkbox" class="accent-primary" /></td>
+                    <td class="px-3 py-3 text-muted">20</td>
+                    <td class="px-3 py-3 whitespace-nowrap">13073767897</td>
+                    <td class="px-3 py-3 font-semibold">张新坤</td>
+                    <td class="px-3 py-3">
+                      <img class="w-9 h-9 rounded-full object-cover border border-[rgba(201,205,212,.7)]" src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=96&h=96&q=80" alt="avatar" />
+                    </td>
+                    <td class="px-3 py-3">男</td>
+                    <td class="px-3 py-3">销售员</td>
+                    <td class="px-3 py-3 text-muted">—</td>
+                    <td class="px-3 py-3">豫中</td>
+                    <td class="px-3 py-3"><span class="chip chip--danger">禁用</span></td>
+                    <td class="px-3 py-3 whitespace-nowrap">超级管理员1</td>
+                    <td class="px-3 py-3 text-[13px] text-muted whitespace-nowrap">2022-09-24 17:05:02</td>
+                    <td class="px-3 py-3 text-right whitespace-nowrap space-x-2">
+                      <button class="text-primary font-semibold" data-open-modal="emp-edit">编辑</button>
+                      <button class="text-[#F53F3F] font-semibold" data-open-modal="emp-del">删除</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <span>共 <span class="text-text font-semibold">10</span> 条</span>
+              <div class="flex flex-wrap items-center gap-3">
+                <select class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option>10条/页</option>
+                  <option>20条/页</option>
+                  <option>50条/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" disabled aria-label="上一页"><i class="fa-solid fa-angle-left"></i></button>
+                  <button type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" disabled aria-label="下一页"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span>前往</span>
+                  <input type="number" min="1" value="1" class="w-12 h-8 rounded-lg border border-[rgba(201,205,212,.7)] px-1 text-center text-[13px] bg-surface" />
+                  <span>页</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 图二：新增员工 -->
+    <div class="overlay" data-overlay="emp-create" data-open="false"></div>
+    <div class="modal" data-modal="emp-create" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">新增员工</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="emp-create"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-4 max-h-[min(78vh,720px)] overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-[12px] text-muted mb-1">员工姓名 <span class="text-[#F53F3F]">*</span></div>
+            <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入" />
+            <div class="text-[12px] text-muted mt-1">建议名称2-15个字</div>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">员工手机号</div>
+            <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入" />
+            <div class="text-[12px] text-muted mt-1">必须是正整数</div>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">初始密码</div>
+            <input type="password" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入" />
+            <div class="text-[12px] text-muted mt-1">默认初始密码是 123456，建议密码为6-12位的字符</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-[12px] text-muted mb-1">性别 <span class="text-[#F53F3F]">*</span></div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>女</option>
+              <option>男</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">角色 <span class="text-[#F53F3F]">*</span></div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>区域总监</option>
+              <option>销售员</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">直属上级</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="">请选择</option>
+              <option>管理员</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-[12px] text-muted mb-1">所属区域</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>豫西</option>
+              <option>豫中</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">绑定销售员</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="">请选择</option>
+              <option>245733</option>
+              <option>245734</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">上传头像</div>
+            <div class="flex gap-2">
+              <label class="flex h-[72px] w-[72px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(201,205,212,.9)] bg-[rgba(245,247,250,.6)] text-[12px] text-primary">
+                <i class="fa-solid fa-plus mb-0.5"></i>
+                上传文件
+                <input type="file" class="sr-only" accept="image/*" />
+              </label>
+              <img class="h-[72px] w-[72px] shrink-0 rounded-lg object-cover border border-[rgba(201,205,212,.7)]" src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=144&h=144&q=80" alt="avatar" />
+            </div>
+            <div class="mt-1 flex items-center gap-1 text-[12px] text-muted">
+              <span class="text-[#00B42A]"><i class="fa-solid fa-circle-check"></i></span>
+              图片
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-[12px] text-muted mb-1">状态</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>启用</option>
+              <option>禁用</option>
+            </select>
+          </div>
+          <div></div>
+          <div></div>
+        </div>
+        <div class="flex justify-center pt-2">
+          <button class="h-9 px-6 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="emp-create" data-simulate-loading>保存关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 图二：编辑员工 -->
+    <div class="overlay" data-overlay="emp-edit" data-open="false"></div>
+    <div class="modal" data-modal="emp-edit" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">编辑员工</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="emp-edit"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-4 max-h-[min(78vh,720px)] overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-[12px] text-muted mb-1">员工姓名 <span class="text-[#F53F3F]">*</span></div>
+            <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="李静波" />
+            <div class="text-[12px] text-muted mt-1">建议名称2-15个字</div>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">员工手机号</div>
+            <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" value="16637558576" />
+            <div class="text-[12px] text-muted mt-1">必须是正整数</div>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">初始密码</div>
+            <input type="password" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="留空则不修改" />
+            <div class="text-[12px] text-muted mt-1">默认初始密码是 123456，建议密码为6-12位的字符</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-[12px] text-muted mb-1">性别 <span class="text-[#F53F3F]">*</span></div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>女</option>
+              <option>男</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">角色 <span class="text-[#F53F3F]">*</span></div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>区域总监</option>
+              <option>销售员</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">直属上级</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="">请选择</option>
+              <option>管理员</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-[12px] text-muted mb-1">所属区域</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>豫西</option>
+              <option>豫中</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">绑定销售员</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="" selected>请选择</option>
+              <option>245733</option>
+              <option>245734</option>
+            </select>
+          </div>
+          <div>
+            <div class="text-[12px] text-muted mb-1">上传头像</div>
+            <div class="flex gap-2">
+              <label class="flex h-[72px] w-[72px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(201,205,212,.9)] bg-[rgba(245,247,250,.6)] text-[12px] text-primary">
+                <i class="fa-solid fa-plus mb-0.5"></i>
+                上传文件
+                <input type="file" class="sr-only" accept="image/*" />
+              </label>
+              <img class="h-[72px] w-[72px] shrink-0 rounded-lg object-cover border border-[rgba(201,205,212,.7)]" src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=144&h=144&q=80" alt="avatar" />
+            </div>
+            <div class="mt-1 flex items-center gap-1 text-[12px] text-muted">
+              <span class="text-[#00B42A]"><i class="fa-solid fa-circle-check"></i></span>
+              图片
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-[12px] text-muted mb-1">状态</div>
+            <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option selected>启用</option>
+              <option>禁用</option>
+            </select>
+          </div>
+          <div></div>
+          <div></div>
+        </div>
+        <div class="flex justify-center pt-2">
+          <button class="h-9 px-6 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="emp-edit" data-simulate-loading>保存关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="emp-del" data-open="false"></div>
+    <div class="modal" data-modal="emp-del" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">删除员工</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="emp-del"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">确认删除该员工？删除后不可恢复。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="emp-del">取消</button>
+          <button class="h-9 px-3 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold" data-close="emp-del" data-simulate-loading>确认删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 批量操作区已移除，对应批量删除弹窗一并移除 -->
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>

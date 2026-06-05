@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据采集 · 脚本管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button
+            type="button"
+            class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]"
+            title="折叠侧边栏"
+            data-sidebar-toggle
+          >
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="text-[16px] font-semibold">搜索查询</div>
+            <div class="mt-3 grid grid-cols-12 gap-3 items-end">
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">脚本名称</div>
+                <input
+                  id="qName"
+                  type="text"
+                  class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"
+                  placeholder="支持模糊匹配"
+                />
+              </div>
+              <div class="col-span-2">
+                <div class="text-[12px] text-muted mb-1">状态</div>
+                <select id="qStatus" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option value="enabled">启用</option>
+                  <option value="disabled">禁用</option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <div class="text-[12px] text-muted mb-1">创建时间（起）</div>
+                <input id="qFrom" type="date" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+              </div>
+              <div class="col-span-2">
+                <div class="text-[12px] text-muted mb-1">创建时间（止）</div>
+                <input id="qTo" type="date" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
+              </div>
+              <div class="col-span-3 flex justify-end gap-2">
+                <button type="button" id="btnSearch" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">搜索</button>
+                <button type="button" id="btnReset" class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">脚本列表</div>
+              <button
+                type="button"
+                id="btnAdd"
+                class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold shrink-0 flex items-center gap-2"
+              >
+                <i class="fa-solid fa-plus"></i>新增脚本
+              </button>
+            </div>
+            <div class="mt-3 overflow-x-auto rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table min-w-[960px]">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">脚本名称</th>
+                    <th class="text-left px-3 py-2">脚本描述</th>
+                    <th class="text-left px-3 py-2">创建人</th>
+                    <th class="text-left px-3 py-2">创建时间</th>
+                    <th class="text-left px-3 py-2">状态</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted">
+              <div>共 <span id="totalCount" class="text-text font-semibold">0</span> 条</div>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="pageSize" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[13px]">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                </select>
+                <div class="flex items-center gap-1">
+                  <button id="prevPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="上一页">
+                    <i class="fa-solid fa-angle-left"></i>
+                  </button>
+                  <button id="pageNoBtn" type="button" class="h-8 w-8 rounded-lg bg-primary text-white font-semibold">1</button>
+                  <button id="nextPage" type="button" class="h-8 w-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" aria-label="下一页">
+                    <i class="fa-solid fa-angle-right"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 新增脚本 -->
+    <div class="overlay" data-overlay="script-add" data-open="false"></div>
+    <div class="modal" data-modal="script-add" data-open="false" style="max-width: 560px; width: min(560px, 96vw)">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">新增脚本</div>
+        <button type="button" class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="script-add" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3 max-h-[min(80vh,640px)] overflow-y-auto">
+        <div>
+          <div class="text-[12px] text-muted mb-1">脚本名称 <span class="text-[#F53F3F]">*</span></div>
+          <input id="addName" type="text" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入脚本名称" />
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">上传脚本文件 <span class="text-[#F53F3F]">*</span></div>
+          <input id="addFile" type="file" accept=".py,.sh,.bash,.ps1" class="w-full text-[14px]" />
+          <div class="text-[12px] text-muted mt-1">支持 .py / .sh / .bash / .ps1，单文件，最大 5MB</div>
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">脚本描述</div>
+          <textarea id="addDesc" rows="3" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] p-3 text-[14px]" placeholder="选填"></textarea>
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">状态</div>
+          <select id="addStatus" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+            <option value="disabled" selected>禁用</option>
+            <option value="enabled">启用</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="script-add">取消</button>
+          <button type="button" id="btnAddSave" class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold">提交</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 编辑脚本 -->
+    <div class="overlay" data-overlay="script-edit" data-open="false"></div>
+    <div class="modal" data-modal="script-edit" data-open="false" style="max-width: 560px; width: min(560px, 96vw)">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">编辑脚本</div>
+        <button type="button" class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="script-edit" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3 max-h-[min(80vh,640px)] overflow-y-auto">
+        <input type="hidden" id="editId" value="" />
+        <div>
+          <div class="text-[12px] text-muted mb-1">脚本名称 <span class="text-[#F53F3F]">*</span></div>
+          <input id="editName" type="text" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">上传脚本文件 <span class="text-[#F53F3F]">*</span></div>
+          <input id="editFile" type="file" accept=".py,.sh,.bash,.ps1" class="w-full text-[14px]" />
+          <div id="editCurFile" class="text-[12px] text-muted mt-1"></div>
+          <div class="text-[12px] text-muted mt-1">支持 .py / .sh / .bash / .ps1，单文件最大 5MB；保存时必须选择文件，将覆盖原脚本文件</div>
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">脚本描述</div>
+          <textarea id="editDesc" rows="3" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] p-3 text-[14px]"></textarea>
+        </div>
+        <div>
+          <div class="text-[12px] text-muted mb-1">状态</div>
+          <select id="editStatus" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+            <option value="disabled">禁用</option>
+            <option value="enabled">启用</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="script-edit">取消</button>
+          <button type="button" id="btnEditSave" class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认 -->
+    <div class="overlay" data-overlay="script-del" data-open="false"></div>
+    <div class="modal" data-modal="script-del" data-open="false" style="max-width: 440px; width: min(440px, 96vw)">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">删除脚本</div>
+        <button type="button" class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="script-del" title="关闭">
+          <i class="fa-solid fa-xmark text-muted"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">
+          确认删除脚本「<span id="delName" class="font-semibold text-text"></span>」？删除后将移除该脚本及其关联文件，此操作不可恢复。
+        </p>
+        <input type="hidden" id="delId" value="" />
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="script-del">取消</button>
+          <button type="button" id="btnDelConfirm" class="h-9 px-3 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold">确认删除</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap fixed bottom-4 right-4 z-[80] space-y-2 w-[min(420px,calc(100vw-32px))]" id="toasts"></div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        const LS_KEY = "collect_scripts_v1";
+        const MAX_BYTES = 5 * 1024 * 1024;
+        const ALLOWED = [".py", ".sh", ".bash", ".ps1"];
+
+        /** @typedef {{ id: string, name: string, desc: string, createdBy: string, createdAt: string, status: 'enabled'|'disabled', fileName: string, dataUrl: string }} ScriptRow */
+
+        function uid() {
+          return "scr_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        }
+
+        function escapeHtml(s) {
+          return String(s ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function openModal(id) {
+          const ov = document.querySelector(`[data-overlay="${id}"]`);
+          const m = document.querySelector(`[data-modal="${id}"]`);
+          if (ov) ov.dataset.open = "true";
+          if (m) m.dataset.open = "true";
+        }
+        function closeModal(id) {
+          const ov = document.querySelector(`[data-overlay="${id}"]`);
+          const m = document.querySelector(`[data-modal="${id}"]`);
+          if (ov) ov.dataset.open = "false";
+          if (m) m.dataset.open = "false";
+        }
+
+        function toast(type, title, desc) {
+          const color =
+            type === "success" ? "rgba(0,180,42,.12)" : type === "error" ? "rgba(245,63,63,.10)" : "rgba(255,125,0,.10)";
+          const border =
+            type === "success" ? "rgba(0,180,42,.25)" : type === "error" ? "rgba(245,63,63,.25)" : "rgba(255,125,0,.25)";
+          const icon =
+            type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-triangle-exclamation";
+          const wrap = document.getElementById("toasts");
+          const el = document.createElement("div");
+          el.className = "toast bg-surface rounded-xl border shadow-card";
+          el.style.borderColor = border;
+          el.innerHTML = `
+            <div class="p-3 flex gap-3" style="background:${color}">
+              <i class="fa-solid ${icon} text-muted mt-0.5"></i>
+              <div class="min-w-0">
+                <div class="text-[14px] font-semibold">${escapeHtml(title)}</div>
+                ${desc ? `<div class="text-[12px] text-muted mt-0.5">${escapeHtml(desc)}</div>` : ""}
+              </div>
+              <button type="button" class="ml-auto w-8 h-8 rounded-lg hover:bg-[rgba(245,247,250,.9)]" title="关闭"><i class="fa-solid fa-xmark text-muted"></i></button>
+            </div>
+          `;
+          el.querySelector("button").addEventListener("click", () => el.remove());
+          wrap.appendChild(el);
+          setTimeout(() => el.remove(), 3200);
+        }
+
+        function demoDataUrl(name) {
+          const body =
+            name.endsWith(".sh") || name.endsWith(".bash")
+              ? '#!/bin/bash\necho "demo script"\n'
+              : name.endsWith(".ps1")
+                ? 'Write-Output "demo"\n'
+                : '# -*- coding: utf-8 -*-\n"""demo"""\nprint("ok")\n';
+          const b64 = btoa(unescape(encodeURIComponent(body)));
+          const mime =
+            name.endsWith(".sh") || name.endsWith(".bash")
+              ? "text/x-shellscript"
+              : name.endsWith(".ps1")
+                ? "text/plain"
+                : "text/x-python";
+          return "data:" + mime + ";charset=utf-8;base64," + b64;
+        }
+
+        function defaultRows() {
+          const t = new Date("2026-04-18T06:30:00.000Z").toISOString();
+          const t2 = new Date("2026-04-10T09:15:00.000Z").toISOString();
+          const t3 = new Date("2026-03-22T11:00:00.000Z").toISOString();
+          return [
+            {
+              id: uid(),
+              name: "展会名录抓取",
+              desc: "按关键词抓取展会参展商名录页",
+              createdBy: "管理员",
+              createdAt: t,
+              status: "enabled",
+              fileName: "expo_list.py",
+              dataUrl: demoDataUrl("expo_list.py"),
+            },
+            {
+              id: uid(),
+              name: "招标源同步",
+              desc: "定时同步招标站点列表",
+              createdBy: "李雷",
+              createdAt: t2,
+              status: "disabled",
+              fileName: "bid_sync.sh",
+              dataUrl: demoDataUrl("bid_sync.sh"),
+            },
+            {
+              id: uid(),
+              name: "工商详情补全",
+              desc: "根据统一社会信用代码补全工商字段",
+              createdBy: "张敏",
+              createdAt: t3,
+              status: "enabled",
+              fileName: "gs_detail.py",
+              dataUrl: demoDataUrl("gs_detail.py"),
+            },
+          ];
+        }
+
+        function loadAll() {
+          try {
+            const raw = localStorage.getItem(LS_KEY);
+            if (raw) {
+              const arr = JSON.parse(raw);
+              if (Array.isArray(arr) && arr.length) return /** @type {ScriptRow[]} */ (arr);
+            }
+          } catch (_) {}
+          const rows = defaultRows();
+          saveAll(rows);
+          return rows;
+        }
+
+        function saveAll(rows) {
+          localStorage.setItem(LS_KEY, JSON.stringify(rows));
+        }
+
+        /** @type {ScriptRow[]} */
+        let all = loadAll();
+
+        let pageNo = 1;
+
+        function normName(n) {
+          return String(n || "").trim().toLowerCase();
+        }
+
+        function isDupName(name, excludeId) {
+          const key = normName(name);
+          if (!key) return false;
+          return all.some((r) => r.id !== excludeId && normName(r.name) === key);
+        }
+
+        function extOk(fileName) {
+          const lower = String(fileName || "").toLowerCase();
+          return ALLOWED.some((ext) => lower.endsWith(ext));
+        }
+
+        function validateFile(file) {
+          if (!file) return "请选择脚本文件";
+          if (!extOk(file.name)) return "仅支持上传 " + ALLOWED.join("、") + " 格式";
+          if (file.size > MAX_BYTES) return "文件过大，单文件不超过 5MB";
+          return "";
+        }
+
+        function readFileAsDataURL(file) {
+          return new Promise((resolve, reject) => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(String(fr.result || ""));
+            fr.onerror = () => reject(new Error("读取文件失败"));
+            fr.readAsDataURL(file);
+          });
+        }
+
+        function formatTime(iso) {
+          const d = new Date(iso);
+          if (Number.isNaN(d.getTime())) return "—";
+          const pad = (n) => String(n).padStart(2, "0");
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+
+        function dayStartMs(dateStr) {
+          if (!dateStr) return null;
+          const d = new Date(dateStr + "T00:00:00");
+          return Number.isNaN(d.getTime()) ? null : d.getTime();
+        }
+        function dayEndMs(dateStr) {
+          if (!dateStr) return null;
+          const d = new Date(dateStr + "T23:59:59.999");
+          return Number.isNaN(d.getTime()) ? null : d.getTime();
+        }
+
+        function filtered() {
+          const qn = normName(document.getElementById("qName").value);
+          const qs = document.getElementById("qStatus").value;
+          const from = dayStartMs(document.getElementById("qFrom").value);
+          const to = dayEndMs(document.getElementById("qTo").value);
+          return all
+            .filter((r) => {
+              if (qn && !normName(r.name).includes(qn)) return false;
+              if (qs && r.status !== qs) return false;
+              const ts = new Date(r.createdAt).getTime();
+              if (from != null && ts < from) return false;
+              if (to != null && ts > to) return false;
+              return true;
+            })
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+
+        function paged(rows) {
+          const size = parseInt(document.getElementById("pageSize").value, 10);
+          const total = rows.length;
+          const pages = Math.max(1, Math.ceil(total / size));
+          pageNo = Math.min(pageNo, pages);
+          const start = (pageNo - 1) * size;
+          return { total, pages, slice: rows.slice(start, start + size) };
+        }
+
+        function statusChip(status) {
+          if (status === "enabled") return '<span class="chip chip--success">启用</span>';
+          return '<span class="chip bg-[rgba(201,205,212,.25)] text-muted border border-[rgba(201,205,212,.55)]">禁用</span>';
+        }
+
+        function render() {
+          const tb = document.getElementById("tbody");
+          const rows = filtered();
+          const { total, pages, slice } = paged(rows);
+          document.getElementById("totalCount").textContent = String(total);
+          document.getElementById("pageNoBtn").textContent = String(pageNo);
+          document.getElementById("prevPage").disabled = pageNo <= 1;
+          document.getElementById("nextPage").disabled = pageNo >= pages;
+
+          if (!slice.length) {
+            tb.innerHTML = `<tr><td colspan="6" class="px-3 py-10 text-center text-muted text-[14px]">暂无数据</td></tr>`;
+            return;
+          }
+          tb.innerHTML = slice
+            .map((r) => {
+              const desc = r.desc ? escapeHtml(r.desc) : '<span class="text-muted">—</span>';
+              return `
+              <tr class="border-t border-[rgba(201,205,212,.6)]">
+                <td class="px-3 py-3 font-semibold">${escapeHtml(r.name)}</td>
+                <td class="px-3 py-3 max-w-[280px]"><div class="line-clamp-2">${desc}</div></td>
+                <td class="px-3 py-3">${escapeHtml(r.createdBy)}</td>
+                <td class="px-3 py-3 text-[13px] text-muted whitespace-nowrap">${escapeHtml(formatTime(r.createdAt))}</td>
+                <td class="px-3 py-3">${statusChip(r.status)}</td>
+                <td class="px-3 py-3 text-right space-x-2 whitespace-nowrap">
+                  <button type="button" class="text-primary font-semibold" data-act="edit" data-id="${escapeHtml(r.id)}">编辑</button>
+                  <button type="button" class="text-primary font-semibold" data-act="dl" data-id="${escapeHtml(r.id)}">下载脚本</button>
+                  <button type="button" class="text-[#F53F3F] font-semibold" data-act="del" data-id="${escapeHtml(r.id)}">删除</button>
+                </td>
+              </tr>`;
+            })
+            .join("");
+        }
+
+        function resetAddForm() {
+          document.getElementById("addName").value = "";
+          document.getElementById("addFile").value = "";
+          document.getElementById("addDesc").value = "";
+          document.getElementById("addStatus").value = "disabled";
+        }
+
+        document.getElementById("btnAdd").addEventListener("click", () => {
+          resetAddForm();
+          openModal("script-add");
+        });
+
+        document.getElementById("btnSearch").addEventListener("click", () => {
+          pageNo = 1;
+          render();
+        });
+        document.getElementById("btnReset").addEventListener("click", () => {
+          document.getElementById("qName").value = "";
+          document.getElementById("qStatus").value = "";
+          document.getElementById("qFrom").value = "";
+          document.getElementById("qTo").value = "";
+          pageNo = 1;
+          render();
+        });
+
+        document.getElementById("pageSize").addEventListener("change", () => {
+          pageNo = 1;
+          render();
+        });
+        document.getElementById("prevPage").addEventListener("click", () => {
+          pageNo = Math.max(1, pageNo - 1);
+          render();
+        });
+        document.getElementById("nextPage").addEventListener("click", () => {
+          pageNo = pageNo + 1;
+          render();
+        });
+
+        document.getElementById("btnAddSave").addEventListener("click", async () => {
+          const name = document.getElementById("addName").value.trim();
+          const file = document.getElementById("addFile").files && document.getElementById("addFile").files[0];
+          const desc = document.getElementById("addDesc").value.trim();
+          const status = /** @type {'enabled'|'disabled'} */ (document.getElementById("addStatus").value);
+          if (!name) {
+            toast("error", "校验失败", "请填写脚本名称");
+            return;
+          }
+          if (!file) {
+            toast("error", "校验失败", "请上传脚本文件");
+            return;
+          }
+          const ferr = validateFile(file);
+          if (ferr) {
+            toast("error", "文件校验失败", ferr);
+            return;
+          }
+          if (isDupName(name, null)) {
+            toast("error", "名称重复", "脚本名称不允许重复，请修改后重试");
+            return;
+          }
+          let dataUrl = "";
+          try {
+            dataUrl = await readFileAsDataURL(file);
+          } catch (e) {
+            toast("error", "上传失败", String(e && e.message ? e.message : e));
+            return;
+          }
+          const row = {
+            id: uid(),
+            name,
+            desc,
+            createdBy: "李雷",
+            createdAt: new Date().toISOString(),
+            status,
+            fileName: file.name,
+            dataUrl,
+          };
+          all.unshift(row);
+          try {
+            saveAll(all);
+          } catch (e) {
+            all.shift();
+            toast("error", "保存失败", "本地存储空间不足或数据过大，请缩小脚本文件后重试");
+            return;
+          }
+          closeModal("script-add");
+          pageNo = 1;
+          toast("success", "创建成功", "脚本已保存");
+          render();
+        });
+
+        document.getElementById("btnEditSave").addEventListener("click", async () => {
+          const id = document.getElementById("editId").value;
+          const name = document.getElementById("editName").value.trim();
+          const file = document.getElementById("editFile").files && document.getElementById("editFile").files[0];
+          const desc = document.getElementById("editDesc").value.trim();
+          const status = /** @type {'enabled'|'disabled'} */ (document.getElementById("editStatus").value);
+          const idx = all.findIndex((r) => r.id === id);
+          if (idx < 0) {
+            toast("error", "保存失败", "记录不存在");
+            return;
+          }
+          if (!name) {
+            toast("error", "校验失败", "请填写脚本名称");
+            return;
+          }
+          if (!file) {
+            toast("error", "校验失败", "请上传脚本文件");
+            return;
+          }
+          if (isDupName(name, id)) {
+            toast("error", "名称重复", "脚本名称不允许重复，请修改后重试");
+            return;
+          }
+          const ferr = validateFile(file);
+          if (ferr) {
+            toast("error", "文件校验失败", ferr);
+            return;
+          }
+          let nextDataUrl = "";
+          let nextFileName = "";
+          try {
+            nextDataUrl = await readFileAsDataURL(file);
+            nextFileName = file.name;
+          } catch (e) {
+            toast("error", "上传失败", String(e && e.message ? e.message : e));
+            return;
+          }
+          const prev = { ...all[idx] };
+          all[idx] = { ...all[idx], name, desc, status, dataUrl: nextDataUrl, fileName: nextFileName };
+          try {
+            saveAll(all);
+          } catch (e) {
+            all[idx] = prev;
+            toast("error", "保存失败", "本地存储空间不足或数据过大，请缩小脚本文件后重试");
+            return;
+          }
+          closeModal("script-edit");
+          document.getElementById("editFile").value = "";
+          toast("success", "保存成功", "脚本已更新");
+          render();
+        });
+
+        document.getElementById("tbody").addEventListener("click", (e) => {
+          const btn = e.target && e.target.closest && e.target.closest("button[data-act]");
+          if (!btn) return;
+          const id = btn.getAttribute("data-id");
+          const act = btn.getAttribute("data-act");
+          const row = all.find((r) => r.id === id);
+          if (!row) return;
+          if (act === "edit") {
+            document.getElementById("editId").value = row.id;
+            document.getElementById("editName").value = row.name;
+            document.getElementById("editDesc").value = row.desc || "";
+            document.getElementById("editStatus").value = row.status;
+            document.getElementById("editFile").value = "";
+            document.getElementById("editCurFile").textContent = row.fileName
+              ? "当前文件：" + row.fileName + "（保存时需重新选择文件以覆盖）"
+              : "当前文件：—";
+            openModal("script-edit");
+          }
+          if (act === "dl") {
+            if (!row.dataUrl || !row.fileName) {
+              toast("error", "无法下载", "该脚本没有可用的文件内容");
+              return;
+            }
+            const a = document.createElement("a");
+            a.href = row.dataUrl;
+            a.download = row.fileName;
+            a.rel = "noopener";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast("success", "下载已开始", row.fileName);
+          }
+          if (act === "del") {
+            document.getElementById("delId").value = row.id;
+            document.getElementById("delName").textContent = row.name;
+            openModal("script-del");
+          }
+        });
+
+        document.getElementById("btnDelConfirm").addEventListener("click", () => {
+          const id = document.getElementById("delId").value;
+          const before = all.length;
+          all = all.filter((r) => r.id !== id);
+          if (all.length === before) {
+            toast("error", "删除失败", "记录不存在");
+            closeModal("script-del");
+            return;
+          }
+          saveAll(all);
+          closeModal("script-del");
+          toast("success", "已删除", "脚本及关联文件已从列表移除");
+          render();
+        });
+
+        render();
+      })();
+    </script>
+  </body>
+</html>

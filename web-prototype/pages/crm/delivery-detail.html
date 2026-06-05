@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户管理 · 交付详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+              <i class="fa-solid fa-bars text-muted"></i>
+            </button>
+            <div>
+              <div class="text-[18px] font-semibold text-text leading-tight">交付详情</div>
+              <div class="text-[12px] text-muted">查看交付全维度信息（示例）</div>
+            </div>
+          </div>
+          <a class="h-9 px-3 rounded-lg bg-surface border border-[rgba(201,205,212,.7)] hover:bg-[rgba(245,247,250,.9)] text-[14px] font-semibold flex items-center" href="./deliveries.html">
+            <i class="fa-solid fa-arrow-left text-muted mr-2"></i>返回交付列表
+          </a>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">交付信息</div>
+              <div class="text-[12px] text-muted">ID：<span id="did">—</span></div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-12 gap-3">
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">客户名称</div>
+                <div class="font-semibold mt-1" id="dCustomer">—</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">合同编号 / 合同名称</div>
+                <div class="font-semibold mt-1" id="dContractNo">—</div>
+                <div class="text-[12px] text-muted mt-1" id="dContractName">—</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">交付时间</div>
+                <div class="font-semibold mt-1" id="dDeliveredAt">—</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">成交金额 / 验收结果</div>
+                <div class="font-semibold mt-1" id="dAmount">—</div>
+                <div class="text-[12px] text-muted mt-1" id="dAcceptance">—</div>
+              </div>
+              <div class="col-span-6 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">创建人 / 创建时间</div>
+                <div class="font-semibold mt-1" id="dCreator">—</div>
+                <div class="text-[12px] text-muted mt-1" id="dCreatedAt">—</div>
+              </div>
+              <div class="col-span-12 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">附件</div>
+                <div class="mt-2 space-y-2" id="dFiles">—</div>
+              </div>
+              <div class="col-span-12 p-3 rounded-xl bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]">
+                <div class="text-[12px] text-muted">备注</div>
+                <div class="mt-1 text-muted whitespace-pre-wrap" id="dRemark">—</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      function money(n) {
+        const v = Number(n || 0);
+        return v.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      const creators = [
+        { id: "E-001", name: "张敏" },
+        { id: "E-002", name: "李雷" },
+        { id: "E-003", name: "王芳" },
+      ];
+      const customers = [
+        { id: "C-0001", name: "苏州XX半导体设备有限公司", ownerId: "E-002" },
+        { id: "C-0004", name: "上海某某PCB有限公司", ownerId: "E-001" },
+        { id: "C-0005", name: "北京某某研究院", ownerId: "E-003" },
+      ];
+      const contracts = [
+        { id: "CT-1", customerId: "C-0001", no: "HT-2026-0001", name: "产线升级设备采购合同", amount: 120000 },
+        { id: "CT-2", customerId: "C-0004", no: "HT-2026-0002", name: "设备维保服务合同", amount: 68000.5 },
+        { id: "CT-3", customerId: "C-0005", no: "HT-2026-0003", name: "科研设备采购与安装合同", amount: 300000 },
+      ];
+      const deliveries = [
+        {
+          id: "D-1",
+          customerId: "C-0001",
+          contractId: "CT-1",
+          deliveredAt: "2026-04-13 10:30",
+          amount: 120000,
+          acceptance: "验收中",
+          files: [{ name: "交付清单.pdf", size: 420 * 1024 }, { name: "验收计划.xlsx", size: 260 * 1024 }],
+          remark: "现场安装完成，等待客户验收。",
+          createdById: "E-002",
+          createdAt: "2026-04-13 11:00",
+        },
+        {
+          id: "D-2",
+          customerId: "C-0004",
+          contractId: "CT-2",
+          deliveredAt: "2026-04-11 15:20",
+          amount: 68000.5,
+          acceptance: "已验收",
+          files: [{ name: "服务报告.docx", size: 180 * 1024 }],
+          remark: "",
+          createdById: "E-001",
+          createdAt: "2026-04-11 16:05",
+        },
+        {
+          id: "D-3",
+          customerId: "C-0005",
+          contractId: "CT-3",
+          deliveredAt: "2026-04-12 09:10",
+          amount: 300000,
+          acceptance: "未验收",
+          files: [],
+          remark: "待补充附件。",
+          createdById: "E-003",
+          createdAt: "2026-04-12 10:00",
+        },
+      ];
+
+      const getCustomerName = (id) => customers.find((c) => c.id === id)?.name || "—";
+      const getCreatorName = (id) => creators.find((e) => e.id === id)?.name || "—";
+      const getContract = (id) => contracts.find((c) => c.id === id) || null;
+
+      const url = new URL(location.href);
+      const id = url.searchParams.get("id") || "";
+      document.getElementById("did").textContent = id || "—";
+
+      const row = deliveries.find((x) => x.id === id) || null;
+      if (!row) {
+        document.getElementById("dCustomer").textContent = "未找到该交付记录";
+      } else {
+        const ct = getContract(row.contractId);
+        document.getElementById("dCustomer").textContent = getCustomerName(row.customerId);
+        document.getElementById("dContractNo").textContent = ct?.no || "—";
+        document.getElementById("dContractName").textContent = ct?.name || "—";
+        document.getElementById("dDeliveredAt").textContent = row.deliveredAt;
+        document.getElementById("dAmount").textContent = `¥ ${money(row.amount)}`;
+        document.getElementById("dAcceptance").textContent = row.acceptance || "—";
+        document.getElementById("dCreator").textContent = getCreatorName(row.createdById);
+        document.getElementById("dCreatedAt").textContent = row.createdAt;
+        document.getElementById("dRemark").textContent = row.remark || "—";
+        const filesEl = document.getElementById("dFiles");
+        if (!row.files?.length) {
+          filesEl.innerHTML = `<span class="text-muted">—</span>`;
+        } else {
+          filesEl.innerHTML = row.files
+            .map(
+              (f) => `
+                <div class="flex items-center justify-between gap-3 rounded-xl border border-[rgba(201,205,212,.6)] bg-surface px-3 py-2">
+                  <div class="min-w-0">
+                    <div class="font-semibold text-primary inline-flex items-center gap-2">
+                      <i class="fa-solid fa-paperclip text-muted"></i>${escapeHtml(f.name)}
+                    </div>
+                    <div class="text-[12px] text-muted mt-0.5">${Math.round((f.size || 0) / 1024)} KB（原型：下载未接后端）</div>
+                  </div>
+                  <button class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] font-semibold" type="button">下载</button>
+                </div>
+              `,
+            )
+            .join("");
+        }
+      }
+    </script>
+  </body>
+</html>
+

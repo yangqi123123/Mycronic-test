@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>系统管理 · 登录日志</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="text-[16px] font-semibold">搜索查询</div>
+            <div class="mt-3 grid grid-cols-12 gap-3">
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">账号 / 姓名</div>
+                <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-2">
+                <div class="text-[12px] text-muted mb-1">结果</div>
+                <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+                  <option>全部</option>
+                  <option>成功</option>
+                  <option>失败</option>
+                </select>
+              </div>
+              <div class="col-span-3">
+                <div class="text-[12px] text-muted mb-1">IP</div>
+                <input class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-2">
+                <div class="text-[12px] text-muted mb-1">方式</div>
+                <select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.9)] px-3 text-[14px]">
+                  <option>全部</option>
+                  <option>密码</option>
+                  <option>SSO</option>
+                </select>
+              </div>
+              <div class="col-span-2 flex items-end gap-2">
+                <button class="w-full h-9 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+                <button class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">登录记录</div>
+              <button type="button" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold shrink-0" data-simulate-loading>
+                <i class="fa-solid fa-download mr-2"></i>导出
+              </button>
+            </div>
+            <div class="mt-3 overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">时间</th>
+                    <th class="text-left px-3 py-2">账号</th>
+                    <th class="text-left px-3 py-2">姓名</th>
+                    <th class="text-left px-3 py-2">IP</th>
+                    <th class="text-left px-3 py-2">位置</th>
+                    <th class="text-left px-3 py-2">方式</th>
+                    <th class="text-left px-3 py-2">结果</th>
+                    <th class="text-left px-3 py-2">风控</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3 text-[13px]">2026-04-14 08:59:12</td>
+                    <td class="px-3 py-3">zhangsan</td>
+                    <td class="px-3 py-3">张三</td>
+                    <td class="px-3 py-3 text-muted text-[13px]">10.8.0.55</td>
+                    <td class="px-3 py-3 text-[13px]">上海</td>
+                    <td class="px-3 py-3">密码</td>
+                    <td class="px-3 py-3"><span class="chip chip--success">成功</span></td>
+                    <td class="px-3 py-3"><span class="chip">—</span></td>
+                    <td class="px-3 py-3 text-right whitespace-nowrap">
+                      <button class="text-primary font-semibold" data-open-drawer="login-detail">详情</button>
+                      <button class="text-[#F53F3F] font-semibold ml-2" data-open-modal="kick">强退</button>
+                    </td>
+                  </tr>
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3 text-[13px]">2026-04-14 08:12:44</td>
+                    <td class="px-3 py-3">guest</td>
+                    <td class="px-3 py-3">—</td>
+                    <td class="px-3 py-3 text-muted text-[13px]">45.33.x.x</td>
+                    <td class="px-3 py-3 text-[13px]">境外</td>
+                    <td class="px-3 py-3">密码</td>
+                    <td class="px-3 py-3"><span class="chip chip--danger">失败</span></td>
+                    <td class="px-3 py-3"><span class="chip chip--warning">暴力破解</span></td>
+                    <td class="px-3 py-3 text-right">
+                      <button class="text-primary font-semibold" data-open-drawer="login-detail">详情</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="overlay" data-overlay="login-detail" data-open="false"></div>
+    <div class="drawer" data-drawer="login-detail" data-open="false">
+      <div class="h-14 px-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">登录详情</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="login-detail"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4 space-y-2 text-[14px]" style="max-height: calc(100vh - 56px); overflow-y: auto">
+        <div><span class="text-muted">User-Agent：</span>Mozilla/5.0 (Windows NT 10.0) Chrome/123</div>
+        <div><span class="text-muted">设备指纹：</span>fp-a1b2c3（示例）</div>
+        <div><span class="text-muted">会话 ID：</span>sess-998877</div>
+        <div><span class="text-muted">失败原因：</span>—</div>
+      </div>
+    </div>
+
+    <div class="overlay" data-overlay="kick" data-open="false"></div>
+    <div class="modal" data-modal="kick" data-open="false">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">强制下线</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="kick"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="p-4">
+        <p class="text-[14px] text-muted">将吊销该用户全部活跃会话，并写入操作日志。</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="kick">取消</button>
+          <button class="h-9 px-3 rounded-lg bg-[#F53F3F] text-white text-[14px] font-semibold" data-close="kick" data-simulate-loading>确认强退</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>消息列表</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]" title="折叠侧边栏" data-sidebar-toggle>
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[16px] font-semibold">搜索查询</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnQuery" type="button" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold">搜索</button>
+                <button id="btnReset" type="button" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-12 gap-3 items-end">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <div class="text-[12px] text-muted mb-1">消息标题</div>
+                <input id="qTitle" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="模糊搜索" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <div class="text-[12px] text-muted mb-1">创建时间（起）</div>
+                <input id="qStart" type="date" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+              <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+                <div class="text-[12px] text-muted mb-1">创建时间（止）</div>
+                <input id="qEnd" type="date" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="text-[16px] font-semibold">消息列表</div>
+              <button id="btnReadAll" type="button" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold shrink-0">
+                全部已读
+              </button>
+            </div>
+            <div class="overflow-hidden rounded-xl border border-[rgba(201,205,212,.6)]">
+              <table class="w-full table">
+                <thead class="bg-[rgba(245,247,250,.9)]">
+                  <tr>
+                    <th class="text-left px-3 py-2">阅读状态</th>
+                    <th class="text-left px-3 py-2">消息标题</th>
+                    <th class="text-left px-3 py-2">消息内容</th>
+                    <th class="text-left px-3 py-2">创建时间</th>
+                    <th class="text-right px-3 py-2">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody" class="bg-surface"></tbody>
+              </table>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between">
+              <div class="text-[12px] text-muted">共 <span id="total" class="font-semibold text-text">0</span> 条</div>
+              <div class="flex items-center gap-2">
+                <button id="prev" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] font-semibold">上一页</button>
+                <div class="text-[13px] text-muted">第 <span id="page" class="font-semibold text-text">1</span> / <span id="pages" class="font-semibold text-text">1</span> 页</div>
+                <button id="next" class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] font-semibold">下一页</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 查看弹窗（与首页提醒保持一致） -->
+    <div id="msgOverlay" class="fixed inset-0 z-[100] bg-black/35 hidden items-center justify-center p-4" style="display:none">
+      <div class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.7)] w-full max-w-[520px] overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="msgTitle">
+        <div class="px-4 py-3 border-b border-[rgba(201,205,212,.6)] flex items-center justify-between">
+          <div id="msgTitle" class="text-[16px] font-semibold pr-2"></div>
+          <button type="button" id="msgX" class="w-8 h-8 rounded-lg border border-[rgba(201,205,212,.6)] hover:bg-[rgba(245,247,250,.9)] shrink-0" aria-label="关闭">
+            <i class="fa-solid fa-xmark text-muted"></i>
+          </button>
+        </div>
+        <div class="px-4 py-3">
+          <div id="msgBody" class="text-[14px] text-text leading-relaxed"></div>
+          <div id="msgTime" class="text-[12px] text-muted mt-3"></div>
+        </div>
+        <div class="px-4 py-3 border-t border-[rgba(201,205,212,.6)] flex justify-end bg-[rgba(245,247,250,.5)]">
+          <button type="button" id="msgOk" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script>
+      (function () {
+        const PAGE_SIZE = 10;
+        let page = 1;
+        let inited = false;
+
+        function getStore() {
+          return window.FollowReminderStore;
+        }
+
+        function escapeHtml(s) {
+          return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        function messagesAll() {
+          const Store = getStore();
+          return Store ? Store.listMessages() : [];
+        }
+
+        function applyFilters(list) {
+          const kw = (document.getElementById("qTitle").value || "").trim().toLowerCase();
+          const s = document.getElementById("qStart").value;
+          const e = document.getElementById("qEnd").value;
+          return list.filter((m) => {
+            if (kw && !m.title.toLowerCase().includes(kw)) return false;
+            // createdAt is formatted; compare by original date fields roughly
+            const d = m.createdAt.slice(0, 10);
+            if (s && d < s) return false;
+            if (e && d > e) return false;
+            return true;
+          });
+        }
+
+        function markRead(id) {
+          const Store = getStore();
+          if (!Store) return;
+          const meta = Store.loadMeta();
+          if (!meta.readIds.includes(id)) {
+            meta.readIds.push(id);
+            Store.saveMeta(meta);
+          }
+        }
+
+        const overlay = document.getElementById("msgOverlay");
+        const msgTitle = document.getElementById("msgTitle");
+        const msgBody = document.getElementById("msgBody");
+        const msgTime = document.getElementById("msgTime");
+        const msgOk = document.getElementById("msgOk");
+        const msgX = document.getElementById("msgX");
+        let currentId = "";
+
+        function openModal(m) {
+          currentId = m.id;
+          msgTitle.textContent = m.title;
+          msgBody.textContent = m.content;
+          msgTime.textContent = "创建时间：" + m.createdAt;
+          overlay.classList.remove("hidden");
+          overlay.style.display = "flex";
+        }
+
+        function closeModal() {
+          overlay.style.display = "none";
+          overlay.classList.add("hidden");
+          currentId = "";
+        }
+
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closeModal();
+        });
+        msgX.addEventListener("click", closeModal);
+        msgOk.addEventListener("click", () => {
+          if (currentId) markRead(currentId);
+          if (window.__frBellRefresh) window.__frBellRefresh();
+          closeModal();
+          render();
+        });
+
+        function render() {
+          const raw = messagesAll();
+          const list = applyFilters(raw);
+          const total = list.length;
+          const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+          page = Math.min(page, pages);
+          page = Math.max(page, 1);
+
+          document.getElementById("total").textContent = String(total);
+          document.getElementById("page").textContent = String(page);
+          document.getElementById("pages").textContent = String(pages);
+
+          const start = (page - 1) * PAGE_SIZE;
+          const rows = list.slice(start, start + PAGE_SIZE);
+          const tbody = document.getElementById("tbody");
+
+          if (!rows.length) {
+            tbody.innerHTML = `<tr class="border-t border-[rgba(201,205,212,.6)]"><td class="px-3 py-6 text-center text-[13px] text-muted" colspan="5">暂无消息</td></tr>`;
+          } else {
+            tbody.innerHTML = rows
+              .map((m) => {
+                const st = m.read ? `<span class="chip">已读</span>` : `<span class="chip chip--warning">未读</span>`;
+                return `
+                  <tr class="border-t border-[rgba(201,205,212,.6)]">
+                    <td class="px-3 py-3">${st}</td>
+                    <td class="px-3 py-3 font-semibold">${escapeHtml(m.title)}</td>
+                    <td class="px-3 py-3 text-muted">${escapeHtml(m.content)}</td>
+                    <td class="px-3 py-3 text-muted">${escapeHtml(m.createdAt)}</td>
+                    <td class="px-3 py-3 text-right">
+                      <button class="text-primary font-semibold btnView" data-id="${escapeHtml(m.id)}">查看</button>
+                    </td>
+                  </tr>
+                `;
+              })
+              .join("");
+
+            tbody.querySelectorAll(".btnView").forEach((btn) => {
+              btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-id");
+                const m = messagesAll().find((x) => x.id === id);
+                if (m) openModal(m);
+              });
+            });
+          }
+
+          document.getElementById("prev").disabled = page <= 1;
+          document.getElementById("next").disabled = page >= pages;
+        }
+
+        function setDefaultRange30d() {
+          const end = new Date();
+          const start = new Date();
+          start.setDate(end.getDate() - 30);
+          const fmt = (d) => d.toISOString().slice(0, 10);
+          document.getElementById("qStart").value = fmt(start);
+          document.getElementById("qEnd").value = fmt(end);
+        }
+
+        document.getElementById("btnQuery").addEventListener("click", () => {
+          page = 1;
+          render();
+        });
+        document.getElementById("btnReset").addEventListener("click", () => {
+          document.getElementById("qTitle").value = "";
+          setDefaultRange30d();
+          page = 1;
+          render();
+        });
+        document.getElementById("prev").addEventListener("click", () => {
+          page -= 1;
+          render();
+        });
+        document.getElementById("next").addEventListener("click", () => {
+          page += 1;
+          render();
+        });
+
+        document.getElementById("btnReadAll").addEventListener("click", () => {
+          const Store = getStore();
+          if (!Store) return;
+          const meta = Store.loadMeta();
+          messagesAll().forEach((m) => {
+            if (!meta.readIds.includes(m.id)) meta.readIds.push(m.id);
+          });
+          Store.saveMeta(meta);
+          if (window.__frBellRefresh) window.__frBellRefresh();
+          render();
+        });
+
+        function initWhenReady() {
+          if (inited) return;
+          const Store = getStore();
+          if (!Store || typeof Store.listMessages !== "function") return;
+          inited = true;
+          setDefaultRange30d();
+          render();
+        }
+
+        // Try now; if chain loads later, init on ready event.
+        initWhenReady();
+        window.addEventListener("follow-reminder:ready", initWhenReady);
+      })();
+    </script>
+  </body>
+</html>
+
