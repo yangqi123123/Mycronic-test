@@ -189,12 +189,8 @@
         <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="cust-create"><i class="fa-solid fa-xmark text-muted"></i></button>
       </div>
       <div class="p-4 space-y-4 modal-cust-create__scroll">
-        <!-- 基础信息区（双列布局） -->
+        <!-- 字段顺序对齐 360 档案 · 客户信息（左列 | 右列逐行配对） -->
         <div class="grid grid-cols-12 gap-4">
-          <div class="col-span-12">
-            <div class="text-[14px] font-semibold">基础信息</div>
-          </div>
-
           <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">客户名称 <span class="text-[#F53F3F]">*</span></div>
             <input id="cName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入客户名称" />
@@ -204,26 +200,6 @@
             <div class="text-[12px] text-muted mb-1">统一社会信用代码</div>
             <input id="cUscc" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入统一社会信用代码（18位）" />
             <div id="errCUscc" class="hidden text-[12px] text-[#F53F3F] mt-1">统一社会信用代码格式不正确</div>
-          </div>
-
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">联系人 <span class="text-[#F53F3F]">*</span></div>
-            <input id="cContactName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入联系人姓名" />
-            <div id="errCContactName" class="hidden text-[12px] text-[#F53F3F] mt-1">联系人不能为空</div>
-          </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">联系方式 <span class="text-[#F53F3F]">*</span></div>
-            <input id="cContact" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入手机号" />
-            <div id="errCContact" class="hidden text-[12px] text-[#F53F3F] mt-1">请输入正确的手机号（11位）</div>
-          </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">客户等级</div>
-            <select id="cGrade" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C" selected>C</option>
-              <option value="D">D</option>
-            </select>
           </div>
 
           <div class="col-span-6">
@@ -240,14 +216,19 @@
             </select>
           </div>
           <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">行业</div>
-            <select id="cIndustry" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-              <option value="">请选择</option>
-              <option>半导体</option>
-              <option>电子制造</option>
-              <option>PCB</option>
-              <option>科研院所</option>
-            </select>
+            <div class="text-[12px] text-muted mb-1">联系人 <span class="text-[#F53F3F]">*</span></div>
+            <input id="cContactName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入联系人姓名" />
+            <div id="errCContactName" class="hidden text-[12px] text-[#F53F3F] mt-1">联系人不能为空</div>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">项目名称</div>
+            <input id="cProjectName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入项目名称" />
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">联系方式 <span class="text-[#F53F3F]">*</span></div>
+            <input id="cContact" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入手机号" />
+            <div id="errCContact" class="hidden text-[12px] text-[#F53F3F] mt-1">请输入正确的手机号（11位）</div>
           </div>
 
           <div class="col-span-6">
@@ -255,88 +236,101 @@
             <input id="cLegalRep" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入法定代表人" />
           </div>
           <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户等级</div>
+            <select id="cGrade" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C" selected>C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">省市区</div>
+            <div class="grid grid-cols-3 gap-2">
+              <select id="cProv" class="h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+              <select id="cCity" class="h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+              <select id="cDist" class="h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+            </div>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">行业类型</div>
+            <select id="cIndustry" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="">请选择</option>
+              <option>半导体</option>
+              <option>SMT/电子制造</option>
+              <option>PCB</option>
+              <option>科研院所</option>
+            </select>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">实缴资本</div>
+            <input id="cPaidCapital" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="文本/数字（非必填）" />
+          </div>
+          <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">成立日期</div>
             <input id="cEstablishedAt" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
           </div>
 
           <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">省市区（三级联动）</div>
-            <div class="grid grid-cols-12 gap-2">
-              <select id="cProv" class="col-span-4 h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
-              <select id="cCity" class="col-span-4 h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
-              <select id="cDist" class="col-span-4 h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]"></select>
-            </div>
+            <div class="text-[12px] text-muted mb-1">组织机构代码</div>
+            <input id="cOrgCode" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入组织机构代码" />
           </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">注册地址</div>
-            <input id="cRegAddr" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入注册地址" />
-          </div>
-
           <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">注册资本</div>
             <input id="cRegCapital" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="文本/数字（非必填）" />
           </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">实缴资本</div>
-            <input id="cPaidCapital" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="文本/数字（非必填）" />
-          </div>
 
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">工商注册号</div>
-            <input id="cRegNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入工商注册号" />
-          </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">组织机构代码</div>
-            <input id="cOrgCode" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入组织机构代码" />
-          </div>
-
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">纳税人识别号</div>
-            <input id="cTaxId" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入纳税人识别号" />
-          </div>
           <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">营业期限</div>
             <input id="cBizTerm" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="文本/日期区间（非必填）" />
           </div>
-
           <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">登记机关</div>
-            <input id="cRegAuthority" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入登记机关" />
+            <div class="text-[12px] text-muted mb-1">工商注册号</div>
+            <input id="cRegNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入工商注册号" />
           </div>
+
           <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">参保人数</div>
             <input id="cInsuredCount" type="number" min="0" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="数字（非必填）" />
           </div>
-
           <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">曾用名</div>
-            <input id="cFormerName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入曾用名" />
+            <div class="text-[12px] text-muted mb-1">纳税人识别号</div>
+            <input id="cTaxId" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入纳税人识别号" />
           </div>
+
           <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">核准日期</div>
             <input id="cApproveAt" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
           </div>
-        </div>
-
-        <!-- 扩展信息区（单列布局） -->
-        <div class="space-y-3">
-          <div class="text-[14px] font-semibold">扩展信息</div>
-          <div>
-            <div class="text-[12px] text-muted mb-1">经营范围</div>
-            <textarea id="cBizScope" rows="4" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="可选，输入经营范围"></textarea>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">登记机关</div>
+            <input id="cRegAuthority" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入登记机关" />
           </div>
-          <div>
-            <div class="flex items-center justify-between">
-              <div class="text-[12px] text-muted mb-1">关键需求摘要 <span class="text-muted">（最多240字）</span></div>
-              <div class="text-[12px] text-muted" id="cNeedSummaryCount">还可输入 240 字</div>
-            </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">经营范围</div>
+            <textarea id="cBizScope" rows="4" maxlength="240" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="最多输入 240 字"></textarea>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">曾用名</div>
+            <input id="cFormerName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入曾用名" />
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">关键需求摘要</div>
             <textarea
               id="cNeedSummary"
-              rows="3"
+              rows="4"
               maxlength="240"
               class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none"
-              placeholder="可选，描述关键需求、意向产品、交付周期等"
+              placeholder="最多输入 240 字"
             ></textarea>
+          </div>
+          <div class="col-span-6">
+            <div class="text-[12px] text-muted mb-1">注册地址</div>
+            <textarea id="cRegAddr" rows="4" maxlength="240" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="请输入注册地址"></textarea>
           </div>
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
@@ -1086,17 +1080,6 @@
       });
 
       // ===== 新增客户 =====
-      // 关键需求摘要字数提示（最多240）
-      const cSummary = document.getElementById("cNeedSummary");
-      const cSummaryCount = document.getElementById("cNeedSummaryCount");
-      function updateSummaryCount() {
-        const max = 240;
-        const len = (cSummary.value || "").length;
-        cSummaryCount.textContent = `还可输入 ${Math.max(0, max - len)} 字`;
-      }
-      cSummary.addEventListener("input", updateSummaryCount);
-      updateSummaryCount();
-
       function setFieldError(inputEl, errEl, on) {
         if (on) {
           inputEl.classList.add("border-[#F53F3F]");
@@ -1161,6 +1144,7 @@
               contactName,
               contactPhone: contact,
               source: (document.getElementById("cSource").value || "").trim() || "手工新增",
+              projectName: (document.getElementById("cProjectName").value || "").trim(),
               industry: (document.getElementById("cIndustry").value || "").trim(),
               createdAt: "2026-04-14",
               regionOwner: currentUser.name,
@@ -1200,6 +1184,7 @@
           document.getElementById("cContact").value = "";
           document.getElementById("cGrade").value = "C";
           document.getElementById("cSource").value = "手工新增";
+          document.getElementById("cProjectName").value = "";
           document.getElementById("cIndustry").value = "";
           document.getElementById("cLegalRep").value = "";
           document.getElementById("cEstablishedAt").value = "";
@@ -1216,7 +1201,6 @@
           document.getElementById("cApproveAt").value = "";
           document.getElementById("cBizScope").value = "";
           document.getElementById("cNeedSummary").value = "";
-          updateSummaryCount();
           document.getElementById("cProv").value = "";
           fillSelect(document.getElementById("cCity"), [], "城市");
           fillSelect(document.getElementById("cDist"), [], "县区");
