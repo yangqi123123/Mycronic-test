@@ -192,81 +192,128 @@
       </main>
     </div>
 
-    <!-- 补全字段 -->
+    <!-- 补全字段（样式对齐「新增跟进记录」） -->
     <div class="overlay" data-overlay="edit" data-open="false"></div>
-    <div class="modal" data-modal="edit" data-open="false" style="max-width: 980px; width: min(980px, 96vw);">
+    <div class="modal" data-modal="edit" data-open="false" style="max-width: 1180px; width: min(1180px, 96vw);">
       <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
         <div class="text-[16px] font-semibold">补全字段</div>
-        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="edit"><i class="fa-solid fa-xmark text-muted"></i></button>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="edit" title="关闭"><i class="fa-solid fa-xmark text-muted"></i></button>
       </div>
-      <div class="p-6 space-y-4 max-h-[min(78vh,720px)] overflow-y-auto">
+      <div class="p-4 space-y-4 max-h-[min(82vh,780px)] overflow-y-auto">
         <div class="grid grid-cols-12 gap-4">
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">客户名称</div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户名称 <span class="text-[#F53F3F]">*</span></div>
             <input id="fName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
           </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">联系方式</div>
-            <input id="fContact" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
-          </div>
-          <div class="col-span-6">
+          <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">统一社会信用代码</div>
             <input id="fUscc" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
           </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">项目名称</div>
-            <input id="fProjectName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
-          </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">项目编号</div>
-            <input id="fProjectNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
-          </div>
-          <div class="col-span-6">
-            <div class="text-[12px] text-muted mb-1">数据来源</div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户来源</div>
             <select id="fSource" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-              <option>公开工商数据</option>
-              <option>行业名录</option>
-              <option>政府科研数据</option>
-              <option>招标采购</option>
-              <option>垂直平台数据</option>
-              <option>企业自媒体数据</option>
-              <option>展会活动</option>
+              <option value="">请选择</option>
             </select>
           </div>
-          <div class="col-span-6">
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">联系人 <span class="text-[#F53F3F]">*</span></div>
+            <input id="fContactName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">项目名称</div>
+            <input id="fProjectName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入项目名称" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">联系方式 <span class="text-[#F53F3F]">*</span></div>
+            <input id="fContact" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">法定代表人</div>
+            <input id="fLegalPerson" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">客户等级</div>
+            <select id="fGrade" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">省市区</div>
+            <div class="grid grid-cols-3 gap-2">
+              <select id="fProv" class="h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+              <select id="fCity" class="h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+              <select id="fCounty" class="h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]"></select>
+            </div>
+          </div>
+          <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">行业类型</div>
             <select id="fIndustry" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-              <option>SMT/电子制造</option>
-              <option>PCB</option>
-              <option>半导体</option>
-              <option>科研院所</option>
+              <option value="">请选择</option>
             </select>
           </div>
-          <div class="col-span-4">
-            <div class="text-[12px] text-muted mb-1">省份</div>
-            <input id="fProv" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">实缴资本</div>
+            <input id="fPaidInCapital" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
           </div>
-          <div class="col-span-4">
-            <div class="text-[12px] text-muted mb-1">城市</div>
-            <input id="fCity" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">成立日期</div>
+            <input id="fEstablishedAt" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-surface" />
           </div>
-          <div class="col-span-4">
-            <div class="text-[12px] text-muted mb-1">县区</div>
-            <input id="fCounty" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">组织机构代码</div>
+            <input id="fOrgCode" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
           </div>
-          <div class="col-span-12">
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">注册资本</div>
+            <input id="fRegisteredCapital" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">营业期限</div>
+            <input id="fBusinessTerm" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">工商注册号</div>
+            <input id="fRegNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">参保人数</div>
+            <input id="fInsuredCount" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">纳税人识别号</div>
+            <input id="fTaxNo" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">核准日期</div>
+            <input id="fApprovedAt" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-surface" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">登记机关</div>
+            <input id="fRegAuthority" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">曾用名</div>
+            <input id="fFormerName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">注册地址</div>
+            <textarea id="fRegisteredAddress" rows="3" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="请输入注册地址"></textarea>
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">经营范围</div>
+            <textarea id="fScope" maxlength="240" rows="4" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="最多输入 240 字"></textarea>
+          </div>
+          <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">关键需求摘要</div>
-            <textarea
-              id="fNeedSummary"
-              maxlength="240"
-              class="w-full min-h-[84px] rounded-xl border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] bg-surface"
-              placeholder="最多输入 240 字"
-            ></textarea>
+            <textarea id="fNeedSummary" maxlength="240" rows="4" class="w-full rounded-lg border border-[rgba(201,205,212,.7)] px-3 py-2 text-[14px] resize-none" placeholder="最多输入 240 字"></textarea>
           </div>
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t border-[rgba(201,205,212,.6)]">
           <button class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] text-[14px] font-semibold" data-close="edit">取消</button>
-          <button id="btnSaveEdit" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">保存</button>
+          <button id="btnSaveEdit" class="h-9 px-4 rounded-lg bg-primary text-white text-[14px] font-semibold">确认</button>
         </div>
       </div>
     </div>
@@ -420,6 +467,7 @@
     <div class="toast-wrap" id="toasts"></div>
 
     <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/components/customer-form-fields.js"></script>
     <script src="../../assets/app.js"></script>
     <script>
       // ----- utilities -----
@@ -735,24 +783,62 @@
         bindRowActions();
       }
 
-      // ----- edit -----
+      // ----- edit（字段与 360 客户信息一致） -----
       let editingId = null;
+      function blankIfMissing(v) {
+        const s = String(v ?? "").trim();
+        return !s || s === "（未抓取）" || s === "—" ? "" : s;
+      }
+      function val(id) {
+        const el = document.getElementById(id);
+        return el ? String(el.value || "").trim() : "";
+      }
       function openEdit(id) {
         const row = leads.find((x) => x.id === id);
         if (!row) return;
         editingId = id;
-        document.getElementById("fName").value = row.name === "（未抓取）" ? "" : row.name;
-        document.getElementById("fContact").value = row.contact === "（未抓取）" ? "" : row.contact;
-        document.getElementById("fUscc").value = row.uscc || "";
-        const ns = document.getElementById("fNeedSummary");
-        if (ns) ns.value = String(row.needSummary || "").slice(0, 240);
-        document.getElementById("fProjectName").value = row.projectName || "";
-        document.getElementById("fProjectNo").value = row.projectNo || "";
-        document.getElementById("fSource").value = row.source;
-        document.getElementById("fIndustry").value = row.industry;
-        document.getElementById("fProv").value = row.prov || "";
-        document.getElementById("fCity").value = row.city || "";
-        document.getElementById("fCounty").value = row.county || "";
+        document.getElementById("fName").value = blankIfMissing(row.name);
+        const srcSel = document.getElementById("fSource");
+        const indSel = document.getElementById("fIndustry");
+        const FF = window.CustomerFormFields;
+        if (FF && srcSel) {
+          srcSel.innerHTML = FF.buildSelectOptions(FF.CUSTOMER_SOURCES, blankIfMissing(row.source), "请选择");
+        } else if (srcSel) {
+          srcSel.value = blankIfMissing(row.source);
+        }
+        if (FF && indSel) {
+          indSel.innerHTML = FF.buildSelectOptions(FF.INDUSTRY_TYPES, blankIfMissing(row.industry), "请选择");
+        } else if (indSel) {
+          indSel.value = blankIfMissing(row.industry);
+        }
+        document.getElementById("fProjectName").value = blankIfMissing(row.projectName);
+        document.getElementById("fLegalPerson").value = blankIfMissing(row.legalPerson);
+        if (FF) {
+          FF.initRegionCascade(document.getElementById("fProv"), document.getElementById("fCity"), document.getElementById("fCounty"), {
+            prov: blankIfMissing(row.prov),
+            city: blankIfMissing(row.city),
+            dist: blankIfMissing(row.county),
+          });
+        }
+        document.getElementById("fPaidInCapital").value = blankIfMissing(row.paidInCapital);
+        document.getElementById("fOrgCode").value = blankIfMissing(row.orgCode);
+        document.getElementById("fBusinessTerm").value = blankIfMissing(row.businessTerm);
+        document.getElementById("fInsuredCount").value = blankIfMissing(row.insuredCount);
+        document.getElementById("fApprovedAt").value = blankIfMissing(row.approvedAt);
+        document.getElementById("fScope").value = blankIfMissing(row.scope);
+        document.getElementById("fNeedSummary").value = String(row.needSummary || "").slice(0, 240);
+        document.getElementById("fUscc").value = blankIfMissing(row.uscc);
+        document.getElementById("fContactName").value = blankIfMissing(row.contactName);
+        document.getElementById("fContact").value = blankIfMissing(row.contact);
+        document.getElementById("fGrade").value = row.grade || "D";
+        document.getElementById("fIndustry").value = blankIfMissing(row.industry);
+        document.getElementById("fEstablishedAt").value = blankIfMissing(row.establishedAt);
+        document.getElementById("fRegisteredCapital").value = blankIfMissing(row.registeredCapital);
+        document.getElementById("fRegNo").value = blankIfMissing(row.regNo);
+        document.getElementById("fTaxNo").value = blankIfMissing(row.taxNo);
+        document.getElementById("fRegAuthority").value = blankIfMissing(row.regAuthority);
+        document.getElementById("fFormerName").value = blankIfMissing(row.formerName);
+        document.getElementById("fRegisteredAddress").value = blankIfMissing(row.registeredAddress);
         openModal("edit");
       }
 
@@ -760,18 +846,38 @@
         if (!editingId) return;
         const row = leads.find((x) => x.id === editingId);
         if (!row) return;
-        row.name = document.getElementById("fName").value.trim() || "（未抓取）";
-        row.contact = document.getElementById("fContact").value.trim() || "（未抓取）";
-        row.uscc = document.getElementById("fUscc").value.trim();
-        const ns = document.getElementById("fNeedSummary");
-        row.needSummary = (ns ? String(ns.value || "") : "").trim().slice(0, 240);
-        row.projectName = document.getElementById("fProjectName").value.trim();
-        row.projectNo = document.getElementById("fProjectNo").value.trim();
-        row.source = document.getElementById("fSource").value;
-        row.industry = document.getElementById("fIndustry").value;
-        row.prov = document.getElementById("fProv").value.trim();
-        row.city = document.getElementById("fCity").value.trim();
-        row.county = document.getElementById("fCounty").value.trim();
+        const name = val("fName");
+        const contactName = val("fContactName");
+        const contact = val("fContact");
+        if (!name) return toast("error", "无法保存", "请填写客户名称");
+        if (!contactName) return toast("error", "无法保存", "请填写联系人");
+        if (!contact) return toast("error", "无法保存", "请填写联系方式");
+        row.name = name;
+        row.source = val("fSource");
+        row.projectName = val("fProjectName");
+        row.legalPerson = val("fLegalPerson");
+        row.prov = val("fProv");
+        row.city = val("fCity");
+        row.county = val("fCounty");
+        row.paidInCapital = val("fPaidInCapital");
+        row.orgCode = val("fOrgCode");
+        row.businessTerm = val("fBusinessTerm");
+        row.insuredCount = val("fInsuredCount");
+        row.approvedAt = val("fApprovedAt");
+        row.scope = val("fScope").slice(0, 240);
+        row.needSummary = val("fNeedSummary").slice(0, 240);
+        row.uscc = val("fUscc");
+        row.contactName = contactName;
+        row.contact = contact;
+        row.grade = val("fGrade") || "D";
+        row.industry = val("fIndustry");
+        row.establishedAt = val("fEstablishedAt");
+        row.registeredCapital = val("fRegisteredCapital");
+        row.regNo = val("fRegNo");
+        row.taxNo = val("fTaxNo");
+        row.regAuthority = val("fRegAuthority");
+        row.formerName = val("fFormerName");
+        row.registeredAddress = val("fRegisteredAddress");
         closeModal("edit");
         toast("success", "保存成功", "字段已补全并刷新列表");
         render();

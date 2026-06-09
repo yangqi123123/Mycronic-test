@@ -184,6 +184,7 @@
     </div>
 
     <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/components/customer-form-fields.js"></script>
     <script src="../../assets/app.js"></script>
     <script>
       (function () {
@@ -493,7 +494,8 @@
 
           const left = [
             { key: "name", label: "客户名称", required: true, type: "text", value: cust.name || "" },
-            { key: "source", label: "客户来源", required: false, type: "text", value: cust.source || "" },
+            { key: "source", label: "客户来源", required: false, type: "select-source", value: cust.source || "" },
+            { key: "projectName", label: "项目名称", required: false, type: "text", value: d.projectName || "" },
             { key: "legalPerson", label: "法定代表人", required: false, type: "text", value: d.legalPerson || "" },
             { key: "region", label: "省市区", required: false, type: "region", value: [cust.prov, cust.city, cust.dist].filter(Boolean).join("/") },
             { key: "paidInCapital", label: "实缴资本", required: false, type: "text", value: d.paidInCapital || "" },
@@ -510,7 +512,7 @@
             { key: "contactName", label: "联系人", required: true, type: "text", value: cust.contactName || "" },
             { key: "contactPhone", label: "联系方式", required: true, type: "text", value: cust.contactPhone || "" },
             { key: "grade", label: "客户等级", required: false, type: "select-grade", value: cust.grade || "D" },
-            { key: "industry", label: "行业", required: false, type: "text", value: cust.industry || "" },
+            { key: "industry", label: "行业类型", required: false, type: "select-industry", value: cust.industry || "" },
             { key: "establishedAt", label: "成立日期", required: false, type: "date", value: d.establishedAt || "" },
             { key: "registeredCapital", label: "注册资本", required: false, type: "text", value: d.registeredCapital || "" },
             { key: "regNo", label: "工商注册号", required: false, type: "text", value: d.regNo || "" },
@@ -527,7 +529,7 @@
             if (f.type === "textarea") {
               return {
                 label,
-                value: `<textarea class="w-full min-h-[72px] rounded-xl border border-[rgba(201,205,212,.7)] p-3 text-[14px]" data-c360-input="${esc(f.key)}">${esc(
+                value: `<textarea maxlength="240" placeholder="最多输入 240 字" class="w-full min-h-[72px] rounded-xl border border-[rgba(201,205,212,.7)] p-3 text-[14px]" data-c360-input="${esc(f.key)}">${esc(
                   f.value || ""
                 )}</textarea>`,
               };
@@ -551,18 +553,34 @@
                 )}">${opts}</select>`,
               };
             }
+            if (f.type === "select-source") {
+              const FF = window.CustomerFormFields;
+              const opts = FF ? FF.buildSelectOptions(FF.CUSTOMER_SOURCES, f.value, "请选择") : "";
+              return {
+                label,
+                value: `<select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-c360-input="${esc(
+                  f.key
+                )}">${opts}</select>`,
+              };
+            }
+            if (f.type === "select-industry") {
+              const FF = window.CustomerFormFields;
+              const opts = FF ? FF.buildSelectOptions(FF.INDUSTRY_TYPES, f.value, "请选择") : "";
+              return {
+                label,
+                value: `<select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-c360-input="${esc(
+                  f.key
+                )}">${opts}</select>`,
+              };
+            }
             if (f.type === "region") {
-              const parts = String(f.value || "").split("/").map((x) => x.trim());
-              const prov = parts[0] || cust.prov || "";
-              const city = parts[1] || cust.city || "";
-              const dist = parts[2] || cust.dist || "";
               return {
                 label,
                 value: `
                   <div class="grid grid-cols-3 gap-2">
-                    <input class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="省" data-c360-input="prov" value="${esc(prov)}" />
-                    <input class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="市" data-c360-input="city" value="${esc(city)}" />
-                    <input class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="区" data-c360-input="dist" value="${esc(dist)}" />
+                    <select class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]" data-c360-input="prov"></select>
+                    <select class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]" data-c360-input="city"></select>
+                    <select class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 text-[14px]" data-c360-input="dist"></select>
                   </div>
                 `,
               };
@@ -1434,6 +1452,7 @@
 
               // store extended fields locally
               const patch = {
+                projectName: get("projectName"),
                 legalPerson: get("legalPerson"),
                 establishedAt: get("establishedAt"),
                 registeredCapital: get("registeredCapital"),
@@ -1447,8 +1466,8 @@
                 formerName: get("formerName"),
                 approvedAt: get("approvedAt"),
                 registeredAddress: get("registeredAddress"),
-                scope: get("scope"),
-                needSummary: get("needSummary"),
+                scope: get("scope").slice(0, 240),
+                needSummary: get("needSummary").slice(0, 240),
               };
               setDetail(state.customerId, patch);
 
@@ -1456,6 +1475,15 @@
               refresh();
               openModal("保存成功", "客户信息已更新，并已全局同步。", `客户：${name}`);
             });
+          }
+
+          if (state.activeTab === "info" && state.editMode && window.CustomerFormFields) {
+            window.CustomerFormFields.initRegionCascade(
+              panel.querySelector('[data-c360-input="prov"]'),
+              panel.querySelector('[data-c360-input="city"]'),
+              panel.querySelector('[data-c360-input="dist"]'),
+              { prov: cust.prov || "", city: cust.city || "", dist: cust.dist || "" }
+            );
           }
 
           panel.querySelectorAll("[data-c360-contact-prev]").forEach((btn) =>
