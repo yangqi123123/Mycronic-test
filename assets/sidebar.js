@@ -15,6 +15,7 @@
     "collect-scripts": { label: "脚本管理", icon: "fa-file-code", href: `${base}pages/collect/scripts.html` },
     "collect-tasks": { label: "采集任务", icon: "fa-list-check", href: `${base}pages/collect/tasks.html` },
     "collect-leads": { label: "线索池", icon: "fa-layer-group", href: `${base}pages/collect/leads-pool.html` },
+    "collect-enterprise-search": { label: "企业搜索", icon: "fa-building", href: `${base}pages/collect/enterprise-search.html` },
 
     "crm-customers": { label: "客户档案", icon: "fa-address-card", href: `${base}pages/crm/customer-archive.html` },
     sales: { label: "销售工作台", icon: "fa-briefcase", href: `${base}pages/sales/workbench.html` },
@@ -40,6 +41,7 @@
       { key: "collect-sources", label: items["collect-sources"].label, icon: items["collect-sources"].icon, href: items["collect-sources"].href },
       { key: "collect-tasks", label: items["collect-tasks"].label, icon: items["collect-tasks"].icon, href: items["collect-tasks"].href },
       { key: "collect-leads", label: items["collect-leads"].label, icon: items["collect-leads"].icon, href: items["collect-leads"].href },
+      { key: "collect-enterprise-search", label: items["collect-enterprise-search"].label, icon: items["collect-enterprise-search"].icon, href: items["collect-enterprise-search"].href },
     ],
   };
 
@@ -113,6 +115,7 @@
     if (p.endsWith("/pages/collect/scripts.html")) return "collect-scripts";
     if (p.endsWith("/pages/collect/tasks.html")) return "collect-tasks";
     if (p.endsWith("/pages/collect/leads-pool.html")) return "collect-leads";
+    if (p.endsWith("/pages/collect/enterprise-search.html")) return "collect-enterprise-search";
 
     if (p.endsWith("/pages/crm/customer-archive.html")) return "crm-customers";
     if (p.endsWith("/pages/crm/customer-360.html")) return "crm-customers";
@@ -167,6 +170,7 @@
     if (key === "collect-scripts") return [crumb("数据采集", dataRoot), crumb("脚本管理", items["collect-scripts"].href)];
     if (key === "collect-tasks") return [crumb("数据采集", dataRoot), crumb("采集任务", items["collect-tasks"].href)];
     if (key === "collect-leads") return [crumb("数据采集", dataRoot), crumb("线索池", items["collect-leads"].href)];
+    if (key === "collect-enterprise-search") return [crumb("数据采集", dataRoot), crumb("企业搜索", items["collect-enterprise-search"].href)];
 
     if (key === "crm-customers") return [crumb("客户管理", crmRoot), crumb("客户档案", items["crm-customers"].href)];
     if (key === "sales") return [crumb("客户管理", crmRoot), crumb("销售工作台", items.sales.href)];

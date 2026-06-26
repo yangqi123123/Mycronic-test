@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据采集 · 企业搜索</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/tailwind-config.js"></script>
+    <script>
+      window.__APP_BASE = "../../";
+    </script>
+    <link rel="stylesheet" href="../../assets/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      .enterprise-card { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+      .enterprise-card:hover { box-shadow: 0 6px 20px rgba(29,33,41,.10); border-color: rgba(255,138,0,.45); }
+      .filter-group { position: relative; }
+      .filter-group::before {
+        content: "";
+        position: absolute;
+        left: 11px;
+        top: 28px;
+        bottom: 48px;
+        width: 1px;
+        background: rgba(201,205,212,.7);
+      }
+      .filter-row::before {
+        content: "";
+        position: absolute;
+        left: -14px;
+        top: 18px;
+        width: 14px;
+        height: 1px;
+        background: rgba(201,205,212,.7);
+      }
+      .field-pool-category.active {
+        background: rgba(255,138,0,.10);
+        color: #ff8a00;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell min-h-screen flex">
+      <div data-sidebar-root></div>
+
+      <main class="flex-1 min-w-0">
+        <header class="h-14 bg-surface border-b border-[rgba(201,205,212,.7)] px-4 flex items-center">
+          <button
+            class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)]"
+            title="折叠侧边栏"
+            data-sidebar-toggle
+          >
+            <i class="fa-solid fa-bars text-muted"></i>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- 高级筛选面板 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="text-[16px] font-semibold">企业搜索</div>
+                <div class="text-[12px] text-muted mt-1">已选择：<span id="selectedConditionCount" class="text-primary font-semibold">0</span> 个筛选条件</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btnReset" class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">清空</button>
+                <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
+              </div>
+            </div>
+
+            <div id="filterBuilder" class="mt-4"></div>
+          </section>
+
+          <!-- 结果列表 -->
+          <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="text-[16px] font-semibold">为你找到 <span id="resultCount" class="text-primary">0</span> 家企业</div>
+              <div class="flex items-center gap-2">
+                <select id="resultSort" class="h-8 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[13px]">
+                  <option value="default">综合排序</option>
+                  <option value="establishedAt">按成立日期</option>
+                  <option value="registeredCapital">按注册资本</option>
+                  <option value="grade">按客户等级</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="resultList" class="mt-4 space-y-3">
+              <!-- 卡片由 JS 渲染 -->
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- 字段选择面板 -->
+    <div class="overlay" data-overlay="field-pool" data-open="false"></div>
+    <div class="modal" data-modal="field-pool" data-open="false" style="max-width: 720px; width: min(720px, 96vw);">
+      <div class="p-4 border-b border-[rgba(201,205,212,.7)] flex items-center justify-between">
+        <div class="text-[16px] font-semibold">选择筛选字段</div>
+        <button class="w-9 h-9 rounded-lg hover:bg-[rgba(245,247,250,.9)]" data-close="field-pool"><i class="fa-solid fa-xmark text-muted"></i></button>
+      </div>
+      <div class="px-4 py-3 border-b border-[rgba(201,205,212,.7)] bg-[rgba(245,247,250,.5)] flex items-center gap-3">
+        <div class="relative flex-1 max-w-md">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-muted text-[13px] pointer-events-none"></i>
+          <input id="fieldPoolSearch" type="text" class="h-9 w-full rounded-lg border border-[rgba(201,205,212,.7)] bg-surface pl-9 pr-3 text-[14px] outline-none focus:border-primary" placeholder="输入关键词搜索字段" />
+        </div>
+        <button id="fieldPoolSearchBtn" class="h-9 px-4 rounded-lg bg-primary text-white text-[13px] font-semibold hover:opacity-90">搜索</button>
+        <button id="fieldPoolResetBtn" class="h-9 px-4 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] font-semibold hover:border-primary hover:text-primary">重置</button>
+      </div>
+      <div class="flex h-[420px]">
+        <div id="fieldPoolTabs" class="w-36 border-r border-[rgba(201,205,212,.6)] overflow-y-auto py-2"></div>
+        <div id="fieldPoolPanels" class="flex-1 overflow-y-auto p-4"></div>
+      </div>
+    </div>
+
+    <script src="../../assets/sidebar.js"></script>
+    <script src="../../assets/app.js"></script>
+    <script src="../../assets/components/lead-detail-modal.js"></script>
+    <script>
+      const enterprises = [
+        {
+          id: "E-0001",
+          name: "上海芯联半导体有限公司",
+          uscc: "91310115MA1K3xxx1",
+          grade: "A",
+          priority: "中",
+          source: "招标采购",
+          industry: "半导体",
+          collector: "接口采集器-A",
+          collectedAt: "2026-04-13 02:08",
+          prov: "上海",
+          city: "上海",
+          county: "浦东",
+          enterpriseStatus: "存续",
+          enterpriseType: "民企",
+          legalPerson: "张伟",
+          establishedAt: "2018-06-12",
+          registeredCapital: "5000 万元",
+          paidInCapital: "3000 万元",
+          enterpriseScale: "50-100人",
+          insuredCount: "86",
+          annualRevenue: "8000 万元",
+          registeredAddress: "上海市浦东新区张江高科技园区xx路xx号",
+          formerName: "上海芯联电子有限公司",
+          regAuthority: "上海市市场监督管理局",
+          taxNo: "91310115MA1K3xxx1",
+          regNo: "3101150028xxxx",
+          orgCode: "MA1K3xxx1",
+          businessTerm: "2018-06-12 至 2038-06-11",
+          scope: "半导体器件、集成电路、电子元器件的研发、生产与销售；货物及技术进出口业务。",
+          needSummary: "贴片机采购需求，预算充足，计划Q2落地。",
+          projectName: "贴片机采购",
+          projectNo: "PRJ-2026-001",
+          contacts: [
+            { name: "李明", title: "采购经理", phone: "13812340001", email: "liming@demo.com", address: "上海/浦东", source: "招标采购", sourceUrl: "https://example.com/source/1", key: true },
+            { name: "王芳", title: "技术负责人", phone: "13912340001", email: "wangfang@demo.com", address: "上海/浦东", source: "垂直平台数据", sourceUrl: "https://example.com/source/1-dup" },
+          ],
+        },
+        {
+          id: "E-0002",
+          name: "深圳精智电子制造股份有限公司",
+          uscc: "91440300MA5Gxxx2",
+          grade: "B",
+          priority: "一般",
+          source: "行业名录",
+          industry: "SMT/电子制造",
+          collector: "爬虫采集器-B",
+          collectedAt: "2026-04-12 18:00",
+          prov: "广东",
+          city: "深圳",
+          county: "南山",
+          enterpriseStatus: "存续",
+          enterpriseType: "外企",
+          legalPerson: "李婷",
+          establishedAt: "2015-09-23",
+          registeredCapital: "1.2 亿元",
+          paidInCapital: "8000 万元",
+          enterpriseScale: "1000人以上",
+          insuredCount: "3200",
+          annualRevenue: "12 亿元",
+          registeredAddress: "广东省深圳市南山区科技园xx栋",
+          formerName: "",
+          regAuthority: "深圳市市场监督管理局",
+          taxNo: "91440300MA5Gxxx2",
+          regNo: "4403011134xxxx",
+          orgCode: "MA5Gxxx2",
+          businessTerm: "2015-09-23 至 长期",
+          scope: "电子制造设备、SMT 生产线、自动化设备的研发、生产与销售。",
+          needSummary: "产线升级，关注高端贴片机与回流焊设备。",
+          projectName: "产线升级",
+          projectNo: "PRJ-2026-002",
+          contacts: [
+            { name: "赵强", title: "销售总监", phone: "13800138000", email: "zhaoqiang@demo.com", address: "广东/深圳", source: "行业名录", sourceUrl: "https://example.com/source/2", key: true },
+          ],
+        },
+        {
+          id: "E-0003",
+          name: "北京华科研究院",
+          uscc: "91110108MA01xxx3",
+          grade: "A",
+          priority: "紧急",
+          source: "政府科研数据",
+          industry: "科研院所",
+          collector: "接口采集器-A",
+          collectedAt: "2026-04-11 10:12",
+          prov: "北京",
+          city: "北京",
+          county: "海淀",
+          enterpriseStatus: "存续",
+          enterpriseType: "国企",
+          legalPerson: "王强",
+          establishedAt: "2020-03-05",
+          registeredCapital: "800 万元",
+          paidInCapital: "800 万元",
+          enterpriseScale: "10-50人",
+          insuredCount: "12",
+          annualRevenue: "1200 万元",
+          registeredAddress: "北京市海淀区中关村大街xx号",
+          formerName: "",
+          regAuthority: "北京市海淀区市场监督管理局",
+          taxNo: "91110108MA01xxx3",
+          regNo: "1101080293xxxx",
+          orgCode: "MA01xxx3",
+          businessTerm: "2020-03-05 至 长期",
+          scope: "科学研究与试验发展、技术推广服务、电子产品检测。",
+          needSummary: "科研项目合作，寻求贴片工艺合作伙伴。",
+          projectName: "科研项目合作",
+          projectNo: "PRJ-2026-003",
+          contacts: [
+            { name: "陈教授", title: "项目负责人", phone: "微信: demo_wechat", email: "chen@institute.cn", address: "北京/海淀", source: "政府科研数据", sourceUrl: "https://example.com/source/3", key: true },
+            { name: "刘助理", title: "科研助理", phone: "13900139000", email: "liu@institute.cn", address: "北京/海淀", source: "政府科研数据", sourceUrl: "https://example.com/source/3" },
+            { name: "周工程师", title: "工程师", phone: "13700137000", email: "zhou@institute.cn", address: "北京/海淀", source: "政府科研数据", sourceUrl: "https://example.com/source/3" },
+          ],
+        },
+        {
+          id: "E-0004",
+          name: "成都明信电路科技有限公司",
+          uscc: "91510100MA6Cxxx4",
+          grade: "C",
+          priority: "低",
+          source: "垂直平台数据",
+          industry: "PCB",
+          collector: "展会采集器-C",
+          collectedAt: "2026-04-10 16:40",
+          prov: "四川",
+          city: "成都",
+          county: "武侯",
+          enterpriseStatus: "停业",
+          enterpriseType: "民企",
+          legalPerson: "陈明",
+          establishedAt: "2017-11-30",
+          registeredCapital: "3000 万元",
+          paidInCapital: "500 万元",
+          enterpriseScale: "10-50人",
+          insuredCount: "8",
+          annualRevenue: "—",
+          registeredAddress: "四川省成都市武侯区xx路xx号",
+          formerName: "成都明信电子",
+          regAuthority: "成都市武侯区市场监督管理局",
+          taxNo: "91510100MA6Cxxx4",
+          regNo: "5101076543xxxx",
+          orgCode: "MA6Cxxx4",
+          businessTerm: "2017-11-30 至 2027-11-29",
+          scope: "印制电路板（PCB）设计、制造与销售。",
+          needSummary: "",
+          projectName: "",
+          projectNo: "",
+          contacts: [
+            { name: "—", title: "—", phone: "（未抓取）", email: "", address: "四川/成都", source: "垂直平台数据", sourceUrl: "https://example.com/source/4" },
+          ],
+        },
+        {
+          id: "E-0005",
+          name: "苏州博创电子科技有限公司",
+          uscc: "91320500MA1Fxxx5",
+          grade: "B",
+          priority: "一般",
+          source: "公开工商数据",
+          industry: "SMT/电子制造",
+          collector: "爬虫采集器-B",
+          collectedAt: "2026-04-09 09:30",
+          prov: "江苏",
+          city: "苏州",
+          county: "吴中",
+          enterpriseStatus: "存续",
+          enterpriseType: "民企",
+          legalPerson: "孙丽",
+          establishedAt: "2016-08-18",
+          registeredCapital: "4500 万元",
+          paidInCapital: "4500 万元",
+          enterpriseScale: "100-500人",
+          insuredCount: "156",
+          annualRevenue: "2.5 亿元",
+          registeredAddress: "江苏省苏州市吴中区xx工业园xx路",
+          formerName: "",
+          regAuthority: "苏州市吴中区市场监督管理局",
+          taxNo: "91320500MA1Fxxx5",
+          regNo: "3205067890xxxx",
+          orgCode: "MA1Fxxx5",
+          businessTerm: "2016-08-18 至 2036-08-17",
+          scope: "电子元器件、SMT 贴片加工、PCBA 代工。",
+          needSummary: "扩产需求，寻找稳定贴片机供应商。",
+          projectName: "SMT 产线扩产",
+          projectNo: "PRJ-2026-005",
+          contacts: [
+            { name: "吴经理", title: "市场经理", phone: "13600136000", email: "wu@demo.com", address: "江苏/苏州", source: "公开工商数据", sourceUrl: "https://example.com/source/5", key: true },
+            { name: "郑助理", title: "商务助理", phone: "13500135000", email: "zheng@demo.com", address: "江苏/苏州", source: "公开工商数据", sourceUrl: "https://example.com/source/5" },
+          ],
+        },
+      ];
+
+      const FIELD_CATALOG = {
+        "客户名称": { category: "工商信息", type: "text" },
+        "统一社会信用代码": { category: "工商信息", type: "text" },
+        "法定代表人": { category: "工商信息", type: "text" },
+        "成立日期": { category: "工商信息", type: "date" },
+        "注册资本": { category: "工商信息", type: "text" },
+        "实缴资本": { category: "工商信息", type: "text" },
+        "企业类型": { category: "工商信息", type: "select", options: ["国企", "民企", "外企"] },
+        "企业规模": { category: "工商信息", type: "text" },
+        "企业状态": { category: "工商信息", type: "select", options: ["存续", "注销", "迁入", "迁出", "停业", "清算"] },
+        "营业期限": { category: "工商信息", type: "text" },
+        "参保人数": { category: "工商信息", type: "number" },
+        "年营业额": { category: "工商信息", type: "text" },
+        "注册地址": { category: "工商信息", type: "text" },
+        "省市区": { category: "工商信息", type: "text" },
+        "曾用名": { category: "工商信息", type: "text" },
+        "登记机关": { category: "工商信息", type: "text" },
+        "纳税人识别号": { category: "工商信息", type: "text" },
+        "工商注册号": { category: "工商信息", type: "text" },
+        "组织机构代码": { category: "工商信息", type: "text" },
+        "联系人": { category: "联系方式", type: "contactName" },
+        "联系电话": { category: "联系方式", type: "contactPhone" },
+        "客户等级": { category: "业务信息", type: "select", options: ["A", "B", "C", "D"] },
+        "优先级": { category: "业务信息", type: "select", options: ["低", "一般", "中", "紧急", "非常紧急"] },
+        "行业类型": { category: "业务信息", type: "select", options: ["半导体", "SMT/电子制造", "PCB", "科研院所"] },
+        "项目名称": { category: "业务信息", type: "text" },
+        "项目编号": { category: "业务信息", type: "text" },
+        "采集器": { category: "业务信息", type: "select", options: ["接口采集器-A", "爬虫采集器-B", "展会采集器-C"] },
+        "数据来源": { category: "业务信息", type: "select", options: ["招标采购", "行业名录", "政府科研数据", "垂直平台数据", "公开工商数据"] },
+        "采集时间": { category: "业务信息", type: "date" },
+        "经营范围": { category: "产品信息", type: "text" },
+        "关键需求摘要": { category: "产品信息", type: "text" },
+      };
+
+      const OPERATORS = {
+        text: ["包含任一", "包含全部", "不等于", "大于", "小于"],
+        date: ["等于", "大于", "小于", "在...之间"],
+        number: ["等于", "大于", "小于", "大于等于", "小于等于"],
+        select: ["等于", "不等于"],
+        contactName: ["包含任一", "包含全部", "不等于", "大于", "小于"],
+        contactPhone: ["包含任一", "包含全部", "不等于", "大于", "小于"],
+      };
+
+      const DEFAULT_OPERATOR = {
+        text: "包含任一",
+        date: "等于",
+        number: "等于",
+        select: "等于",
+        contactName: "包含任一",
+        contactPhone: "包含任一",
+      };
+
+      const CATEGORIES = ["工商信息", "联系方式", "业务信息", "产品信息"];
+      let activePoolCategory = "工商信息";
+      let fieldPoolTarget = null; // { group, index }
+
+      let filterRoot = {
+        op: "all",
+        items: [{ type: "condition", field: "", operator: "包含", value: "", value2: "", tags: [] }],
+      };
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function initials(name) {
+        return String(name || "")
+          .replace(/有限公司|有限责任公司|股份有限公司|集团|公司|研究院|研究所|分公司/g, "")
+          .slice(0, 2);
+      }
+
+      function capitalValue(s) {
+        const m = String(s || "").replace(/,/g, "").match(/[\d.]+/);
+        return m ? parseFloat(m[0]) : 0;
+      }
+
+      function statusChipClass(status) {
+        const s = String(status || "");
+        if (s === "存续") return "chip chip--success";
+        if (s === "注销") return "chip chip--danger";
+        if (s === "迁入" || s === "迁出") return "chip chip--primary";
+        if (s === "停业" || s === "清算") return "chip chip--warning";
+        return "chip chip--primary";
+      }
+
+      function setModalOpen(id, open) {
+        const ov = document.querySelector(`[data-overlay="${id}"]`);
+        const m = document.querySelector(`[data-modal="${id}"]`);
+        if (ov) ov.dataset.open = open ? "true" : "false";
+        if (m) m.dataset.open = open ? "true" : "false";
+      }
+      function openModal(id) { setModalOpen(id, true); }
+      function closeModal(id) { setModalOpen(id, false); }
+
+      function getFieldDef(field) {
+        return FIELD_CATALOG[field] || { category: "工商信息", type: "text" };
+      }
+
+      function countConditions(root) {
+        let count = 0;
+        function walk(node) {
+          if (!node || !node.items) return;
+          node.items.forEach((item) => {
+            if (item.type === "condition" && item.field) count++;
+            else if (item.type === "group") walk(item);
+          });
+        }
+        walk(root);
+        return count;
+      }
+
+      function getValue(row, field) {
+        if (field === "联系人") {
+          return (row.contacts || []).map((c) => c.name).join(" ");
+        }
+        if (field === "联系电话") {
+          return (row.contacts || []).map((c) => `${c.phone} ${c.email}`).join(" ");
+        }
+        if (field === "省市区") {
+          return [row.prov, row.city, row.county].filter(Boolean).join("/");
+        }
+        const map = {
+          "客户名称": "name",
+          "统一社会信用代码": "uscc",
+          "法定代表人": "legalPerson",
+          "成立日期": "establishedAt",
+          "注册资本": "registeredCapital",
+          "实缴资本": "paidInCapital",
+          "企业类型": "enterpriseType",
+          "企业规模": "enterpriseScale",
+          "企业状态": "enterpriseStatus",
+          "营业期限": "businessTerm",
+          "参保人数": "insuredCount",
+          "年营业额": "annualRevenue",
+          "注册地址": "registeredAddress",
+          "曾用名": "formerName",
+          "登记机关": "regAuthority",
+          "纳税人识别号": "taxNo",
+          "工商注册号": "regNo",
+          "组织机构代码": "orgCode",
+          "客户等级": "grade",
+          "优先级": "priority",
+          "行业类型": "industry",
+          "项目名称": "projectName",
+          "项目编号": "projectNo",
+          "采集器": "collector",
+          "数据来源": "source",
+          "采集时间": "collectedAt",
+          "经营范围": "scope",
+          "关键需求摘要": "needSummary",
+        };
+        return row[map[field]];
+      }
+
+      function evaluateCondition(cond, row) {
+        if (!cond.field) return true;
+        const def = getFieldDef(cond.field);
+        let raw = getValue(row, cond.field);
+        raw = raw == null ? "" : String(raw);
+        const val = String(cond.value || "");
+        const val2 = String(cond.value2 || "");
+        const op = cond.operator || DEFAULT_OPERATOR[def.type] || "包含";
+
+        if (def.type === "date") {
+          const a = raw.slice(0, 10);
+          const b = val.slice(0, 10);
+          const b2 = val2.slice(0, 10);
+          if (op === "等于") return a === b;
+          if (op === "大于") return a > b;
+          if (op === "小于") return a < b;
+          if (op === "在...之间") return b <= a && a <= b2;
+          return true;
+        }
+
+        if (def.type === "number") {
+          const a = Number.parseFloat(raw);
+          const b = Number.parseFloat(val);
+          if (Number.isNaN(a) || Number.isNaN(b)) return false;
+          if (op === "等于") return a === b;
+          if (op === "大于") return a > b;
+          if (op === "小于") return a < b;
+          if (op === "大于等于") return a >= b;
+          if (op === "小于等于") return a <= b;
+          return true;
+        }
+
+        if (def.type === "select") {
+          if (op === "等于") return raw === val;
+          if (op === "不等于") return raw !== val;
+          return true;
+        }
+
+        // text / contact: support multi-tag input
+        const tags = Array.isArray(cond.tags) ? cond.tags.filter(Boolean) : [];
+        const vals = tags.length ? tags : [val];
+        if (!vals.length || (vals.length === 1 && vals[0] === "")) return true;
+        if (op === "包含任一") return vals.some((v) => raw.includes(v));
+        if (op === "包含全部") return vals.every((v) => raw.includes(v));
+        if (op === "不等于") return vals.every((v) => raw !== v);
+        if (op === "大于") return vals.length > 0 && raw > vals[0];
+        if (op === "小于") return vals.length > 0 && raw < vals[0];
+        return true;
+      }
+
+      function evaluateGroup(group, row) {
+        if (!group || !group.items || !group.items.length) return true;
+        const results = group.items.map((item) => {
+          if (item.type === "condition") return evaluateCondition(item, row);
+          if (item.type === "group") return evaluateGroup(item, row);
+          return true;
+        });
+        return group.op === "any" ? results.some(Boolean) : results.every(Boolean);
+      }
+
+      function parsePath(str) {
+        return str ? str.split(",").map(Number) : [];
+      }
+
+      function getItemByPath(path) {
+        let node = filterRoot;
+        for (let i = 0; i < path.length - 1; i++) {
+          const item = node.items[path[i]];
+          node = item;
+        }
+        return { parent: node, index: path[path.length - 1] };
+      }
+
+      function getGroupByPath(path) {
+        if (path.length === 0) return filterRoot;
+        let node = filterRoot;
+        for (let i = 0; i < path.length; i++) {
+          const item = node.items[path[i]];
+          if (item && item.type === "group") node = item;
+        }
+        return node;
+      }
+
+      function updateCondition(path, key, value) {
+        const { parent, index } = getItemByPath(path);
+        if (parent.items && parent.items[index]) {
+          parent.items[index][key] = value;
+        }
+      }
+
+      function addCondition(path) {
+        const target = getGroupByPath(path);
+        target.items.push({ type: "condition", field: "", operator: "包含", value: "", value2: "", tags: [] });
+        renderBuilder();
+      }
+
+      function addGroup(path) {
+        const target = getGroupByPath(path);
+        target.items.push({
+          type: "group",
+          op: "all",
+          items: [{ type: "condition", field: "", operator: "包含", value: "", value2: "", tags: [] }],
+        });
+        renderBuilder();
+      }
+
+      function removeItem(path) {
+        const { parent, index } = getItemByPath(path);
+        parent.items.splice(index, 1);
+        renderBuilder();
+      }
+
+      function setGroupOp(path, op) {
+        const target = getGroupByPath(path);
+        target.op = op;
+      }
+
+      function openFieldPool(path) {
+        fieldPoolTarget = { path };
+        const searchInput = document.getElementById("fieldPoolSearch");
+        if (searchInput) searchInput.value = "";
+        renderFieldPool();
+        openModal("field-pool");
+      }
+
+      function selectField(field) {
+        if (!fieldPoolTarget) return;
+        const { path } = fieldPoolTarget;
+        const def = getFieldDef(field);
+        const { parent, index } = getItemByPath(path);
+        const cond = parent.items[index];
+        if (cond.type === "condition") {
+          cond.field = field;
+          cond.operator = DEFAULT_OPERATOR[def.type] || "包含";
+          cond.value = "";
+          cond.value2 = "";
+          cond.tags = [];
+        }
+        closeModal("field-pool");
+        fieldPoolTarget = null;
+        renderBuilder();
+      }
+
+      function renderFieldPool() {
+        const tabsWrap = document.getElementById("fieldPoolTabs");
+        const panelsWrap = document.getElementById("fieldPoolPanels");
+
+        tabsWrap.innerHTML = CATEGORIES
+          .map(
+            (c) => `
+            <button class="field-pool-category w-full text-left px-4 py-2.5 text-[14px] hover:bg-[rgba(245,247,250,.9)] ${c === activePoolCategory ? "active" : ""}" data-category="${escapeHtml(c)}">
+              ${escapeHtml(c)}
+            </button>
+          `
+          )
+          .join("");
+
+        const searchInput = document.getElementById("fieldPoolSearch");
+        const kw = (searchInput ? searchInput.value : "").trim();
+        let fields;
+        let panelTitle;
+        if (kw) {
+          fields = Object.entries(FIELD_CATALOG).filter(([name]) => name.includes(kw));
+          panelTitle = `搜索 “${kw}” 共 ${fields.length} 个字段`;
+        } else {
+          fields = Object.entries(FIELD_CATALOG).filter(([_, def]) => def.category === activePoolCategory);
+          panelTitle = `${activePoolCategory}字段`;
+        }
+        panelsWrap.innerHTML = `
+          <div>
+            <div class="text-[13px] text-muted mb-3">${escapeHtml(panelTitle)}</div>
+            <div class="flex flex-wrap gap-2">
+              ${fields.length
+                ? fields
+                    .map(
+                      ([name, def]) => `
+                    <button class="px-3 py-1.5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] hover:border-primary hover:text-primary flex items-center gap-1.5" data-field="${escapeHtml(name)}">
+                      <span>${escapeHtml(name)}</span>
+                      ${kw ? `<span class="text-[11px] text-muted">${escapeHtml(def.category)}</span>` : ""}
+                    </button>
+                  `
+                    )
+                    .join("")
+                : `<div class="text-[13px] text-muted">未找到匹配字段</div>`}
+            </div>
+          </div>
+        `;
+
+        tabsWrap.querySelectorAll("[data-category]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            activePoolCategory = btn.getAttribute("data-category");
+            if (searchInput) searchInput.value = "";
+            renderFieldPool();
+          });
+        });
+        panelsWrap.querySelectorAll("[data-field]").forEach((btn) => {
+          btn.addEventListener("click", () => selectField(btn.getAttribute("data-field")));
+        });
+      }
+
+      function renderValueInput(cond, def, pathStr) {
+        if (cond.operator === "在...之间" && def.type === "date") {
+          return `
+            <input type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" value="${escapeHtml(cond.value)}" data-path="${pathStr}" data-key="value" />
+            <span class="text-[13px] text-muted">至</span>
+            <input type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" value="${escapeHtml(cond.value2)}" data-path="${pathStr}" data-key="value2" />
+          `;
+        }
+        if (def.type === "date") {
+          return `<input type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" value="${escapeHtml(cond.value)}" data-path="${pathStr}" data-key="value" />`;
+        }
+        if (def.type === "select") {
+          return `
+            <select class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-path="${pathStr}" data-key="value">
+              <option value="">请选择</option>
+              ${def.options.map((o) => `<option ${cond.value === o ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
+            </select>
+          `;
+        }
+        if (def.type === "number") {
+          return `<input type="number" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入数值" value="${escapeHtml(cond.value)}" data-path="${pathStr}" data-key="value" />`;
+        }
+
+        // text / contact: tag input
+        const tags = Array.isArray(cond.tags) ? cond.tags : [];
+        const tagsHtml = tags
+          .map(
+            (t) => `
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px]">
+              <span class="truncate max-w-[200px]">${escapeHtml(t)}</span>
+              <button class="tag-remove w-4 h-4 rounded hover:bg-[rgba(201,205,212,.5)] flex items-center justify-center" data-tag="${escapeHtml(t)}">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+              </button>
+            </span>
+          `
+          )
+          .join("");
+        return `
+          <div class="flex items-start gap-2 flex-1 min-w-[360px] max-w-[720px]">
+            <div class="tag-input flex-1 min-h-[42px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 py-1.5 flex flex-wrap gap-2 items-center" data-path="${pathStr}">
+              ${tagsHtml}
+              <input type="text" class="tag-input-field flex-1 min-w-[120px] h-7 bg-transparent outline-none text-[14px]" placeholder="${tags.length ? "" : "单个词不超过30个字符;最多20个词;回车键隔开"}" />
+            </div>
+            <button class="tag-copy h-9 w-9 shrink-0 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-muted hover:text-primary flex items-center justify-center" data-path="${pathStr}" title="复制">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      function renderCondition(cond, path) {
+        const pathStr = path.join(",");
+        if (!cond.field) {
+          return `
+            <div class="filter-row relative flex items-center gap-3 py-2 pl-6">
+              <button class="h-9 px-4 rounded-lg border border-dashed border-[rgba(201,205,212,.9)] bg-surface text-[14px] text-muted hover:border-primary hover:text-primary flex items-center gap-2" data-open-field="${pathStr}">
+                <i class="fa-solid fa-chevron-down text-[11px]"></i> 请选择类型
+              </button>
+            </div>
+          `;
+        }
+
+        const def = getFieldDef(cond.field);
+        const ops = OPERATORS[def.type] || OPERATORS.text;
+        const valueHtml = renderValueInput(cond, def, pathStr);
+
+        return `
+          <div class="filter-row relative flex flex-wrap items-center gap-3 py-2 pl-6">
+            <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] hover:border-primary hover:text-primary" data-open-field="${pathStr}">
+              ${escapeHtml(cond.field)} <i class="fa-solid fa-chevron-down text-[11px] ml-1"></i>
+            </button>
+            <select class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-path="${pathStr}" data-key="operator">
+              ${ops.map((o) => `<option value="${escapeHtml(o)}" ${cond.operator === o ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
+            </select>
+            ${valueHtml}
+            <button class="w-7 h-7 rounded-full border border-[rgba(245,63,63,.4)] text-[rgba(245,63,63,.8)] hover:bg-[rgba(245,63,63,.08)] flex items-center justify-center" data-remove="${pathStr}" title="删除条件">
+              <i class="fa-solid fa-minus text-[11px]"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      function renderGroup(group, path) {
+        const isRoot = path.length === 0;
+        const itemsHtml = group.items
+          .map((item, idx) => {
+            const itemPath = [...path, idx];
+            if (item.type === "condition") return renderCondition(item, itemPath);
+            if (item.type === "group") return renderGroup(item, itemPath);
+            return "";
+          })
+          .join("");
+
+        return `
+          <div class="filter-group ${isRoot ? "" : "ml-6 mt-2 border-l border-[rgba(201,205,212,.6)] pl-4"}">
+            <div class="flex items-center gap-3 py-2">
+              <span class="text-[13px] text-muted">满足下列</span>
+              <select class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-group-op="${path.join(",")}">
+                <option value="all" ${group.op === "all" ? "selected" : ""}>所有</option>
+                <option value="any" ${group.op === "any" ? "selected" : ""}>任一</option>
+              </select>
+              <span class="text-[13px] text-muted">条件：</span>
+              ${isRoot ? "" : `<button class="w-7 h-7 rounded-full border border-[rgba(245,63,63,.4)] text-[rgba(245,63,63,.8)] hover:bg-[rgba(245,63,63,.08)] flex items-center justify-center" data-remove="${path.join(",")}" title="删除组合"><i class="fa-solid fa-minus text-[11px]"></i></button>`}
+            </div>
+            <div class="space-y-1">${itemsHtml}</div>
+            <div class="flex items-center gap-3 py-3">
+              <button class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] font-semibold hover:border-primary hover:text-primary flex items-center gap-1.5" data-add-condition="${path.join(",")}">
+                <i class="fa-solid fa-plus text-[11px]"></i> 添加单个条件
+              </button>
+              <button class="h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] font-semibold hover:border-primary hover:text-primary flex items-center gap-1.5" data-add-group="${path.join(",")}">
+                <i class="fa-solid fa-plus text-[11px]"></i> 添加条件组合
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderBuilder() {
+        document.getElementById("filterBuilder").innerHTML = renderGroup(filterRoot, []);
+        document.getElementById("selectedConditionCount").textContent = String(countConditions(filterRoot));
+
+        // bind field selection
+        document.querySelectorAll("[data-open-field]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const path = parsePath(btn.getAttribute("data-open-field"));
+            openFieldPool(path);
+          });
+        });
+
+        // bind operator / value changes
+        document.querySelectorAll("#filterBuilder [data-path]").forEach((el) => {
+          el.addEventListener("change", () => {
+            const path = parsePath(el.getAttribute("data-path"));
+            const key = el.getAttribute("data-key");
+            updateCondition(path, key, el.value);
+          });
+        });
+
+        // bind group op
+        document.querySelectorAll("[data-group-op]").forEach((sel) => {
+          sel.addEventListener("change", () => {
+            const path = parsePath(sel.getAttribute("data-group-op"));
+            setGroupOp(path, sel.value);
+          });
+        });
+
+        // bind add/remove
+        document.querySelectorAll("[data-add-condition]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const path = parsePath(btn.getAttribute("data-add-condition"));
+            addCondition(path);
+          });
+        });
+        document.querySelectorAll("[data-add-group]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const path = parsePath(btn.getAttribute("data-add-group"));
+            addGroup(path);
+          });
+        });
+        document.querySelectorAll("[data-remove]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const path = parsePath(btn.getAttribute("data-remove"));
+            removeItem(path);
+          });
+        });
+
+        // tag input
+        document.querySelectorAll(".tag-input").forEach((wrap) => {
+          const path = parsePath(wrap.getAttribute("data-path"));
+          const field = wrap.querySelector(".tag-input-field");
+          if (field) {
+            field.addEventListener("keydown", (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTag(path, field.value);
+              }
+            });
+          }
+          wrap.querySelectorAll(".tag-remove").forEach((btn) => {
+            btn.addEventListener("click", () => removeTag(path, btn.getAttribute("data-tag")));
+          });
+        });
+        document.querySelectorAll(".tag-copy").forEach((btn) => {
+          const path = parsePath(btn.getAttribute("data-path"));
+          btn.addEventListener("click", () => copyTags(path));
+        });
+      }
+
+      function addTag(path, text) {
+        const t = text.trim();
+        if (!t) return;
+        if (t.length > 30) {
+          alert("单个词不超过30个字符");
+          return;
+        }
+        const { parent, index } = getItemByPath(path);
+        const cond = parent.items[index];
+        if (cond.type !== "condition") return;
+        const tags = Array.isArray(cond.tags) ? cond.tags : [];
+        if (tags.includes(t)) return;
+        if (tags.length >= 20) {
+          alert("最多20个词");
+          return;
+        }
+        tags.push(t);
+        cond.tags = tags;
+        renderBuilder();
+      }
+
+      function removeTag(path, tag) {
+        const { parent, index } = getItemByPath(path);
+        const cond = parent.items[index];
+        if (cond.type !== "condition") return;
+        cond.tags = (Array.isArray(cond.tags) ? cond.tags : []).filter((x) => x !== tag);
+        renderBuilder();
+      }
+
+      function copyTags(path) {
+        const { parent, index } = getItemByPath(path);
+        const cond = parent.items[index];
+        const tags = Array.isArray(cond.tags) ? cond.tags : [];
+        const text = tags.join("\n");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => alert("已复制到剪贴板"));
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          alert("已复制到剪贴板");
+        }
+      }
+
+      function renderResults() {
+        let filtered = enterprises.filter((r) => evaluateGroup(filterRoot, r));
+        const sort = document.getElementById("resultSort").value;
+        if (sort === "establishedAt") {
+          filtered = filtered.sort((a, b) => String(b.establishedAt || "").localeCompare(String(a.establishedAt || "")));
+        } else if (sort === "registeredCapital") {
+          filtered = filtered.sort((a, b) => capitalValue(b.registeredCapital) - capitalValue(a.registeredCapital));
+        } else if (sort === "grade") {
+          const gradeOrder = { A: 4, B: 3, C: 2, D: 1 };
+          filtered = filtered.sort((a, b) => (gradeOrder[b.grade] || 0) - (gradeOrder[a.grade] || 0));
+        }
+
+        document.getElementById("resultCount").textContent = String(filtered.length);
+        const wrap = document.getElementById("resultList");
+        if (!filtered.length) {
+          wrap.innerHTML = `<div class="text-center py-10 text-muted text-[14px]">未找到符合条件的企业</div>`;
+          return;
+        }
+
+        wrap.innerHTML = filtered
+          .map((r) => {
+            const contactCount = (r.contacts || []).length;
+            const logoText = escapeHtml(initials(r.name));
+            const contactBadge = contactCount > 0
+              ? `<span class="chip chip--primary">${contactCount}个联系方式</span>`
+              : `<span class="chip">0个联系方式</span>`;
+            return `
+              <div class="enterprise-card bg-surface rounded-xl border border-[rgba(201,205,212,.6)] p-4 cursor-pointer" data-enterprise-id="${escapeHtml(r.id)}">
+                <div class="flex gap-4">
+                  <div class="shrink-0 w-14 h-14 rounded-xl bg-[rgba(255,138,0,.12)] text-primary flex items-center justify-center text-[16px] font-bold">
+                    ${logoText}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-[16px] font-semibold truncate">${escapeHtml(r.name)}</div>
+                        <div class="mt-1.5 flex flex-wrap items-center gap-2">
+                          ${contactBadge}
+                          <span class="${statusChipClass(r.enterpriseStatus)}">${escapeHtml(r.enterpriseStatus || "—")}</span>
+                          <span class="chip chip--warning">${escapeHtml(r.enterpriseType || "—")}</span>
+                        </div>
+                      </div>
+                      <button class="shrink-0 h-8 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[13px] font-semibold hover:border-primary hover:text-primary">查看详情</button>
+                    </div>
+                    <div class="mt-3 grid grid-cols-12 gap-y-2 gap-x-4 text-[13px]">
+                      <div class="col-span-12 md:col-span-6 lg:col-span-3"><span class="text-muted">企业法人：</span><span class="font-medium">${escapeHtml(r.legalPerson || "—")}</span></div>
+                      <div class="col-span-12 md:col-span-6 lg:col-span-3"><span class="text-muted">成立日期：</span><span class="font-medium">${escapeHtml(r.establishedAt || "—")}</span></div>
+                      <div class="col-span-12 md:col-span-6 lg:col-span-3"><span class="text-muted">注册资本：</span><span class="font-medium">${escapeHtml(r.registeredCapital || "—")}</span></div>
+                      <div class="col-span-12 md:col-span-6 lg:col-span-3"><span class="text-muted">客户等级：</span><span class="font-medium">${escapeHtml(r.grade || "—")}</span></div>
+                      <div class="col-span-12 md:col-span-6 lg:col-span-3"><span class="text-muted">企业规模：</span><span class="font-medium">${escapeHtml(r.enterpriseScale || "—")}</span></div>
+                      <div class="col-span-12 md:col-span-6 lg:col-span-3"><span class="text-muted">行业类型：</span><span class="font-medium">${escapeHtml(r.industry || "—")}</span></div>
+                      <div class="col-span-12 md:col-span-12 lg:col-span-6"><span class="text-muted">注册地址：</span><span class="font-medium">${escapeHtml(r.registeredAddress || "—")}</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+
+        wrap.querySelectorAll("[data-enterprise-id]").forEach((card) => {
+          card.addEventListener("click", () => {
+            const id = card.getAttribute("data-enterprise-id");
+            const row = enterprises.find((x) => x.id === id);
+            if (row) LeadDetailModal.open(row);
+          });
+        });
+      }
+
+      document.getElementById("btnSearch").addEventListener("click", renderResults);
+      document.getElementById("resultSort").addEventListener("change", renderResults);
+      document.getElementById("btnReset").addEventListener("click", () => {
+        filterRoot = {
+          op: "all",
+          items: [{ type: "condition", field: "", operator: "包含", value: "", value2: "", tags: [] }],
+        };
+        renderBuilder();
+        renderResults();
+      });
+
+      // modal close bindings
+      document.querySelectorAll('[data-close="field-pool"]').forEach((btn) => {
+        btn.addEventListener("click", () => closeModal("field-pool"));
+      });
+      document.querySelector('[data-overlay="field-pool"]').addEventListener("click", () => closeModal("field-pool"));
+      const fieldPoolSearch = document.getElementById("fieldPoolSearch");
+      const fieldPoolSearchBtn = document.getElementById("fieldPoolSearchBtn");
+      const fieldPoolResetBtn = document.getElementById("fieldPoolResetBtn");
+      function doFieldPoolSearch() {
+        renderFieldPool();
+      }
+      if (fieldPoolSearch) {
+        fieldPoolSearch.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") doFieldPoolSearch();
+        });
+      }
+      if (fieldPoolSearchBtn) fieldPoolSearchBtn.addEventListener("click", doFieldPoolSearch);
+      if (fieldPoolResetBtn) {
+        fieldPoolResetBtn.addEventListener("click", () => {
+          fieldPoolSearch.value = "";
+          renderFieldPool();
+        });
+      }
+
+      renderBuilder();
+      renderResults();
+    </script>
+  </body>
+</html>

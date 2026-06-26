@@ -114,28 +114,33 @@
                       </div>
                       <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
                       <div class="pr-6">
-                        <div class="text-[12px] text-muted">联系人</div>
-                        <div class="mt-1 text-[14px] font-semibold" id="ovContactName">—</div>
+                        <div class="text-[12px] text-muted">法定代表人</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovLegalRep">—</div>
                       </div>
                       <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
                       <div class="pr-6">
-                        <div class="text-[12px] text-muted">联系方式</div>
-                        <div class="mt-1 text-[14px] font-semibold" id="ovPhone">—</div>
+                        <div class="text-[12px] text-muted">企业状态</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovEnterpriseStatus">—</div>
                       </div>
                       <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
-                      <div class="min-w-0 pr-6">
-                        <div class="text-[12px] text-muted">省市区</div>
-                        <div class="mt-1 text-[14px] font-semibold truncate max-w-[220px]" id="ovRegion">—</div>
+                      <div class="pr-6">
+                        <div class="text-[12px] text-muted">企业类型</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovEnterpriseType">—</div>
                       </div>
                       <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
-                      <div class="min-w-0 pr-6">
-                        <div class="text-[12px] text-muted">客户来源</div>
-                        <div class="mt-1 text-[14px] font-semibold truncate max-w-[180px]" id="ovSource">—</div>
+                      <div class="pr-6">
+                        <div class="text-[12px] text-muted">成立日期</div>
+                        <div class="mt-1 text-[14px] font-semibold" id="ovEstablishedAt">—</div>
                       </div>
                       <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
                       <div class="min-w-0">
                         <div class="text-[12px] text-muted">行业</div>
                         <div class="mt-1 text-[14px] font-semibold truncate max-w-[180px]" id="ovIndustry">—</div>
+                      </div>
+                      <div class="h-9 w-px bg-[rgba(201,205,212,.7)]"></div>
+                      <div class="min-w-0 pr-6">
+                        <div class="text-[12px] text-muted">省市区</div>
+                        <div class="mt-1 text-[14px] font-semibold truncate max-w-[220px]" id="ovRegion">—</div>
                       </div>
                     </div>
                   </div>
@@ -424,12 +429,14 @@
         }
 
         function renderOverview(cust) {
+          const d = cust ? getDetail(state.customerId) : {};
           document.getElementById("ovName").textContent = cust ? cust.name || "—" : "—";
           document.getElementById("ovGrade").innerHTML = getGradeTag(cust && cust.grade);
-          document.getElementById("ovContactName").textContent = (cust && cust.contactName) || "—";
-          document.getElementById("ovPhone").textContent = (cust && cust.contactPhone) || "—";
+          document.getElementById("ovLegalRep").textContent = (cust && (cust.legalRep || cust.legalPerson || cust.contactName)) || "—";
           document.getElementById("ovRegion").textContent = cust ? [cust.prov, cust.city, cust.dist].filter(Boolean).join(" / ") || "—" : "—";
-          document.getElementById("ovSource").textContent = (cust && cust.source) || "—";
+          document.getElementById("ovEnterpriseStatus").textContent = (cust && cust.enterpriseStatus) || "—";
+          document.getElementById("ovEnterpriseType").textContent = (cust && cust.enterpriseType) || "—";
+          document.getElementById("ovEstablishedAt").textContent = (d && d.establishedAt) || (cust && cust.establishedAt) || "—";
           document.getElementById("ovIndustry").textContent = (cust && cust.industry) || "—";
         }
 
@@ -501,6 +508,10 @@
             { key: "paidInCapital", label: "实缴资本", required: false, type: "text", value: d.paidInCapital || "" },
             { key: "orgCode", label: "组织机构代码", required: false, type: "text", value: d.orgCode || "" },
             { key: "businessTerm", label: "营业期限", required: false, type: "text", value: d.businessTerm || "" },
+            { key: "enterpriseStatus", label: "企业状态", required: false, type: "select-status", value: d.enterpriseStatus || cust.enterpriseStatus || "" },
+            { key: "annualRevenue", label: "年营业额", required: false, type: "text", value: d.annualRevenue || "" },
+            { key: "enterpriseScale", label: "企业规模", required: false, type: "text", value: d.enterpriseScale || "" },
+            { key: "enterpriseType", label: "企业类型", required: false, type: "select-enterprise-type", value: d.enterpriseType || cust.enterpriseType || "" },
             { key: "insuredCount", label: "参保人数", required: false, type: "text", value: d.insuredCount || "" },
             { key: "approvedAt", label: "核准日期", required: false, type: "date", value: d.approvedAt || "" },
             { key: "scope", label: "经营范围", required: false, type: "textarea", value: d.scope || "" },
@@ -509,8 +520,6 @@
 
           const right = [
             { key: "uscc", label: "统一社会信用代码", required: false, type: "text", value: cust.uscc || "" },
-            { key: "contactName", label: "联系人", required: true, type: "text", value: cust.contactName || "" },
-            { key: "contactPhone", label: "联系方式", required: true, type: "text", value: cust.contactPhone || "" },
             { key: "grade", label: "客户等级", required: false, type: "select-grade", value: cust.grade || "D" },
             { key: "industry", label: "行业类型", required: false, type: "select-industry", value: cust.industry || "" },
             { key: "establishedAt", label: "成立日期", required: false, type: "date", value: d.establishedAt || "" },
@@ -571,6 +580,30 @@
                 value: `<select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-c360-input="${esc(
                   f.key
                 )}">${opts}</select>`,
+              };
+            }
+            if (f.type === "select-status") {
+              const statuses = ["存续", "注销", "迁入", "迁出", "停业", "清算"];
+              const opts = statuses
+                .map((s) => `<option value="${esc(s)}" ${String(f.value || "") === s ? "selected" : ""}>${esc(s)}</option>`)
+                .join("");
+              return {
+                label,
+                value: `<select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-c360-input="${esc(
+                  f.key
+                )}"><option value="">请选择</option>${opts}</select>`,
+              };
+            }
+            if (f.type === "select-enterprise-type") {
+              const types = ["国企", "民企", "外企"];
+              const opts = types
+                .map((t) => `<option value="${esc(t)}" ${String(f.value || "") === t ? "selected" : ""}>${esc(t)}</option>`)
+                .join("");
+              return {
+                label,
+                value: `<select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-c360-input="${esc(
+                  f.key
+                )}"><option value="">请选择</option>${opts}</select>`,
               };
             }
             if (f.type === "region") {
@@ -636,7 +669,7 @@
                 </tbody>
               </table>
               <div class="mt-3 text-[12px] text-muted">
-                <span class="c360-required">必填项</span>：客户名称、联系人、联系方式
+                <span class="c360-required">必填项</span>：客户名称
               </div>
             </div>
           `;
@@ -1229,7 +1262,9 @@
                 leadId: x.id || x.leadId || "",
                 projectName: x.projectName || "",
                 projNo: x.projectNo || "",
+                contactName: x.contactName || "",
                 contact: x.contact || "",
+                title: x.title || "",
                 collector: x.collector || x.collectorName || "",
                 source: x.source || "",
                 industry: x.industry || "",
@@ -1253,6 +1288,8 @@
           const industries = ["半导体", "电子制造", "SMT", "PCB", "自动化", "新能源", "汽车电子"];
           const sources = ["展会采集", "官网表单", "线索池导入", "市场活动", "第三方数据"];
           const collectors = ["接口采集器-A", "爬虫采集器-B", "展会采集器-C"];
+          const contactNames = ["周伟", "刘敏", "王强", "赵磊", "陈晨", "孙浩", "李娜", "张伟"];
+          const titles = ["采购经理", "技术总监", "项目经理", "销售经理", "研发工程师", "总经理助理", "市场经理"];
           const provs = ["河南省", "江苏省", "上海市", "北京市", "浙江省", "广东省", "四川省"];
           const cities = ["郑州", "洛阳", "苏州", "南京", "浦东", "海淀", "杭州", "深圳", "成都"];
           const dists = ["金水区", "高新区", "工业园区", "浦东新区", "海淀区", "余杭区", "南山区", "武侯区"];
@@ -1282,6 +1319,8 @@
             const collector = pick(collectors, 210 + i);
 
             const projNo = `PRJ-2026-${String(1000 + Math.floor(rand01(seed + 220 + i) * 8999)).padStart(4, "0")}`;
+            const contactName = pick(contactNames, 230 + i);
+            const title = pick(titles, 240 + i);
             const contact =
               cust?.contactPhone ||
               `1${Math.floor(3000000000 + rand01(seed + 260 + i) * 699999999)
@@ -1296,7 +1335,9 @@
               leadId,
               projectName,
               projNo,
+              contactName,
               contact,
+              title,
               collector,
               source,
               industry,
@@ -1325,14 +1366,14 @@
 
           const body = rows
             .map((r) => {
-              const href = `https://example.com/lead-source-detail?leadId=${encodeURIComponent(r.leadId)}&customerId=${encodeURIComponent(
-                state.customerId || ""
-              )}`;
+              const href = "https://hbggzy.cn/jyxx/003002/003002004/20260611/8ff88f25-d3e3-4fef-b9f1-f807b9f78b7f.html";
               return `
                 <tr class="border-t border-[rgba(201,205,212,.45)]">
                   <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.projectName)}</td>
                   <td class="py-3 px-3 text-[14px] text-muted whitespace-nowrap">${esc(r.projNo)}</td>
+                  <td class="py-3 px-3 text-[14px] whitespace-nowrap">${esc(r.contactName || "—")}</td>
                   <td class="py-3 px-3 text-[14px] whitespace-nowrap">${esc(r.contact || "—")}</td>
+                  <td class="py-3 px-3 text-[14px] whitespace-nowrap">${esc(r.title || "—")}</td>
                   <td class="py-3 px-3 text-[14px] whitespace-nowrap">${esc(r.collector || "—")}</td>
                   <td class="py-3 px-3 text-[14px]">${esc(r.source || "—")}</td>
                   <td class="py-3 px-3 text-[14px]">${esc(r.industry || "—")}</td>
@@ -1355,12 +1396,14 @@
               </div>
             </div>
             <div class="mt-4 overflow-x-auto">
-              <table class="w-full min-w-[1220px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+              <table class="w-full min-w-[1380px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
                 <thead class="bg-[rgba(245,247,250,.9)]">
                   <tr class="border-b border-[rgba(201,205,212,.6)]">
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">项目名称</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">项目编号</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">联系人</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">联系方式</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">职位</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">所属采集器</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">数据来源</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">行业类型</th>
@@ -1420,11 +1463,7 @@
               };
 
               const name = get("name");
-              const contactPhone = get("contactPhone");
               if (!name) return openModal("校验失败", "客户名称不能为空。", "必填项校验");
-              const contactName = get("contactName");
-              if (!contactName) return openModal("校验失败", "联系人不能为空。", "必填项校验");
-              if (!contactPhone) return openModal("校验失败", "联系方式不能为空。", "必填项校验");
 
               const grade = get("grade") || "D";
               const source = get("source");
@@ -1433,6 +1472,9 @@
               const prov = get("prov");
               const city = get("city");
               const dist = get("dist");
+              const enterpriseStatus = get("enterpriseStatus");
+              const enterpriseType = get("enterpriseType");
+              const registeredCapital = get("registeredCapital");
 
               // sync to global CustomerStore (影响工作台/档案列表/提醒等)
               try {
@@ -1442,11 +1484,12 @@
                   source,
                   industry,
                   uscc,
-                  contactName,
-                  contactPhone,
                   prov,
                   city,
                   dist,
+                  enterpriseStatus,
+                  enterpriseType,
+                  registeredCapital,
                 });
               } catch (_) {}
 
@@ -1461,6 +1504,10 @@
                 orgCode: get("orgCode"),
                 taxNo: get("taxNo"),
                 businessTerm: get("businessTerm"),
+                enterpriseStatus,
+                annualRevenue: get("annualRevenue"),
+                enterpriseScale: get("enterpriseScale"),
+                enterpriseType,
                 regAuthority: get("regAuthority"),
                 insuredCount: get("insuredCount"),
                 formerName: get("formerName"),

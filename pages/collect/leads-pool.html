@@ -32,12 +32,12 @@
           <section class="bg-surface rounded-xl shadow-card border border-[rgba(201,205,212,.6)] p-4">
             <div class="text-[16px] font-semibold">搜索查询</div>
             <div class="mt-3 grid grid-cols-12 gap-3 items-end">
-              <div class="col-span-4">
+              <div class="col-span-12 md:col-span-6 lg:col-span-3">
                 <div class="text-[12px] text-muted mb-1">客户名称</div>
                 <input id="qName" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px] bg-surface" placeholder="请输入客户名称" />
               </div>
-              <div class="col-span-4">
-                <div class="text-[12px] text-muted mb-1">行业类型</div>
+              <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <div class="text-[12px] text-muted mb-1">行业类型（支持多选）</div>
                 <select id="qIndustry" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
                   <option value="">全部</option>
                   <option>半导体</option>
@@ -46,8 +46,18 @@
                   <option>科研院所</option>
                 </select>
               </div>
-              <div class="col-span-4">
-                <div class="text-[12px] text-muted mb-1">数据来源</div>
+              <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <div class="text-[12px] text-muted mb-1">客户等级</div>
+                <select id="qGrade" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+                  <option value="">全部</option>
+                  <option>A</option>
+                  <option>B</option>
+                  <option>C</option>
+                  <option>D</option>
+                </select>
+              </div>
+              <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <div class="text-[12px] text-muted mb-1">数据来源（支持多选）</div>
                 <select id="qSource" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
                   <option value="">全部</option>
                   <option>公开工商数据</option>
@@ -60,18 +70,14 @@
                 </select>
               </div>
 
-              <div class="col-span-4">
-                <div class="text-[12px] text-muted mb-1">所属采集器</div>
-                <input id="qCollector" class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入所属采集器" />
-              </div>
-              <div class="col-span-4">
+              <div class="col-span-12 md:col-span-6 lg:col-span-4">
                 <div class="text-[12px] text-muted mb-1">采集时间（起止）</div>
                 <div class="grid grid-cols-2 gap-2">
                   <input id="qCollectedStart" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
                   <input id="qCollectedEnd" type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" />
                 </div>
               </div>
-              <div class="col-span-4 flex gap-2 justify-end">
+              <div class="col-span-12 md:col-span-6 lg:col-span-8 flex gap-2 justify-end">
                 <button id="btnSearch" class="h-9 px-5 rounded-lg bg-primary text-white text-[14px] font-semibold" data-simulate-loading>搜索</button>
                 <button id="btnReset" class="h-9 px-5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold">重置</button>
               </div>
@@ -83,7 +89,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div class="text-[16px] font-semibold">线索列表</div>
               <div class="flex flex-wrap gap-2">
-                <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="bulk-in">批量入库（到CRM）</button>
+                <!-- <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-open-modal="bulk-in">批量入库（到CRM）</button> -->
                 <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-open-modal="bulk-grade">批量修改客户等级</button>
                 <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-open-modal="bulk-priority">设置优先级</button>
                 <button class="h-9 px-3 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface text-[14px] font-semibold" data-open-modal="bulk-export-selected">导出选中</button>
@@ -98,13 +104,15 @@
                   <tr>
                     <th class="text-left px-3 py-2 w-10"><input id="chkAll" type="checkbox" class="accent-primary" /></th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">客户名称</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">法定代表人</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">联系方式</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">客户等级</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">企业状态</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">企业类型</th>
+                    <th class="text-left px-3 py-2 whitespace-nowrap">注册资本</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">优先级</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">项目名称</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">项目编号</th>
-                    <th class="text-left px-3 py-2 whitespace-nowrap">所属采集器</th>
-                    <th class="text-left px-3 py-2 whitespace-nowrap">数据来源</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">行业类型</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">省市区</th>
                     <th class="text-left px-3 py-2 whitespace-nowrap">采集时间</th>
@@ -216,16 +224,8 @@
             </select>
           </div>
           <div class="col-span-12 md:col-span-6">
-            <div class="text-[12px] text-muted mb-1">联系人 <span class="text-[#F53F3F]">*</span></div>
-            <input id="fContactName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
-          </div>
-          <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">项目名称</div>
             <input id="fProjectName" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请输入项目名称" />
-          </div>
-          <div class="col-span-12 md:col-span-6">
-            <div class="text-[12px] text-muted mb-1">联系方式 <span class="text-[#F53F3F]">*</span></div>
-            <input id="fContact" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
           </div>
           <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">法定代表人</div>
@@ -273,6 +273,35 @@
           <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">营业期限</div>
             <input id="fBusinessTerm" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">企业状态</div>
+            <select id="fEnterpriseStatus" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="">请选择</option>
+              <option>存续</option>
+              <option>注销</option>
+              <option>迁入</option>
+              <option>迁出</option>
+              <option>停业</option>
+              <option>清算</option>
+            </select>
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">年营业额</div>
+            <input id="fAnnualRevenue" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">企业规模</div>
+            <input id="fEnterpriseScale" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <div class="text-[12px] text-muted mb-1">企业类型</div>
+            <select id="fEnterpriseType" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
+              <option value="">请选择</option>
+              <option>国企</option>
+              <option>民企</option>
+              <option>外企</option>
+            </select>
           </div>
           <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">工商注册号</div>
@@ -469,6 +498,7 @@
     <script src="../../assets/sidebar.js"></script>
     <script src="../../assets/components/customer-form-fields.js"></script>
     <script src="../../assets/app.js"></script>
+    <script src="../../assets/components/lead-detail-modal.js"></script>
     <script>
       // ----- utilities -----
       const PRIORITIES = ["低", "一般", "中", "紧急", "非常紧急"];
@@ -558,7 +588,7 @@
       }
 
       // ----- data -----
-      /** @type {{id:string,name:string,contact:string,uscc:string,grade:"A"|"B"|"C"|"D",priority:string,projectName:string,projectNo:string,collector:string,source:string,industry:string,prov:string,city:string,county:string,collectedAt:string,rawUrl:string,note:string,status:"normal"|"ignored"|"merged"}[]} */
+      /** @type {{id:string,name:string,contact:string,uscc:string,grade:"A"|"B"|"C"|"D",priority:string,projectName:string,projectNo:string,collector:string,source:string,industry:string,prov:string,city:string,county:string,collectedAt:string,rawUrl:string,note:string,status:"normal"|"ignored"|"merged",enterpriseStatus:string,annualRevenue:string,enterpriseScale:string,enterpriseType:string,contacts:{name:string,title:string,phone:string,email:string,address:string,source:string,sourceUrl:string,key?:boolean}[]}[]} */
       let leads = [
         {
           id: "L-0001",
@@ -579,6 +609,14 @@
           rawUrl: "https://example.com/source/1",
           note: "",
           status: "normal",
+          enterpriseStatus: "存续",
+          annualRevenue: "5000万元",
+          enterpriseScale: "",
+          enterpriseType: "民企",
+          contacts: [
+            { name: "李明", title: "采购经理", phone: "13812340001", email: "liming@demo.com", address: "上海/浦东", source: "招标采购", sourceUrl: "https://example.com/source/1", key: true },
+            { name: "王芳", title: "技术负责人", phone: "13912340001", email: "wangfang@demo.com", address: "上海/浦东", source: "垂直平台数据", sourceUrl: "https://example.com/source/1-dup" },
+          ],
         },
         {
           id: "L-0005",
@@ -599,26 +637,20 @@
           rawUrl: "https://example.com/source/1-dup",
           note: "",
           status: "normal",
+          enterpriseStatus: "存续",
+          annualRevenue: "5000万元",
+          enterpriseScale: "",
+          enterpriseType: "民企",
+          contacts: [
+            { name: "李明", title: "采购经理", phone: "13812340001", email: "liming@demo.com", address: "上海/浦东", source: "招标采购", sourceUrl: "https://example.com/source/1", key: true },
+            { name: "王芳", title: "技术负责人", phone: "13912340001", email: "wangfang@demo.com", address: "上海/浦东", source: "垂直平台数据", sourceUrl: "https://example.com/source/1-dup" },
+          ],
         },
         {
-          id: "L-0002",
-          name: "某某电子制造",
-          contact: "sales@demo.com",
-          uscc: "91320000MA1K0X0002",
-          grade: "C",
-          priority: "一般",
-          projectName: "产线升级",
-          projectNo: "PRJ-2026-002",
-          collector: "爬虫采集器-B",
-          source: "行业名录",
-          industry: "SMT/电子制造",
-          prov: "江苏",
-          city: "苏州",
-          county: "吴中",
-          collectedAt: "2026-04-13 18:00",
-          rawUrl: "https://example.com/source/2",
-          note: "",
-          status: "normal",
+          enterpriseType: "外企",
+          contacts: [
+            { name: "张伟", title: "销售经理", phone: "sales@demo.com", email: "sales@demo.com", address: "江苏/苏州", source: "行业名录", sourceUrl: "https://example.com/source/2", key: true },
+          ],
         },
         {
           id: "L-0006",
@@ -639,26 +671,19 @@
           rawUrl: "https://example.com/source/2-dup",
           note: "",
           status: "normal",
+          enterpriseStatus: "存续",
+          annualRevenue: "3000万元",
+          enterpriseScale: "",
+          enterpriseType: "民企",
+          contacts: [
+            { name: "张伟", title: "销售经理", phone: "sales@demo.com", email: "sales@demo.com", address: "江苏/苏州", source: "行业名录", sourceUrl: "https://example.com/source/2", key: true },
+          ],
         },
         {
-          id: "L-0003",
-          name: "某某研究院",
-          contact: "微信: demo_wechat",
-          uscc: "91110000MA1K0X0003",
-          grade: "A",
-          priority: "紧急",
-          projectName: "科研项目合作",
-          projectNo: "PRJ-2026-003",
-          collector: "接口采集器-A",
-          source: "政府科研数据",
-          industry: "科研院所",
-          prov: "北京",
-          city: "北京",
-          county: "海淀",
-          collectedAt: "2026-04-13 10:12",
-          rawUrl: "https://example.com/source/3",
-          note: "",
-          status: "normal",
+          enterpriseType: "国企",
+          contacts: [
+            { name: "陈教授", title: "项目负责人", phone: "微信: demo_wechat", email: "chen@institute.cn", address: "北京/海淀", source: "政府科研数据", sourceUrl: "https://example.com/source/3", key: true },
+          ],
         },
         {
           id: "L-0004",
@@ -679,6 +704,13 @@
           rawUrl: "https://example.com/source/4",
           note: "",
           status: "normal",
+          enterpriseStatus: "停业",
+          annualRevenue: "—",
+          enterpriseScale: "",
+          enterpriseType: "民企",
+          contacts: [
+            { name: "—", title: "—", phone: "（未抓取）", email: "", address: "—/—", source: "垂直平台数据", sourceUrl: "https://example.com/source/4" },
+          ],
         },
       ];
 
@@ -699,13 +731,13 @@
         const n = (document.getElementById("qName").value || "").trim();
         const s = document.getElementById("qSource")?.value || "";
         const ind = document.getElementById("qIndustry")?.value || "";
-        const col = (document.getElementById("qCollector")?.value || "").trim();
+        const g = document.getElementById("qGrade")?.value || "";
         const ds = document.getElementById("qCollectedStart")?.value || "";
         const de = document.getElementById("qCollectedEnd")?.value || "";
         if (n && !row.name.includes(n)) return false;
         if (s && String(row.source || "") !== s) return false;
         if (ind && String(row.industry || "") !== ind) return false;
-        if (col && !String(row.collector || "").includes(col)) return false;
+        if (g && String(row.grade || "") !== g) return false;
         if (ds && String(row.collectedAt || "").slice(0, 10) < ds) return false;
         if (de && String(row.collectedAt || "").slice(0, 10) > de) return false;
         return true;
@@ -723,7 +755,26 @@
           if (b.hasAttribute("disabled")) return;
           b.addEventListener("click", () => openEdit(b.getAttribute("data-edit")));
         });
+        document.querySelectorAll("[data-view]").forEach((b) => {
+          if (b.hasAttribute("disabled")) return;
+          b.addEventListener("click", () => {
+            const row = leads.find((x) => x.id === b.getAttribute("data-view"));
+            if (row) LeadDetailModal.open(row, { onEdit: () => openEdit(row.id) });
+          });
+        });
       }
+
+      function listStatusChip(status) {
+        const s = String(status || "").trim();
+        if (!s || s === "—") return "—";
+        let cls = "chip chip--primary";
+        if (s === "存续") cls = "chip chip--success";
+        else if (s === "注销") cls = "chip chip--danger";
+        else if (s === "迁入" || s === "迁出") cls = "chip chip--primary";
+        else if (s === "停业" || s === "清算") cls = "chip chip--warning";
+        return `<span class="${cls}">${escapeHtml(s)}</span>`;
+      }
+
       function render() {
         const filtered = leads.filter((x) => x.status !== "merged").filter(passesQuery);
         const { total, pages, slice } = paged(filtered);
@@ -756,22 +807,28 @@
           .map(
             (r) => {
               const editBtn = `<button class="text-primary font-semibold" data-edit="${r.id}">补全字段</button>`;
+              const contactCount = (r.contacts || []).length;
+              const contactBadge = contactCount > 0
+                ? `<button class="chip chip--primary hover:opacity-80" data-view="${r.id}">${contactCount}个联系方式</button>`
+                : `<span class="text-muted">—</span>`;
               return `
               <tr class="border-t border-[rgba(201,205,212,.6)]">
                 <td class="px-3 py-3"><input type="checkbox" class="accent-primary" data-row-chk="${r.id}" /></td>
                 <td class="px-3 py-3 font-semibold whitespace-nowrap">${escapeHtml(r.name)}</td>
-                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.contact)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.legalPerson || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${contactBadge}</td>
                 <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.grade || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${listStatusChip(r.enterpriseStatus)}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.enterpriseType || "—")}</td>
+                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.registeredCapital || "—")}</td>
                 <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.priority)}</td>
                 <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.projectName || "—")}</td>
                 <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.projectNo || "—")}</td>
-                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.collector || "—")}</td>
-                <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.source)}</td>
                 <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(r.industry)}</td>
                 <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(`${r.prov || "—"}/${r.city || "—"}/${r.county || "—"}`)}</td>
                 <td class="px-3 py-3 whitespace-nowrap text-muted text-[13px]">${escapeHtml(r.collectedAt)}</td>
                 <td class="px-3 py-3 text-right whitespace-nowrap space-x-3">
-                  <a class="text-primary font-semibold" href="${r.rawUrl}" target="_blank" rel="noreferrer">查看</a>
+                  <button class="text-primary font-semibold" data-view="${r.id}">查看</button>
                   ${editBtn}
                 </td>
               </tr>
@@ -823,13 +880,15 @@
         document.getElementById("fPaidInCapital").value = blankIfMissing(row.paidInCapital);
         document.getElementById("fOrgCode").value = blankIfMissing(row.orgCode);
         document.getElementById("fBusinessTerm").value = blankIfMissing(row.businessTerm);
+        document.getElementById("fEnterpriseStatus").value = blankIfMissing(row.enterpriseStatus);
+        document.getElementById("fAnnualRevenue").value = blankIfMissing(row.annualRevenue);
+        document.getElementById("fEnterpriseScale").value = blankIfMissing(row.enterpriseScale);
+        document.getElementById("fEnterpriseType").value = blankIfMissing(row.enterpriseType);
         document.getElementById("fInsuredCount").value = blankIfMissing(row.insuredCount);
         document.getElementById("fApprovedAt").value = blankIfMissing(row.approvedAt);
         document.getElementById("fScope").value = blankIfMissing(row.scope);
         document.getElementById("fNeedSummary").value = String(row.needSummary || "").slice(0, 240);
         document.getElementById("fUscc").value = blankIfMissing(row.uscc);
-        document.getElementById("fContactName").value = blankIfMissing(row.contactName);
-        document.getElementById("fContact").value = blankIfMissing(row.contact);
         document.getElementById("fGrade").value = row.grade || "D";
         document.getElementById("fIndustry").value = blankIfMissing(row.industry);
         document.getElementById("fEstablishedAt").value = blankIfMissing(row.establishedAt);
@@ -847,11 +906,7 @@
         const row = leads.find((x) => x.id === editingId);
         if (!row) return;
         const name = val("fName");
-        const contactName = val("fContactName");
-        const contact = val("fContact");
         if (!name) return toast("error", "无法保存", "请填写客户名称");
-        if (!contactName) return toast("error", "无法保存", "请填写联系人");
-        if (!contact) return toast("error", "无法保存", "请填写联系方式");
         row.name = name;
         row.source = val("fSource");
         row.projectName = val("fProjectName");
@@ -862,13 +917,15 @@
         row.paidInCapital = val("fPaidInCapital");
         row.orgCode = val("fOrgCode");
         row.businessTerm = val("fBusinessTerm");
+        row.enterpriseStatus = val("fEnterpriseStatus");
+        row.annualRevenue = val("fAnnualRevenue");
+        row.enterpriseScale = val("fEnterpriseScale");
+        row.enterpriseType = val("fEnterpriseType");
         row.insuredCount = val("fInsuredCount");
         row.approvedAt = val("fApprovedAt");
         row.scope = val("fScope").slice(0, 240);
         row.needSummary = val("fNeedSummary").slice(0, 240);
         row.uscc = val("fUscc");
-        row.contactName = contactName;
-        row.contact = contact;
         row.grade = val("fGrade") || "D";
         row.industry = val("fIndustry");
         row.establishedAt = val("fEstablishedAt");
@@ -1481,8 +1538,8 @@
         if (qs) qs.value = "";
         const qi = document.getElementById("qIndustry");
         if (qi) qi.value = "";
-        const qc = document.getElementById("qCollector");
-        if (qc) qc.value = "";
+        const qg = document.getElementById("qGrade");
+        if (qg) qg.value = "";
         const qds = document.getElementById("qCollectedStart");
         if (qds) qds.value = "";
         const qde = document.getElementById("qCollectedEnd");

@@ -7,7 +7,7 @@
   const K = "ai_customer_store_v1";
 
   /** @typedef {{id:string,name:string,phone:string,avatar:string,role:string,region:string,hasSalesWorkbench:boolean,managerName?:string}} Employee */
-  /** @typedef {{id:string,name:string,grade:"A"|"B"|"C"|"D",priority:"非常紧急"|"紧急"|"中",statusFlow:"待跟进"|"跟进中"|"商机"|"报价"|"合同"|"交付"|"放弃",nextFollowAt:string,prov:string,city:string,dist:string,source:string,industry:string,createdAt:string,regionOwner:string,finalOwnerId:string|null,contactName?:string,contactPhone?:string,uscc?:string,tags?:string[],legalRep?:string,establishedAt?:string,regCapital?:string,paidCapital?:string,regNo?:string,orgCode?:string,taxId?:string,bizTerm?:string,regAuthority?:string,insuredCount?:number,formerName?:string,approveAt?:string,regAddr?:string,bizScope?:string,needSummary?:string}} Customer */
+  /** @typedef {{id:string,name:string,grade:"A"|"B"|"C"|"D",priority:"非常紧急"|"紧急"|"中",statusFlow:"待跟进"|"跟进中"|"商机"|"报价"|"合同"|"交付"|"放弃",nextFollowAt:string,prov:string,city:string,dist:string,source:string,industry:string,createdAt:string,regionOwner:string,finalOwnerId:string|null,contactName?:string,contactPhone?:string,uscc?:string,tags?:string[],legalRep?:string,enterpriseStatus?:string,enterpriseType?:string,establishedAt?:string,regCapital?:string,paidCapital?:string,regNo?:string,orgCode?:string,taxId?:string,bizTerm?:string,regAuthority?:string,insuredCount?:number,formerName?:string,approveAt?:string,regAddr?:string,bizScope?:string,needSummary?:string,contacts?:{name?:string,phone?:string,email?:string,title?:string}[]}} Customer */
 
   const listeners = new Set();
   function emit() {
@@ -300,7 +300,19 @@
       },
     ];
 
+    migrateCustomerFields(customers);
     return { employees, customers };
+  }
+
+  function migrateCustomerFields(customers) {
+    const types = ["有限责任公司", "股份有限公司", "民营企业", "国企"];
+    customers.forEach((c, i) => {
+      if (!c.legalRep) c.legalRep = c.contactName || "—";
+      if (!c.enterpriseStatus) c.enterpriseStatus = "存续";
+      if (!c.enterpriseType) c.enterpriseType = types[i % types.length];
+      if (!c.regCapital) c.regCapital = `${(i + 1) * 500}万元`;
+      if (!c.contacts) c.contacts = c.contactPhone ? [{ name: c.contactName || "", phone: c.contactPhone }] : [];
+    });
   }
 
   function load() {
@@ -309,6 +321,10 @@
       if (!raw) throw new Error("empty");
       const data = JSON.parse(raw);
       if (!data || !Array.isArray(data.customers) || !Array.isArray(data.employees)) throw new Error("bad");
+      migrateCustomerFields(data.customers);
+      try {
+        localStorage.setItem(K, JSON.stringify(data));
+      } catch (_) {}
       return data;
     } catch (_) {
       const s = seed();
