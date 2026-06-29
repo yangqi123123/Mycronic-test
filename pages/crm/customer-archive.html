@@ -286,7 +286,10 @@
 
           <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">营业期限</div>
-            <input id="cBizTerm" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="文本/日期区间（非必填）" />
+            <div class="grid grid-cols-2 gap-2">
+              <input id="cBizTermStart" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请选择开始日期" />
+              <input id="cBizTermEnd" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请选择结束日期" />
+            </div>
           </div>
           <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">工商注册号</div>
@@ -525,6 +528,13 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#39;");
+      }
+      function formatBizTerm(start, end) {
+        const s = String(start || "").trim();
+        const e = String(end || "").trim();
+        if (!s && !e) return "";
+        if (!e) return `${s} 至 长期`;
+        return `${s} 至 ${e}`;
       }
       function openModal(id) {
         const ov = document.querySelector(`[data-overlay="${id}"]`);
@@ -1163,7 +1173,10 @@
               regNo: (document.getElementById("cRegNo").value || "").trim(),
               orgCode: (document.getElementById("cOrgCode").value || "").trim(),
               taxId: (document.getElementById("cTaxId").value || "").trim(),
-              bizTerm: (document.getElementById("cBizTerm").value || "").trim(),
+              bizTerm: formatBizTerm(
+                (document.getElementById("cBizTermStart").value || "").trim(),
+                (document.getElementById("cBizTermEnd").value || "").trim()
+              ),
               regAuthority: (document.getElementById("cRegAuthority").value || "").trim(),
               insuredCount: (() => {
                 const v = (document.getElementById("cInsuredCount").value || "").trim();
@@ -1201,7 +1214,8 @@
           document.getElementById("cRegNo").value = "";
           document.getElementById("cOrgCode").value = "";
           document.getElementById("cTaxId").value = "";
-          document.getElementById("cBizTerm").value = "";
+          document.getElementById("cBizTermStart").value = "";
+          document.getElementById("cBizTermEnd").value = "";
           document.getElementById("cRegAuthority").value = "";
           document.getElementById("cInsuredCount").value = "";
           document.getElementById("cFormerName").value = "";

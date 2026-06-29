@@ -272,7 +272,10 @@
           </div>
           <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">营业期限</div>
-            <input id="fBusinessTerm" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" />
+            <div class="grid grid-cols-2 gap-2">
+              <input id="fBusinessTermStart" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请选择开始日期" />
+              <input id="fBusinessTermEnd" type="date" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] px-3 text-[14px]" placeholder="请选择结束日期" />
+            </div>
           </div>
           <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">企业状态</div>
@@ -850,6 +853,19 @@
         const el = document.getElementById(id);
         return el ? String(el.value || "").trim() : "";
       }
+      function parseBizTerm(s) {
+        const str = String(s || "").trim();
+        if (!str) return ["", ""];
+        const parts = str.split(" 至 ");
+        return [parts[0] || "", parts[1] || ""];
+      }
+      function formatBizTerm(start, end) {
+        const s = String(start || "").trim();
+        const e = String(end || "").trim();
+        if (!s && !e) return "";
+        if (!e) return `${s} 至 长期`;
+        return `${s} 至 ${e}`;
+      }
       function openEdit(id) {
         const row = leads.find((x) => x.id === id);
         if (!row) return;
@@ -879,7 +895,9 @@
         }
         document.getElementById("fPaidInCapital").value = blankIfMissing(row.paidInCapital);
         document.getElementById("fOrgCode").value = blankIfMissing(row.orgCode);
-        document.getElementById("fBusinessTerm").value = blankIfMissing(row.businessTerm);
+        const [btStart, btEnd] = parseBizTerm(row.businessTerm);
+        document.getElementById("fBusinessTermStart").value = btStart;
+        document.getElementById("fBusinessTermEnd").value = btEnd;
         document.getElementById("fEnterpriseStatus").value = blankIfMissing(row.enterpriseStatus);
         document.getElementById("fAnnualRevenue").value = blankIfMissing(row.annualRevenue);
         document.getElementById("fEnterpriseScale").value = blankIfMissing(row.enterpriseScale);
@@ -916,7 +934,7 @@
         row.county = val("fCounty");
         row.paidInCapital = val("fPaidInCapital");
         row.orgCode = val("fOrgCode");
-        row.businessTerm = val("fBusinessTerm");
+        row.businessTerm = formatBizTerm(val("fBusinessTermStart"), val("fBusinessTermEnd"));
         row.enterpriseStatus = val("fEnterpriseStatus");
         row.annualRevenue = val("fAnnualRevenue");
         row.enterpriseScale = val("fEnterpriseScale");
