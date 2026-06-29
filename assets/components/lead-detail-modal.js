@@ -187,7 +187,7 @@
             </div>
             <div class="mt-1.5 flex items-center justify-between">
               <span class="text-[12px] text-muted">来源网页</span>
-              <a href="${escapeHtml(c.sourceUrl || "#")}" target="_blank" rel="noopener noreferrer" class="source-url-link text-[12px] text-primary font-semibold truncate max-w-[60%] hover:underline">${escapeHtml(c.sourceUrl || "—")}</a>
+              <a href="${escapeHtml(c.sourceUrl || "#")}" target="_blank" rel="noopener noreferrer" class="source-url-link text-[12px] text-primary font-semibold truncate max-w-[60%] hover:underline" onclick="event.stopPropagation();">${escapeHtml(c.sourceUrl || "—")}</a>
             </div>
             <div class="mt-1.5 flex items-center justify-between">
               <span class="text-[12px] text-muted">采集器</span>
