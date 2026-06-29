@@ -322,9 +322,9 @@
         "成立日期": { category: "工商信息", type: "date" },
         "注册资本": { category: "工商信息", type: "number" },
         "实缴资本": { category: "工商信息", type: "number" },
-        "企业类型": { category: "工商信息", type: "select", options: ["国企", "民企", "外企"] },
+        "企业类型": { category: "工商信息", type: "text" },
         "企业规模": { category: "工商信息", type: "number" },
-        "企业状态": { category: "工商信息", type: "select", options: ["存续", "注销", "迁入", "迁出", "停业", "清算"] },
+        "企业状态": { category: "工商信息", type: "text" },
         "营业期限": { category: "工商信息", type: "date" },
         "参保人数": { category: "工商信息", type: "number" },
         "年营业额": { category: "工商信息", type: "number" },
@@ -337,12 +337,12 @@
         "组织机构代码": { category: "工商信息", type: "text" },
         "联系人": { category: "联系方式", type: "contactName" },
         "联系电话": { category: "联系方式", type: "contactPhone" },
-        "客户等级": { category: "业务信息", type: "select", options: ["A", "B", "C", "D"] },
-        "优先级": { category: "业务信息", type: "select", options: ["低", "一般", "中", "紧急", "非常紧急"] },
-        "行业类型": { category: "业务信息", type: "select", options: ["半导体", "SMT/电子制造", "PCB", "科研院所"] },
+        "客户等级": { category: "业务信息", type: "text" },
+        "优先级": { category: "业务信息", type: "text" },
+        "行业类型": { category: "业务信息", type: "text" },
         "项目名称": { category: "业务信息", type: "text" },
         "项目编号": { category: "业务信息", type: "text" },
-        "采集器": { category: "业务信息", type: "select", options: ["接口采集器-A", "爬虫采集器-B", "展会采集器-C"] },
+        "采集器": { category: "业务信息", type: "text" },
         "数据来源": { category: "业务信息", type: "select", options: ["招标采购", "行业名录", "政府科研数据", "垂直平台数据", "公开工商数据"] },
         "采集时间": { category: "业务信息", type: "date" },
         "经营范围": { category: "产品信息", type: "text" },
@@ -350,12 +350,12 @@
       };
 
       const OPERATORS = {
-        text: ["包含任一", "包含全部", "不等于", "大于", "小于"],
+        text: ["包含任一", "包含全部", "不等于"],
         date: ["等于", "大于", "小于", "在...之间"],
         number: ["等于", "大于", "小于", "大于等于", "小于等于"],
         select: ["等于", "不等于"],
-        contactName: ["包含任一", "包含全部", "不等于", "大于", "小于"],
-        contactPhone: ["包含任一", "包含全部", "不等于", "大于", "小于"],
+        contactName: ["包含任一", "包含全部", "不等于"],
+        contactPhone: ["包含任一", "包含全部", "不等于"],
       };
 
       const DEFAULT_OPERATOR = {
