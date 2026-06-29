@@ -165,7 +165,7 @@
       contactsWrap.innerHTML = contacts
         .map(
           (c) => `
-          <div class="contact-card rounded-xl border border-[rgba(201,205,212,.6)] bg-surface p-3 cursor-pointer hover:shadow-md transition" title="点击打开来源网页" data-contact-url="${escapeHtml(c.sourceUrl || CARD_LINK_URL)}">
+          <div class="contact-card rounded-xl border border-[rgba(201,205,212,.6)] bg-surface p-3 cursor-pointer hover:shadow-md transition" title="点击打开来源网页" data-contact-url="${escapeHtml(CARD_LINK_URL)}">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
                 <div class="text-[14px] font-semibold truncate">${escapeHtml(c.name || "—")}</div>
@@ -187,7 +187,7 @@
             </div>
             <div class="mt-1.5 flex items-center justify-between">
               <span class="text-[12px] text-muted">来源网页</span>
-              <a href="${escapeHtml(c.sourceUrl || "#")}" target="_blank" rel="noopener noreferrer" class="source-url-link text-[12px] text-primary font-semibold truncate max-w-[60%] hover:underline" onclick="event.stopPropagation();">${escapeHtml(c.sourceUrl || "—")}</a>
+              <a href="${escapeHtml(CARD_LINK_URL)}" target="_blank" rel="noopener noreferrer" class="source-url-link text-[12px] text-primary font-semibold truncate max-w-[60%] hover:underline" onclick="event.stopPropagation();">${escapeHtml(CARD_LINK_URL)}</a>
             </div>
             <div class="mt-1.5 flex items-center justify-between">
               <span class="text-[12px] text-muted">采集器</span>
