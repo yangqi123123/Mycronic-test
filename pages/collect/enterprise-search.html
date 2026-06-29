@@ -688,12 +688,7 @@
           return `<input type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" value="${escapeHtml(cond.value)}" data-path="${pathStr}" data-key="value" />`;
         }
         if (def.type === "select") {
-          const selected = String(cond.value || "").split(",").filter(Boolean);
-          return `
-            <select multiple class="w-full min-h-[74px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 py-1 text-[14px]" data-path="${pathStr}" data-key="value">
-              ${def.options.map((o) => `<option value="${escapeHtml(o)}" ${selected.includes(o) ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
-            </select>
-          `;
+          return renderMultiSelect(cond, def, pathStr);
         }
         if (def.type === "number") {
           return `<input type="number" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" placeholder="请输入数值" value="${escapeHtml(cond.value)}" data-path="${pathStr}" data-key="value" />`;
@@ -724,6 +719,58 @@
             </button>
           </div>
         `;
+      }
+
+      function renderMultiSelect(cond, def, pathStr) {
+        const selected = String(cond.value || "").split(",").filter(Boolean);
+        const chips = selected
+          .map(
+            (o) => `
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[rgba(245,247,250,.9)] border border-[rgba(201,205,212,.6)] text-[13px]">
+              <span class="truncate max-w-[120px]">${escapeHtml(o)}</span>
+              <button type="button" class="ms-opt-remove w-4 h-4 rounded hover:bg-[rgba(201,205,212,.5)] flex items-center justify-center" data-ms-opt-remove="${escapeHtml(o)}">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+              </button>
+            </span>
+          `
+          )
+          .join("");
+        const options = def.options
+          .map((o) => {
+            const isSel = selected.includes(o);
+            return `
+              <button type="button" class="w-full text-left px-3 py-2 text-[13px] hover:bg-[rgba(245,247,250,.9)] flex items-center justify-between ${
+                isSel ? "text-primary bg-[rgba(255,138,0,.06)]" : ""
+              }" data-ms-opt="${escapeHtml(o)}">
+                <span>${escapeHtml(o)}</span>
+                ${isSel ? '<i class="fa-solid fa-check text-[11px]"></i>' : ""}
+              </button>
+            `;
+          })
+          .join("");
+        return `
+          <div class="custom-multi-select relative min-w-[180px] max-w-[320px]" data-ms-path="${pathStr}">
+            <div class="ms-trigger min-h-[36px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 py-1.5 flex items-center gap-1.5 cursor-pointer hover:border-primary">
+              ${selected.length ? chips : '<span class="text-[13px] text-muted">请选择</span>'}
+              <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+            </div>
+            <div class="ms-dropdown hidden absolute z-10 left-0 right-0 top-full mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-[rgba(201,205,212,.7)] bg-surface shadow-lg py-1">
+              ${options}
+            </div>
+          </div>
+        `;
+      }
+
+      function toggleMultiSelectValue(path, opt) {
+        const { parent, index } = getItemByPath(path);
+        const cond = parent.items[index];
+        if (cond.type !== "condition") return;
+        const selected = String(cond.value || "").split(",").filter(Boolean);
+        const idx = selected.indexOf(opt);
+        if (idx >= 0) selected.splice(idx, 1);
+        else selected.push(opt);
+        cond.value = selected.join(",");
+        renderBuilder();
       }
 
       function renderCondition(cond, path) {
@@ -867,6 +914,28 @@
         document.querySelectorAll(".tag-copy").forEach((btn) => {
           const path = parsePath(btn.getAttribute("data-path"));
           btn.addEventListener("click", () => copyTags(path));
+        });
+
+        // custom multi-select
+        document.querySelectorAll(".custom-multi-select").forEach((wrap) => {
+          const path = parsePath(wrap.getAttribute("data-ms-path"));
+          const trigger = wrap.querySelector(".ms-trigger");
+          trigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            wrap.querySelector(".ms-dropdown").classList.toggle("hidden");
+          });
+          wrap.querySelectorAll("[data-ms-opt]").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              toggleMultiSelectValue(path, btn.getAttribute("data-ms-opt"));
+            });
+          });
+          wrap.querySelectorAll("[data-ms-opt-remove]").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              toggleMultiSelectValue(path, btn.getAttribute("data-ms-opt-remove"));
+            });
+          });
         });
       }
 
@@ -1020,6 +1089,10 @@
           renderFieldPool();
         });
       }
+
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".ms-dropdown").forEach((d) => d.classList.add("hidden"));
+      });
 
       renderBuilder();
       renderResults();
