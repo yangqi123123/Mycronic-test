@@ -676,22 +676,6 @@
 
       function renderValueInput(cond, def, pathStr) {
         if (cond.operator === "在...之间" && def.type === "date") {
-          const labeledRange = ["成立日期", "采集时间"].includes(cond.field);
-          if (labeledRange) {
-            return `
-              <div class="flex items-end gap-2">
-                <div>
-                  <div class="text-[12px] text-muted mb-1">开始时间</div>
-                  <input type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" value="${escapeHtml(cond.value)}" data-path="${pathStr}" data-key="value" />
-                </div>
-                <span class="text-[13px] text-muted pb-2.5">至</span>
-                <div>
-                  <div class="text-[12px] text-muted mb-1">结束时间</div>
-                  <input type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" value="${escapeHtml(cond.value2)}" data-path="${pathStr}" data-key="value2" />
-                </div>
-              </div>
-            `;
-          }
           return `
             <input type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" value="${escapeHtml(cond.value)}" data-path="${pathStr}" data-key="value" />
             <span class="text-[13px] text-muted">至</span>
@@ -825,6 +809,7 @@
             const path = parsePath(el.getAttribute("data-path"));
             const key = el.getAttribute("data-key");
             updateCondition(path, key, el.value);
+            if (key === "operator") renderBuilder();
           });
         });
 
