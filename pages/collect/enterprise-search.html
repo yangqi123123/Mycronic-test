@@ -507,8 +507,10 @@
         }
 
         if (def.type === "select") {
-          if (op === "等于") return raw === val;
-          if (op === "不等于") return raw !== val;
+          const vals = String(val).split(",").filter(Boolean);
+          if (!vals.length) return true;
+          if (op === "等于") return vals.includes(raw);
+          if (op === "不等于") return !vals.includes(raw);
           return true;
         }
 
@@ -686,10 +688,10 @@
           return `<input type="date" class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" value="${escapeHtml(cond.value)}" data-path="${pathStr}" data-key="value" />`;
         }
         if (def.type === "select") {
+          const selected = String(cond.value || "").split(",").filter(Boolean);
           return `
-            <select class="h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-path="${pathStr}" data-key="value">
-              <option value="">请选择</option>
-              ${def.options.map((o) => `<option ${cond.value === o ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
+            <select multiple class="w-full min-h-[74px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 py-1 text-[14px]" data-path="${pathStr}" data-key="value">
+              ${def.options.map((o) => `<option value="${escapeHtml(o)}" ${selected.includes(o) ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
             </select>
           `;
         }
@@ -808,7 +810,12 @@
           el.addEventListener("change", () => {
             const path = parsePath(el.getAttribute("data-path"));
             const key = el.getAttribute("data-key");
-            updateCondition(path, key, el.value);
+            const value = el.hasAttribute("multiple")
+              ? Array.from(el.selectedOptions)
+                  .map((o) => o.value)
+                  .join(",")
+              : el.value;
+            updateCondition(path, key, value);
             if (key === "operator") renderBuilder();
           });
         });
