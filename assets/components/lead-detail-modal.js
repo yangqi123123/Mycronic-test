@@ -182,8 +182,12 @@
               <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-muted w-4 text-center"></i><span class="truncate">${escapeHtml(c.address || "—")}</span></div>
             </div>
             <div class="mt-2 pt-2 border-t border-[rgba(201,205,212,.4)] flex items-center justify-between">
-              <span class="text-[12px] text-muted">来源</span>
-              <button class="text-[12px] px-2 py-1 rounded-lg bg-[rgba(0,180,42,.10)] text-[rgba(0,180,42,.9)] font-semibold hover:opacity-80 source-link" data-source-url="${escapeHtml(c.sourceUrl || "#")}">${escapeHtml(c.source || "—")}</button>
+              <span class="text-[12px] text-muted">数据来源</span>
+              <span class="text-[12px] font-medium truncate max-w-[60%]">${escapeHtml(c.source || "—")}</span>
+            </div>
+            <div class="mt-1.5 flex items-center justify-between">
+              <span class="text-[12px] text-muted">来源网页</span>
+              <a href="${escapeHtml(c.sourceUrl || "#")}" target="_blank" rel="noopener noreferrer" class="source-url-link text-[12px] text-primary font-semibold truncate max-w-[60%] hover:underline">${escapeHtml(c.sourceUrl || "—")}</a>
             </div>
             <div class="mt-1.5 flex items-center justify-between">
               <span class="text-[12px] text-muted">采集器</span>
@@ -196,15 +200,8 @@
       contactsWrap.querySelectorAll(".contact-card").forEach((card) => {
         card.addEventListener("click", () => window.open(CARD_LINK_URL, "_blank", "noopener,noreferrer"));
       });
-      contactsWrap.querySelectorAll(".source-link").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const url = btn.getAttribute("data-source-url") || "#";
-          document.getElementById("sourcePreviewUrl").textContent = url;
-          const link = document.getElementById("sourcePreviewLink");
-          link.href = url;
-          openModal("lead-source-preview");
-        });
+      contactsWrap.querySelectorAll(".source-url-link").forEach((a) => {
+        a.addEventListener("click", (e) => e.stopPropagation());
       });
     }
 
