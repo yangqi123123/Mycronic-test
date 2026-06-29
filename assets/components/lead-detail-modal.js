@@ -165,7 +165,7 @@
       contactsWrap.innerHTML = contacts
         .map(
           (c) => `
-          <div class="contact-card rounded-xl border border-[rgba(201,205,212,.6)] bg-surface p-3 cursor-pointer hover:shadow-md transition" title="点击打开来源网页">
+          <div class="contact-card rounded-xl border border-[rgba(201,205,212,.6)] bg-surface p-3 cursor-pointer hover:shadow-md transition" title="点击打开来源网页" data-contact-url="${escapeHtml(c.sourceUrl || CARD_LINK_URL)}">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
                 <div class="text-[14px] font-semibold truncate">${escapeHtml(c.name || "—")}</div>
@@ -198,7 +198,7 @@
         )
         .join("");
       contactsWrap.querySelectorAll(".contact-card").forEach((card) => {
-        card.addEventListener("click", () => window.open(CARD_LINK_URL, "_blank", "noopener,noreferrer"));
+        card.addEventListener("click", () => window.open(card.getAttribute("data-contact-url") || CARD_LINK_URL, "_blank", "noopener,noreferrer"));
       });
       contactsWrap.querySelectorAll(".source-url-link").forEach((a) => {
         a.addEventListener("click", (e) => e.stopPropagation());
