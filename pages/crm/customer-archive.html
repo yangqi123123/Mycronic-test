@@ -257,13 +257,13 @@
           </div>
           <div class="col-span-6">
             <div class="text-[12px] text-muted mb-1">行业类型</div>
-            <select id="cIndustry" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-              <option value="">请选择</option>
-              <option>半导体</option>
-              <option>SMT/电子制造</option>
-              <option>PCB</option>
-              <option>科研院所</option>
-            </select>
+            <div class="custom-multi-select relative" id="cIndustryMultiSelect">
+              <div class="ms-trigger min-h-[40px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 py-1.5 flex flex-wrap items-center gap-1.5 cursor-pointer hover:border-primary">
+                <span class="text-[13px] text-muted" id="cIndustryPlaceholder">请选择</span>
+                <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+              </div>
+              <div class="ms-dropdown hidden absolute z-10 left-0 right-0 top-full mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-[rgba(201,205,212,.7)] bg-surface shadow-lg py-1" id="cIndustryDropdown"></div>
+            </div>
           </div>
 
           <div class="col-span-6">
@@ -536,6 +536,61 @@
         if (!e) return `${s} 至 长期`;
         return `${s} 至 ${e}`;
       }
+
+      const CREATE_INDUSTRY_OPTIONS = ["半导体", "SMT/电子制造", "PCB", "科研院所"];
+      /** @type {string[]} */
+      let selectedCreateIndustries = [];
+
+      function renderCreateIndustry() {
+        const wrap = document.getElementById("cIndustryMultiSelect");
+        const dropdown = document.getElementById("cIndustryDropdown");
+        if (!wrap || !dropdown) return;
+        const chips = selectedCreateIndustries
+          .map(
+            (o) => `
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[rgba(255,138,0,.10)] text-primary text-[13px]">
+              <span>${escapeHtml(o)}</span>
+              <button type="button" class="create-industry-remove w-4 h-4 rounded hover:bg-[rgba(255,138,0,.20)] flex items-center justify-center" data-create-industry-remove="${escapeHtml(o)}">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+              </button>
+            </span>
+          `
+          )
+          .join("");
+        const trigger = wrap.querySelector(".ms-trigger");
+        if (trigger) {
+          trigger.innerHTML = `
+            ${selectedCreateIndustries.length ? chips : '<span class="text-[13px] text-muted" id="cIndustryPlaceholder">请选择</span>'}
+            <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+          `;
+        }
+        dropdown.innerHTML = CREATE_INDUSTRY_OPTIONS.map((o) => {
+          const isSel = selectedCreateIndustries.includes(o);
+          return `
+            <button type="button" class="w-full text-left px-3 py-2 text-[13px] hover:bg-[rgba(245,247,250,.9)] flex items-center justify-between ${
+              isSel ? "text-primary bg-[rgba(255,138,0,.06)]" : ""
+            }" data-create-industry-opt="${escapeHtml(o)}">
+              <span>${escapeHtml(o)}</span>
+              ${isSel ? '<i class="fa-solid fa-check text-[11px]"></i>' : ""}
+            </button>
+          `;
+        }).join("");
+      }
+
+      function toggleCreateIndustry(opt) {
+        const idx = selectedCreateIndustries.indexOf(opt);
+        if (idx >= 0) selectedCreateIndustries.splice(idx, 1);
+        else selectedCreateIndustries.push(opt);
+        renderCreateIndustry();
+      }
+
+      function resetCreateIndustry() {
+        selectedCreateIndustries = [];
+        renderCreateIndustry();
+        const dropdown = document.getElementById("cIndustryDropdown");
+        if (dropdown) dropdown.classList.add("hidden");
+      }
+
       function openModal(id) {
         const ov = document.querySelector(`[data-overlay="${id}"]`);
         const m = document.querySelector(`[data-modal="${id}"]`);
@@ -1162,7 +1217,7 @@
               contactPhone: contact,
               source: (document.getElementById("cSource").value || "").trim() || "手工新增",
               projectName: (document.getElementById("cProjectName").value || "").trim(),
-              industry: (document.getElementById("cIndustry").value || "").trim(),
+              industry: selectedCreateIndustries.join(","),
               createdAt: "2026-04-14",
               regionOwner: currentUser.name,
               finalOwnerId: null,
@@ -1205,7 +1260,7 @@
           document.getElementById("cGrade").value = "C";
           document.getElementById("cSource").value = "手工新增";
           document.getElementById("cProjectName").value = "";
-          document.getElementById("cIndustry").value = "";
+          resetCreateIndustry();
           document.getElementById("cLegalRep").value = "";
           document.getElementById("cEstablishedAt").value = "";
           document.getElementById("cRegAddr").value = "";
@@ -1289,6 +1344,7 @@
         const id = b.getAttribute("data-open-modal");
         b.addEventListener("click", () => {
           if (id === "cust-create") {
+            resetCreateIndustry();
             // open 新增客户时，清理必填错误提示
             const nameEl = document.getElementById("cName");
             const usccEl = document.getElementById("cUscc");
@@ -1312,6 +1368,31 @@
           openModal(id);
         });
       });
+
+      // 新增客户弹窗：行业类型标签多选事件绑定
+      (function () {
+        const wrap = document.getElementById("cIndustryMultiSelect");
+        const dropdown = document.getElementById("cIndustryDropdown");
+        if (!wrap || !dropdown) return;
+        renderCreateIndustry();
+        wrap.querySelector(".ms-trigger")?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle("hidden");
+        });
+        dropdown.addEventListener("click", (e) => {
+          const btn = e.target && e.target.closest && e.target.closest("[data-create-industry-opt]");
+          if (!btn) return;
+          e.stopPropagation();
+          toggleCreateIndustry(btn.getAttribute("data-create-industry-opt"));
+        });
+        wrap.addEventListener("click", (e) => {
+          const btn = e.target && e.target.closest && e.target.closest("[data-create-industry-remove]");
+          if (!btn) return;
+          e.stopPropagation();
+          toggleCreateIndustry(btn.getAttribute("data-create-industry-remove"));
+        });
+        document.addEventListener("click", () => dropdown.classList.add("hidden"));
+      })();
 
       // init（绑定全局 CustomerStore，确保跨模块实时同步）
       ensureReady(() => {
