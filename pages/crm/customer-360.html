@@ -446,6 +446,10 @@
           editMode: false,
           contactPage: 1,
         };
+        const INFO_INDUSTRY_OPTIONS = (typeof window !== "undefined" && window.CustomerFormFields && window.CustomerFormFields.INDUSTRY_TYPES)
+          ? window.CustomerFormFields.INDUSTRY_TYPES
+          : ["半导体", "SMT/电子制造", "PCB", "科研院所"];
+        let infoIndustrySelection = [];
 
         function renderTabs() {
           const box = document.getElementById("c360Tabs");
@@ -509,9 +513,22 @@
           return `${s} 至 ${e}`;
         }
 
+        window.toggleInfoIndustry = function (label, value) {
+          const idx = infoIndustrySelection.indexOf(value);
+          if (idx > -1) infoIndustrySelection.splice(idx, 1);
+          else infoIndustrySelection.push(value);
+          const selected = idx === -1;
+          label.className = selected
+            ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs cursor-pointer transition select-none bg-brand/10 border-brand text-brand"
+            : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs cursor-pointer transition select-none bg-surface border-[rgba(201,205,212,.7)] text-t2 hover:border-brand/60";
+          const input = label.querySelector('input[type="checkbox"]');
+          if (input) input.checked = selected;
+        };
+
         function renderInfoTab(cust) {
           const d = getDetail(state.customerId);
           const edit = !!state.editMode;
+          infoIndustrySelection = (cust.industry || "").split(",").map((s) => s.trim()).filter(Boolean);
 
           const left = [
             { key: "name", label: "客户名称", required: true, type: "text", value: cust.name || "" },
@@ -535,7 +552,7 @@
           const right = [
             { key: "uscc", label: "统一社会信用代码", required: false, type: "text", value: cust.uscc || "" },
             { key: "grade", label: "客户等级", required: false, type: "select-grade", value: cust.grade || "D" },
-            { key: "industry", label: "行业类型", required: false, type: "select-industry", value: cust.industry || "" },
+            { key: "industry", label: "行业类型", required: false, type: "multi-select-industry", value: infoIndustrySelection.join(",") },
             { key: "establishedAt", label: "成立日期", required: false, type: "date", value: d.establishedAt || "" },
             { key: "registeredCapital", label: "注册资本", required: false, type: "text", value: d.registeredCapital || "" },
             { key: "regNo", label: "工商注册号", required: false, type: "text", value: d.regNo || "" },
@@ -606,6 +623,19 @@
                 value: `<select class="w-full h-9 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]" data-c360-input="${esc(
                   f.key
                 )}"><option value="">请选择</option>${opts}</select>`,
+              };
+            }
+            if (f.type === "multi-select-industry") {
+              const opts = INFO_INDUSTRY_OPTIONS.map((it) => {
+                const sel = infoIndustrySelection.includes(it) ? "checked" : "";
+                return `<label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs cursor-pointer transition select-none ${sel ? 'bg-brand/10 border-brand text-brand' : 'bg-surface border-[rgba(201,205,212,.7)] text-t2 hover:border-brand/60'}" onclick="toggleInfoIndustry(this, '${it}')">
+                  <input type="checkbox" class="hidden" value="${esc(it)}" ${sel} />
+                  ${esc(it)}
+                </label>`;
+              }).join("");
+              return {
+                label,
+                value: `<div class="flex flex-wrap gap-2 min-h-[36px] p-1.5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" data-c360-input="industry">${opts}</div>`,
               };
             }
             if (f.type === "select-enterprise-type") {
@@ -1493,7 +1523,7 @@
 
               const grade = get("grade") || "D";
               const source = get("source");
-              const industry = get("industry");
+              const industry = infoIndustrySelection.join(",");
               const uscc = get("uscc");
               const prov = get("prov");
               const city = get("city");
