@@ -513,22 +513,80 @@
           return `${s} 至 ${e}`;
         }
 
-        window.toggleInfoIndustry = function (label, value) {
-          const idx = infoIndustrySelection.indexOf(value);
-          if (idx > -1) infoIndustrySelection.splice(idx, 1);
-          else infoIndustrySelection.push(value);
-          const selected = idx === -1;
-          label.className = selected
-            ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs cursor-pointer transition select-none bg-brand/10 border-brand text-brand"
-            : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs cursor-pointer transition select-none bg-surface border-[rgba(201,205,212,.7)] text-t2 hover:border-brand/60";
-          const input = label.querySelector('input[type="checkbox"]');
-          if (input) input.checked = selected;
-        };
+        function renderInfoIndustryTags() {
+          const wrap = document.querySelector('[data-c360-industry-multiselect]');
+          const dropdown = document.querySelector('[data-c360-industry-dropdown]');
+          if (!wrap || !dropdown) return;
+          const chips = infoIndustrySelection
+            .map(
+              (o) => `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[rgba(255,138,0,.10)] text-primary text-[13px]">
+                <span>${esc(o)}</span>
+                <button type="button" class="c360-industry-remove w-4 h-4 rounded hover:bg-[rgba(255,138,0,.20)] flex items-center justify-center" data-c360-industry-remove="${esc(o)}">
+                  <i class="fa-solid fa-xmark text-[10px]"></i>
+                </button>
+              </span>
+            `
+            )
+            .join("");
+          const trigger = wrap.querySelector(".ms-trigger");
+          if (trigger) {
+            trigger.innerHTML = `
+              ${infoIndustrySelection.length ? chips : '<span class="text-[13px] text-muted" data-c360-industry-placeholder>请选择</span>'}
+              <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+            `;
+          }
+          dropdown.innerHTML = INFO_INDUSTRY_OPTIONS.map((o) => {
+            const isSel = infoIndustrySelection.includes(o);
+            return `
+              <button type="button" class="w-full text-left px-3 py-2 text-[13px] hover:bg-[rgba(245,247,250,.9)] flex items-center justify-between ${isSel ? "text-primary bg-[rgba(255,138,0,.06)]" : ""}" data-c360-industry-opt="${esc(o)}">
+                <span>${esc(o)}</span>
+                ${isSel ? '<i class="fa-solid fa-check text-[11px]"></i>' : ""}
+              </button>
+            `;
+          }).join("");
+        }
+
+        function toggleInfoIndustry(opt) {
+          const idx = infoIndustrySelection.indexOf(opt);
+          if (idx >= 0) infoIndustrySelection.splice(idx, 1);
+          else infoIndustrySelection.push(opt);
+          renderInfoIndustryTags();
+        }
+
+        function bindInfoIndustryEvents(panel) {
+          const wrap = panel.querySelector('[data-c360-industry-multiselect]');
+          const dropdown = panel.querySelector('[data-c360-industry-dropdown]');
+          if (!wrap || !dropdown) return;
+          const trigger = wrap.querySelector(".ms-trigger");
+          if (trigger) {
+            trigger.addEventListener("click", (e) => {
+              e.stopPropagation();
+              dropdown.classList.toggle("hidden");
+            });
+          }
+          dropdown.addEventListener("click", (e) => {
+            const btn = e.target && e.target.closest && e.target.closest("[data-c360-industry-opt]");
+            if (!btn) return;
+            e.stopPropagation();
+            toggleInfoIndustry(btn.getAttribute("data-c360-industry-opt"));
+          });
+          wrap.addEventListener("click", (e) => {
+            const btn = e.target && e.target.closest && e.target.closest("[data-c360-industry-remove]");
+            if (!btn) return;
+            e.stopPropagation();
+            toggleInfoIndustry(btn.getAttribute("data-c360-industry-remove"));
+          });
+          const closeHandler = (e) => {
+            if (!wrap.contains(e.target)) dropdown.classList.add("hidden");
+          };
+          document.addEventListener("click", closeHandler);
+          panel._c360IndustryClose = closeHandler;
+        }
 
         function renderInfoTab(cust) {
           const d = getDetail(state.customerId);
           const edit = !!state.editMode;
-          infoIndustrySelection = (cust.industry || "").split(",").map((s) => s.trim()).filter(Boolean);
 
           const left = [
             { key: "name", label: "客户名称", required: true, type: "text", value: cust.name || "" },
@@ -626,16 +684,17 @@
               };
             }
             if (f.type === "multi-select-industry") {
-              const opts = INFO_INDUSTRY_OPTIONS.map((it) => {
-                const sel = infoIndustrySelection.includes(it) ? "checked" : "";
-                return `<label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs cursor-pointer transition select-none ${sel ? 'bg-brand/10 border-brand text-brand' : 'bg-surface border-[rgba(201,205,212,.7)] text-t2 hover:border-brand/60'}" onclick="toggleInfoIndustry(this, '${it}')">
-                  <input type="checkbox" class="hidden" value="${esc(it)}" ${sel} />
-                  ${esc(it)}
-                </label>`;
-              }).join("");
               return {
                 label,
-                value: `<div class="flex flex-wrap gap-2 min-h-[36px] p-1.5 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface" data-c360-input="industry">${opts}</div>`,
+                value: `
+                  <div class="custom-multi-select relative" data-c360-industry-multiselect>
+                    <div class="ms-trigger min-h-[40px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 py-1.5 flex flex-wrap items-center gap-1.5 cursor-pointer hover:border-primary">
+                      <span class="text-[13px] text-muted" data-c360-industry-placeholder>请选择</span>
+                      <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+                    </div>
+                    <div class="ms-dropdown hidden absolute z-10 left-0 right-0 top-full mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-[rgba(201,205,212,.7)] bg-surface shadow-lg py-1" data-c360-industry-dropdown></div>
+                  </div>
+                `,
               };
             }
             if (f.type === "select-enterprise-type") {
@@ -1476,6 +1535,10 @@
 
         function renderPanel() {
           const panel = document.getElementById("c360Panel");
+          if (panel && panel._c360IndustryClose) {
+            document.removeEventListener("click", panel._c360IndustryClose);
+            panel._c360IndustryClose = null;
+          }
           const cust = getCustomerById(state.customerId);
           if (!cust) {
             panel.innerHTML = `<div class="py-12 text-center text-[13px] text-muted">客户不存在或未初始化：${esc(state.customerId)}</div>`;
@@ -1497,6 +1560,7 @@
           const editBtn = panel.querySelector("[data-c360-edit]");
           if (editBtn) {
             editBtn.addEventListener("click", () => {
+              infoIndustrySelection = (cust.industry || "").split(",").map((s) => s.trim()).filter(Boolean);
               state.editMode = true;
               renderPanel();
             });
@@ -1587,6 +1651,11 @@
               panel.querySelector('[data-c360-input="dist"]'),
               { prov: cust.prov || "", city: cust.city || "", dist: cust.dist || "" }
             );
+          }
+
+          if (state.activeTab === "info" && state.editMode) {
+            renderInfoIndustryTags();
+            bindInfoIndustryEvents(panel);
           }
 
           panel.querySelectorAll("[data-c360-contact-prev]").forEach((btn) =>
