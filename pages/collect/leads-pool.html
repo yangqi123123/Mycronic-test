@@ -250,9 +250,13 @@
           </div>
           <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">行业类型</div>
-            <select id="fIndustry" class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
-              <option value="">请选择</option>
-            </select>
+            <div class="custom-multi-select relative" id="fIndustryMultiSelect">
+              <div class="ms-trigger min-h-[40px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 py-1.5 flex flex-wrap items-center gap-1.5 cursor-pointer hover:border-primary">
+                <span class="text-[13px] text-muted" id="fIndustryPlaceholder">请选择</span>
+                <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+              </div>
+              <div class="ms-dropdown hidden absolute z-10 left-0 right-0 top-full mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-[rgba(201,205,212,.7)] bg-surface shadow-lg py-1" id="fIndustryDropdown"></div>
+            </div>
           </div>
           <div class="col-span-12 md:col-span-6">
             <div class="text-[12px] text-muted mb-1">实缴资本</div>
@@ -866,24 +870,83 @@
         if (!e) return `${s} 至 长期`;
         return `${s} 至 ${e}`;
       }
+
+      const INDUSTRY_OPTIONS = ["半导体", "SMT/电子制造", "PCB", "科研院所"];
+      /** @type {string[]} */
+      let selectedEditIndustries = [];
+
+      function escapeEditHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function renderEditIndustry() {
+        const wrap = document.getElementById("fIndustryMultiSelect");
+        const dropdown = document.getElementById("fIndustryDropdown");
+        if (!wrap || !dropdown) return;
+        const chips = selectedEditIndustries
+          .map(
+            (o) => `
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[rgba(255,138,0,.10)] text-primary text-[13px]">
+              <span>${escapeEditHtml(o)}</span>
+              <button type="button" class="edit-industry-remove w-4 h-4 rounded hover:bg-[rgba(255,138,0,.20)] flex items-center justify-center" data-edit-industry-remove="${escapeEditHtml(o)}">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+              </button>
+            </span>
+          `
+          )
+          .join("");
+        const trigger = wrap.querySelector(".ms-trigger");
+        if (trigger) {
+          trigger.innerHTML = `
+            ${selectedEditIndustries.length ? chips : '<span class="text-[13px] text-muted" id="fIndustryPlaceholder">请选择</span>'}
+            <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+          `;
+        }
+        dropdown.innerHTML = INDUSTRY_OPTIONS.map((o) => {
+          const isSel = selectedEditIndustries.includes(o);
+          return `
+            <button type="button" class="w-full text-left px-3 py-2 text-[13px] hover:bg-[rgba(245,247,250,.9)] flex items-center justify-between ${
+              isSel ? "text-primary bg-[rgba(255,138,0,.06)]" : ""
+            }" data-edit-industry-opt="${escapeEditHtml(o)}">
+              <span>${escapeEditHtml(o)}</span>
+              ${isSel ? '<i class="fa-solid fa-check text-[11px]"></i>' : ""}
+            </button>
+          `;
+        }).join("");
+      }
+
+      function toggleEditIndustry(opt) {
+        const idx = selectedEditIndustries.indexOf(opt);
+        if (idx >= 0) selectedEditIndustries.splice(idx, 1);
+        else selectedEditIndustries.push(opt);
+        renderEditIndustry();
+      }
+
+      function parseEditIndustry(s) {
+        const str = String(s || "").trim();
+        if (!str) return [];
+        return str.split(",").map((x) => x.trim()).filter(Boolean);
+      }
+
       function openEdit(id) {
         const row = leads.find((x) => x.id === id);
         if (!row) return;
         editingId = id;
         document.getElementById("fName").value = blankIfMissing(row.name);
         const srcSel = document.getElementById("fSource");
-        const indSel = document.getElementById("fIndustry");
         const FF = window.CustomerFormFields;
         if (FF && srcSel) {
           srcSel.innerHTML = FF.buildSelectOptions(FF.CUSTOMER_SOURCES, blankIfMissing(row.source), "请选择");
         } else if (srcSel) {
           srcSel.value = blankIfMissing(row.source);
         }
-        if (FF && indSel) {
-          indSel.innerHTML = FF.buildSelectOptions(FF.INDUSTRY_TYPES, blankIfMissing(row.industry), "请选择");
-        } else if (indSel) {
-          indSel.value = blankIfMissing(row.industry);
-        }
+        selectedEditIndustries = parseEditIndustry(row.industry);
+        renderEditIndustry();
         document.getElementById("fProjectName").value = blankIfMissing(row.projectName);
         document.getElementById("fLegalPerson").value = blankIfMissing(row.legalPerson);
         if (FF) {
@@ -945,7 +1008,7 @@
         row.needSummary = val("fNeedSummary").slice(0, 240);
         row.uscc = val("fUscc");
         row.grade = val("fGrade") || "D";
-        row.industry = val("fIndustry");
+        row.industry = selectedEditIndustries.join(",");
         row.establishedAt = val("fEstablishedAt");
         row.registeredCapital = val("fRegisteredCapital");
         row.regNo = val("fRegNo");
@@ -957,6 +1020,30 @@
         toast("success", "保存成功", "字段已补全并刷新列表");
         render();
       });
+
+      // 补全弹窗：行业类型标签多选事件绑定
+      (function () {
+        const wrap = document.getElementById("fIndustryMultiSelect");
+        const dropdown = document.getElementById("fIndustryDropdown");
+        if (!wrap || !dropdown) return;
+        wrap.querySelector(".ms-trigger")?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle("hidden");
+        });
+        dropdown.addEventListener("click", (e) => {
+          const btn = e.target && e.target.closest && e.target.closest("[data-edit-industry-opt]");
+          if (!btn) return;
+          e.stopPropagation();
+          toggleEditIndustry(btn.getAttribute("data-edit-industry-opt"));
+        });
+        wrap.addEventListener("click", (e) => {
+          const btn = e.target && e.target.closest && e.target.closest("[data-edit-industry-remove]");
+          if (!btn) return;
+          e.stopPropagation();
+          toggleEditIndustry(btn.getAttribute("data-edit-industry-remove"));
+        });
+        document.addEventListener("click", () => dropdown.classList.add("hidden"));
+      })();
 
       // ----- export -----
       function exportCsv(rows, filename) {
