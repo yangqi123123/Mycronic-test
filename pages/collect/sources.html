@@ -241,6 +241,18 @@
         </div>
         <div class="grid grid-cols-12 gap-4">
           <div class="col-span-12">
+            <div class="text-[12px] text-muted mb-1">行业类型</div>
+            <div class="custom-multi-select relative" id="industryMultiSelect">
+              <div class="ms-trigger min-h-[40px] rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-2 py-1.5 flex flex-wrap items-center gap-1.5 cursor-pointer hover:border-primary">
+                <span class="text-[13px] text-muted" id="industryPlaceholder">请选择</span>
+                <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+              </div>
+              <div class="ms-dropdown hidden absolute z-10 left-0 right-0 top-full mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-[rgba(201,205,212,.7)] bg-surface shadow-lg py-1" id="industryDropdown"></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-12">
             <div class="text-[12px] text-muted mb-1">数据来源</div>
             <select class="w-full h-10 rounded-lg border border-[rgba(201,205,212,.7)] bg-surface px-3 text-[14px]">
               <option value="" selected>请选择</option>
@@ -405,6 +417,75 @@
 
         /** @type {string[]} */
         const kwList = [];
+        const INDUSTRY_OPTIONS = ["半导体", "SMT/电子制造", "PCB", "科研院所"];
+        /** @type {string[]} */
+        let selectedIndustries = [];
+
+        function escapeHtml(s) {
+          return String(s ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function renderIndustrySelect() {
+          const wrap = document.getElementById("industryMultiSelect");
+          const dropdown = document.getElementById("industryDropdown");
+          const placeholder = document.getElementById("industryPlaceholder");
+          if (!wrap || !dropdown) return;
+
+          const chips = selectedIndustries
+            .map(
+              (o) => `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[rgba(255,138,0,.10)] text-primary text-[13px]">
+                <span>${escapeHtml(o)}</span>
+                <button type="button" class="industry-opt-remove w-4 h-4 rounded hover:bg-[rgba(255,138,0,.20)] flex items-center justify-center" data-industry-remove="${escapeHtml(o)}">
+                  <i class="fa-solid fa-xmark text-[10px]"></i>
+                </button>
+              </span>
+            `
+            )
+            .join("");
+          if (placeholder) {
+            placeholder.style.display = selectedIndustries.length ? "none" : "";
+          }
+
+          const trigger = wrap.querySelector(".ms-trigger");
+          if (trigger) {
+            trigger.innerHTML = `
+              ${selectedIndustries.length ? chips : '<span class="text-[13px] text-muted" id="industryPlaceholder">请选择</span>'}
+              <i class="fa-solid fa-chevron-down text-[11px] text-muted ml-auto"></i>
+            `;
+          }
+
+          dropdown.innerHTML = INDUSTRY_OPTIONS.map((o) => {
+            const isSel = selectedIndustries.includes(o);
+            return `
+              <button type="button" class="w-full text-left px-3 py-2 text-[13px] hover:bg-[rgba(245,247,250,.9)] flex items-center justify-between ${
+                isSel ? "text-primary bg-[rgba(255,138,0,.06)]" : ""
+              }" data-industry-opt="${escapeHtml(o)}">
+                <span>${escapeHtml(o)}</span>
+                ${isSel ? '<i class="fa-solid fa-check text-[11px]"></i>' : ""}
+              </button>
+            `;
+          }).join("");
+        }
+
+        function toggleIndustry(opt) {
+          const idx = selectedIndustries.indexOf(opt);
+          if (idx >= 0) selectedIndustries.splice(idx, 1);
+          else selectedIndustries.push(opt);
+          renderIndustrySelect();
+        }
+
+        function resetIndustrySelect() {
+          selectedIndustries = [];
+          renderIndustrySelect();
+          const dropdown = document.getElementById("industryDropdown");
+          if (dropdown) dropdown.classList.add("hidden");
+        }
 
         function resetKwTags() {
           kwList.length = 0;
@@ -439,6 +520,31 @@
         }
 
         renderKwTags();
+        renderIndustrySelect();
+
+        const industryWrap = document.getElementById("industryMultiSelect");
+        const industryDropdown = document.getElementById("industryDropdown");
+        if (industryWrap && industryDropdown) {
+          industryWrap.querySelector(".ms-trigger")?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            industryDropdown.classList.toggle("hidden");
+          });
+          industryDropdown.addEventListener("click", (e) => {
+            const btn = e.target && e.target.closest && e.target.closest("[data-industry-opt]");
+            if (!btn) return;
+            e.stopPropagation();
+            toggleIndustry(btn.getAttribute("data-industry-opt"));
+          });
+          industryWrap.addEventListener("click", (e) => {
+            const btn = e.target && e.target.closest && e.target.closest("[data-industry-remove]");
+            if (!btn) return;
+            e.stopPropagation();
+            toggleIndustry(btn.getAttribute("data-industry-remove"));
+          });
+        }
+        document.addEventListener("click", () => {
+          if (industryDropdown) industryDropdown.classList.add("hidden");
+        });
 
         document.getElementById("btnKwAdd")?.addEventListener("click", () => {
           const inp = document.getElementById("kwInput");
@@ -475,6 +581,7 @@
           (e) => {
             if (e.target.closest('[data-open-modal="add-script"]')) {
               resetKwTags();
+              resetIndustrySelect();
             }
           },
           true
