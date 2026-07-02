@@ -181,10 +181,7 @@
       </div>
       <div class="p-4">
         <div class="text-[12px] text-muted" id="c360ModalMeta"></div>
-        <div class="mt-3 text-[14px] leading-relaxed whitespace-pre-wrap" id="c360ModalBody"></div>
-        <div class="mt-4 flex justify-end gap-2">
-          <button class="h-9 px-3 rounded-lg bg-primary text-white text-[14px] font-semibold" data-close="c360-modal">知道了</button>
-        </div>
+        <div class="mt-3 text-[14px] leading-relaxed" id="c360ModalBody"></div>
       </div>
     </div>
 
@@ -199,7 +196,6 @@
         const Tabs = [
           { key: "info", label: "客户信息" },
           { key: "score", label: "客户评分" },
-          { key: "leads", label: "线索" },
           { key: "contacts", label: "联系人" },
           { key: "follows", label: "跟进记录" },
           { key: "opps", label: "商机" },
@@ -322,68 +318,68 @@
 
         function seedRel(customerId, custName) {
           const map = loadRelMap();
-          if (map && map[customerId]) return;
-          const now = new Date();
-          const y = now.getFullYear();
-          const m = String(now.getMonth() + 1).padStart(2, "0");
-          const d = String(now.getDate()).padStart(2, "0");
-          const baseDay = `${y}-${m}-${d}`;
+          const hasData = map && map[customerId];
+          if (!hasData) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, "0");
+            const d = String(now.getDate()).padStart(2, "0");
+            const baseDay = `${y}-${m}-${d}`;
 
-          map[customerId] = {
-            contacts: [],
-            follows: [
-              {
-                id: `FR-${customerId}-001`,
-                oppNo: "OPP-2026-0001",
-                way: "电话",
-                content: "初次沟通，客户对方案感兴趣，需补充规格参数与交期。",
-                location: "线上",
-                tip: "需尽快跟进",
-                owner: "销售A",
-                followAt: `${baseDay} 10:30`,
-              },
-            ],
-            opps: [
-              { oppNo: "OPP-2026-0001", desc: "半导体检测设备采购意向，预算待确认", owner: "销售A", createdAt: `${baseDay} 11:10` },
-            ],
-            quotes: [
-              { oppNo: "OPP-2026-0001", amount: 1200000, file: { name: "报价单", ext: "pdf" }, owner: "销售A", createdAt: `${baseDay} 12:30` },
-            ],
-            contracts: [
-              {
-                oppNo: "OPP-2026-0001",
-                contractNo: "CT-2026-00088",
-                contractName: "设备采购合同",
-                amount: 1180000,
-                signedAt: `${baseDay} 00:00`,
-                expireAt: `${y + 1}-${m}-${d} 00:00`,
-                fileA: { name: "合同附件", ext: "pdf" },
-                fileB: { name: "纸质合同扫描件", ext: "pdf" },
-                owner: "销售A",
-                createdAt: `${baseDay} 13:40`,
-              },
-            ],
-            deliveries: [
-              {
-                contractNo: "CT-2026-00088",
-                contractName: "设备采购合同",
-                deliveredAt: `${baseDay} 00:00`,
-                dealAmount: 1180000,
-                status: "交付中",
-                file: { name: "交付清单", ext: "xlsx" },
-                owner: "交付A",
-                createdAt: `${baseDay} 16:20`,
-              },
-            ],
-          };
-
-          // 一些客户默认联系人为空，满足空态展示
-          if (String(custName || "").includes("苏州")) {
-            map[customerId].contacts = [
-              { name: "王工", title: "采购经理", phone: "13812341234", type: "采购", createdBy: "管理员", createdAt: `${baseDay} 09:30` },
-              { name: "李经理", title: "技术负责人", phone: "18600000088", type: "技术", createdBy: "管理员", createdAt: `${baseDay} 09:35` },
-            ];
+            map[customerId] = {
+              contacts: [],
+              follows: [
+                {
+                  id: `FR-${customerId}-001`,
+                  oppNo: "OPP-2026-0001",
+                  way: "电话",
+                  content: "初次沟通，客户对方案感兴趣，需补充规格参数与交期。",
+                  location: "线上",
+                  tip: "需尽快跟进",
+                  owner: "销售A",
+                  followAt: `${baseDay} 10:30`,
+                },
+              ],
+              opps: [
+                { oppNo: "OPP-2026-0001", desc: "半导体检测设备采购意向，预算待确认", owner: "销售A", createdAt: `${baseDay} 11:10` },
+              ],
+              quotes: [
+                { oppNo: "OPP-2026-0001", amount: 1200000, file: { name: "报价单", ext: "pdf" }, owner: "销售A", createdAt: `${baseDay} 12:30` },
+              ],
+              contracts: [
+                {
+                  oppNo: "OPP-2026-0001",
+                  contractNo: "CT-2026-00088",
+                  contractName: "设备采购合同",
+                  amount: 1180000,
+                  signedAt: `${baseDay} 00:00`,
+                  expireAt: `${y + 1}-${m}-${d} 00:00`,
+                  fileA: { name: "合同附件", ext: "pdf" },
+                  fileB: { name: "纸质合同扫描件", ext: "pdf" },
+                  owner: "销售A",
+                  createdAt: `${baseDay} 13:40`,
+                },
+              ],
+              deliveries: [
+                {
+                  contractNo: "CT-2026-00088",
+                  contractName: "设备采购合同",
+                  deliveredAt: `${baseDay} 00:00`,
+                  dealAmount: 1180000,
+                  status: "交付中",
+                  file: { name: "交付清单", ext: "xlsx" },
+                  owner: "交付A",
+                  createdAt: `${baseDay} 16:20`,
+                },
+              ],
+            };
           }
+
+          // 默认展示示例联系人（每次启动都刷新，避免本地旧缓存导致示例数据不更新）
+          map[customerId].contacts = [
+            { name: "王强", title: "采购经理", phone: "13655889955", type: "采购负责人", source: "手工新增", collector: "-", createdBy: "李明", createdAt: `2026-06-01 10:22:00` },
+            { name: "李靖", title: "采购经理", phone: "13655889958", type: "采购负责人", source: "公开工商数据", collector: "公开工商数据采集器", createdBy: "李明", createdAt: `2026-06-02 10:22:00` },
+          ];
 
           saveRelMap(map);
         }
@@ -420,7 +416,7 @@
           const b = document.getElementById("c360ModalBody");
           const m = document.getElementById("c360ModalMeta");
           t.textContent = title || "查看";
-          b.textContent = body || "";
+          b.innerHTML = body || "";
           m.textContent = meta || "";
           const overlay = document.querySelector('[data-overlay="c360-modal"]');
           const modal = document.querySelector('[data-modal="c360-modal"]');
@@ -801,17 +797,28 @@
 
           const rows =
             slice.length === 0
-              ? `<tr><td colspan="6" class="py-10 text-center text-[13px] text-muted">暂无联系人</td></tr>`
+              ? `<tr><td colspan="9" class="py-10 text-center text-[13px] text-muted">暂无联系人</td></tr>`
               : slice
                   .map(
                     (r) => `
                       <tr class="border-b border-[rgba(201,205,212,.6)]">
                         <td class="py-3 px-3 text-[14px] font-semibold">${esc(r.name || "—")}</td>
-                        <td class="py-3 px-3 text-[14px]">${esc(r.title || "—")}</td>
                         <td class="py-3 px-3 text-[14px]">${esc(r.phone || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.title || "—")}</td>
                         <td class="py-3 px-3 text-[14px]">${esc(r.type || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.source || "—")}</td>
+                        <td class="py-3 px-3 text-[14px]">${esc(r.collector || "—")}</td>
                         <td class="py-3 px-3 text-[14px]">${esc(r.createdBy || "—")}</td>
                         <td class="py-3 px-3 text-[14px] text-muted whitespace-nowrap">${esc(r.createdAt || "—")}</td>
+                        <td class="py-3 px-3 text-[14px] whitespace-nowrap">
+                          ${
+                            r.name === "李靖"
+                              ? `<a class="text-primary font-semibold" href="https://hbggzy.cn/jyxx/003002/003002004/20260611/8ff88f25-d3e3-4fef-b9f1-f807b9f78b7f.html" target="_blank" rel="noopener noreferrer">查看</a>`
+                              : `<button class="text-primary font-semibold" data-c360-view='${esc(
+                                  JSON.stringify({ title: "联系人详情", body: `<div class="space-y-3"><div class="flex gap-4"><span class="text-muted w-20 shrink-0">姓名</span><span>${esc(r.name || "—")}</span></div><div class="flex gap-4"><span class="text-muted w-20 shrink-0">电话</span><span>${esc(r.phone || "—")}</span></div><div class="flex gap-4"><span class="text-muted w-20 shrink-0">职位</span><span>${esc(r.title || "—")}</span></div><div class="flex gap-4"><span class="text-muted w-20 shrink-0">联系人类型</span><span>${esc(r.type || "—")}</span></div><div class="flex gap-4"><span class="text-muted w-20 shrink-0">数据来源</span><span>${esc(r.source || "—")}</span></div><div class="flex gap-4"><span class="text-muted w-20 shrink-0">所属采集器</span><span>${esc(r.collector || "—")}</span></div><div class="flex gap-4"><span class="text-muted w-20 shrink-0">创建人</span><span>${esc(r.createdBy || "—")}</span></div><div class="flex gap-4"><span class="text-muted w-20 shrink-0">创建时间</span><span>${esc(r.createdAt || "—")}</span></div></div>`, meta: "" })
+                                )}'>查看</button>`
+                          }
+                        </td>
                       </tr>
                     `
                   )
@@ -824,15 +831,18 @@
               </div>
             </div>
             <div class="mt-4 overflow-x-auto">
-              <table class="w-full min-w-[860px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
+              <table class="w-full min-w-[1100px] border border-[rgba(201,205,212,.6)] rounded-xl overflow-hidden">
                 <thead class="bg-[rgba(245,247,250,.9)]">
                   <tr class="border-b border-[rgba(201,205,212,.6)]">
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">姓名</th>
-                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">职位</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">电话</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">职位</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">联系人类型</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">数据来源</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">所属采集器</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建人</th>
                     <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">创建时间</th>
+                    <th class="py-3 px-3 text-left text-[12px] text-muted font-semibold">操作</th>
                   </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -870,7 +880,7 @@
                         <td class="py-3 px-3 text-[14px] max-w-[420px]">
                           <div class="line-clamp-2">${esc(r.content || "—")}</div>
                           <button class="mt-1 text-primary font-semibold text-[12px]" data-c360-view='${esc(
-                            JSON.stringify({ title: "跟进记录", body: r.content || "", meta: `跟进时间：${formatDateTime(r.followAt)}` })
+                            JSON.stringify({ title: "跟进记录", body: esc(r.content || "").replaceAll("\n", "<br>"), meta: `跟进时间：${formatDateTime(r.followAt)}` })
                           )}'>查看</button>
                         </td>
                         <td class="py-3 px-3 text-[14px]">${esc(r.location || "—")}</td>
@@ -1553,7 +1563,6 @@
           else if (state.activeTab === "contracts") panel.innerHTML = renderContractsTab();
           else if (state.activeTab === "deliveries") panel.innerHTML = renderDeliveriesTab();
           else if (state.activeTab === "score") panel.innerHTML = renderAiScoreTab(cust);
-          else if (state.activeTab === "leads") panel.innerHTML = renderLeadsTab(cust);
           else panel.innerHTML = `<div class="py-10 text-center text-muted">未实现</div>`;
 
           // bind per-panel actions
